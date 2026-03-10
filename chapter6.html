@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.06 — 資料庫整合與狀態管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ── MASTHEAD ───────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ── PAGE ───────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900;
+  line-height: 1.15; letter-spacing: -0.025em;
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ── OBJECTIVES ─────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ── CONTENT LAYOUT ─────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ── LESSON ─────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ── CODE BLOCKS ────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+
+.code-block {
+  background: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  padding: 1.5rem 0;
+  overflow-x: auto;
+  border-left: 3px solid var(--red);
+}
+
+/* Each line is a flex row: line-number + content */
+.cl {
+  display: flex;
+  padding: 0 1.75rem 0 0;
+  min-height: 1.85em;
+}
+.cl:hover { background: rgba(255,255,255,0.04); }
+
+.ln {
+  display: inline-block;
+  width: 3rem;
+  padding-left: 1.25rem;
+  color: #4A4440;
+  user-select: none;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  padding-top: 0.02em;
+  text-align: right;
+  padding-right: 1.25rem;
+}
+
+.lc {
+  flex: 1;
+  white-space: pre;
+  color: #E8E0D8;
+}
+
+/* Indent helpers */
+.i1 { padding-left: 2ch; }
+.i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; }
+.i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; }
+.i6 { padding-left: 12ch; }
+
+/* Syntax colours */
+.kw  { color: #C47A6A; }   /* keyword: const let async function class if return await etc */
+.str { color: #8BAF7A; }   /* string */
+.fn  { color: #7AABCF; }   /* function call */
+.num { color: #C49A5A; }   /* number */
+.cls { color: #C4B570; }   /* class name / constructor */
+.cmt { color: #7A6F6A; font-style: italic; }   /* comment */
+.pun { color: #9A9090; }   /* punctuation */
+.def { color: #E8E0D8; }   /* default text */
+
+/* ── CALLOUTS ───────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem;
+  color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.08); padding: 0.1em 0.4em;
+}
+
+/* ── DEF LIST ───────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── TABLE ──────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2);
+  border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── SCHEMA ─────────────────────────────────── */
+.schema-wrap { margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2); }
+.schema-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.schema-tables { display: flex; gap: 1.5rem; padding: 1.25rem; flex-wrap: wrap; }
+.schema-table { border: 1px solid var(--paper-4); min-width: 170px; flex: 1; }
+.schema-table-head {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+  background: var(--ink); color: var(--paper);
+  padding: 0.4rem 0.75rem; letter-spacing: 0.06em;
+}
+.schema-row {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-2);
+  padding: 0.3rem 0.75rem; border-bottom: 1px solid var(--paper-3);
+  display: flex; gap: 0.5rem; align-items: baseline;
+}
+.schema-row:last-child { border-bottom: none; }
+.col-name { color: var(--ink); font-weight: 600; min-width: 85px; }
+.col-type { color: var(--ink-4); font-size: 0.58rem; }
+.col-pk   { color: var(--red); font-size: 0.56rem; font-weight: 700; margin-left: auto; }
+
+/* ── FLOW ───────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; padding-bottom: 0.5rem; }
+.flow-row {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.68rem;
+  min-width: max-content; gap: 0;
+}
+.fnode {
+  border: 1px solid var(--ink); padding: 0.6rem 0.9rem;
+  background: var(--paper-2); color: var(--ink);
+  text-align: center; line-height: 1.4;
+  min-width: 110px; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fnode.dark { background: var(--ink); color: var(--paper); }
+.fnode.red  { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.fsub { font-size: 0.56rem; color: var(--ink-4); display: block; margin-top: 0.2rem; }
+.fnode.dark .fsub { color: #8C8070; }
+.farrow { padding: 0 0.4rem; color: var(--ink-4); display: flex; align-items: center; }
+
+/* ── SIDEBAR ────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820;
+  cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ── NAV ────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+  .schema-tables { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.06 — 資料庫整合與狀態管理</span>
+  </div>
+  <div class="masthead-right">第 6 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ══════════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">06</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">5 小時</div>
+      <div class="ch-stat">中級</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含對話狀態機</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title"><span>資料庫整合</span><br>與狀態管理</h1>
+    <p class="ch-standfirst">
+      無記憶的 Bot 只能處理單輪對話，無法追蹤用戶的累積行為、偏好或對話進度。
+      本章建立 Bot 的持久化記憶層：從選擇資料庫、設計 schema、實作 Repository 模式，
+      到建構多輪對話的有限狀態機。完成後你的 Bot 將能記住每位用戶是誰、
+      他們做過什麼，以及他們目前在哪個對話流程中。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>評估 SQLite 與 PostgreSQL 的適用場景</li>
+    <li>用 Knex.js 建立 migration 管理資料庫版本</li>
+    <li>設計用戶與對話記錄的資料表結構</li>
+    <li>實作 Repository 模式封裝資料存取邏輯</li>
+    <li>建立有限狀態機管理多輪對話流程</li>
+    <li>用 Redis 實作高效能 session 狀態儲存</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 6-1 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l6-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 6–1</span>
+    <h2 class="lesson-title">資料庫選型：SQLite vs PostgreSQL vs Redis</h2>
+  </div>
+
+  <p class="body-text">
+    大多數 LINE Bot 需要三種不同性質的儲存需求，
+    而沒有任何一種資料庫能同時以最佳方式滿足全部需求。
+    理解每種需求的特性，才能做出正確的技術選型，
+    避免後期因選錯而付出高昂的重構代價。
+  </p>
+
+  <div class="sub-heading">三種儲存需求</div>
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">持久化業務資料</div>
+      <div class="def-desc">
+        用戶帳號、訂單記錄、點數歷史——需要長期保存、支援複雜查詢的關係型資料。
+        適合 <strong>PostgreSQL</strong>（生產）或 <strong>SQLite</strong>（開發）。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">對話狀態（Session）</div>
+      <div class="def-desc">
+        用戶目前在哪個對話步驟、暫存中的輸入值——存取頻率極高，
+        需要毫秒級讀寫，對話結束後可以丟棄。
+        適合 <strong>Redis</strong>，搭配 TTL 自動清理過期 session。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">快取</div>
+      <div class="def-desc">
+        頻繁查詢但不常變動的資料（商品列表、設定檔）。
+        用 Redis 快取資料庫查詢結果，減少資料庫壓力。
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">SQLite：開發環境首選</div>
+  <p class="body-text">
+    SQLite 是嵌入式資料庫，整個資料庫就是磁碟上的一個 <code>.db</code> 檔案，
+    無需安裝伺服器，<code>npm install</code> 後即可使用。
+    對於本地開發、功能驗證和小型部署（日活躍用戶 1,000 以下）而言，
+    SQLite 的簡單性遠超其他選項的優勢。唯一的核心限制是
+    <strong>不支援並發寫入</strong>——同一時間只能有一個寫入操作，
+    在大量并行 Webhook 請求下會成為瓶頸。
+  </p>
+
+  <div class="sub-heading">PostgreSQL：生產環境標準</div>
+  <p class="body-text">
+    PostgreSQL 支援完整的 ACID 事務、並行寫入、<code>jsonb</code> 欄位、
+    全文搜尋和豐富的索引類型。本章所有範例使用
+    <strong>Knex.js</strong> 作為 Query Builder，
+    讓相同程式碼同時支援 SQLite（開發）和 PostgreSQL（生產），
+    只需修改 <code>knexfile.js</code> 中的連線設定。
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>特性</th>
+        <th>SQLite</th>
+        <th>PostgreSQL</th>
+        <th>Redis</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>安裝複雜度</td>
+        <td>無需安裝</td>
+        <td>需要伺服器</td>
+        <td>需要伺服器</td>
+      </tr>
+      <tr>
+        <td>並發寫入</td>
+        <td>不支援</td>
+        <td>支援</td>
+        <td>支援（單執行緒）</td>
+      </tr>
+      <tr>
+        <td>資料持久性</td>
+        <td>磁碟檔案</td>
+        <td>磁碟</td>
+        <td>預設記憶體（可持久化）</td>
+      </tr>
+      <tr>
+        <td>TTL 支援</td>
+        <td>需手動實作</td>
+        <td>需手動實作</td>
+        <td>原生 <code>EXPIRE</code></td>
+      </tr>
+      <tr>
+        <td>典型讀取延遲</td>
+        <td>0.1–1 ms</td>
+        <td>1–10 ms</td>
+        <td>0.1–0.3 ms</td>
+      </tr>
+      <tr>
+        <td>適合用途</td>
+        <td>開發、小型部署</td>
+        <td>生產業務資料</td>
+        <td>Session、快取</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <span class="callout-label">推薦架構</span>
+    開發階段：SQLite + Redis（本地 Docker）。生產環境：PostgreSQL + Redis。
+    使用 Knex.js 抽象資料庫差異，讓兩套環境共用業務邏輯，
+    只有 <code>knexfile.js</code> 因環境不同而有差異。
+  </div>
+</article>
+
+<!-- ── LESSON 6-2 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l6-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 6–2</span>
+    <h2 class="lesson-title">Knex.js Migration 與資料表設計</h2>
+  </div>
+
+  <p class="body-text">
+    <strong>Migration</strong> 是資料庫結構變更的版本控制機制：每一次對資料表的修改
+    都記錄為一個帶有時間戳記的檔案，可以被追蹤、執行（<code>up</code>）、
+    還原（<code>down</code>），讓多人協作和環境同步有明確的操作基準。
+    沒有 migration 機制直接修改生產資料庫是極度危險的做法。
+  </p>
+
+  <div class="sub-heading">初始化 Knex 專案</div>
+
+  <div class="code-figure">
+    <div class="code-caption">安裝依賴與初始化</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 安裝 Knex 與驅動（同時安裝 SQLite 和 PostgreSQL 驅動）</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">npm install knex better-sqlite3 pg</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt"># 產生 knexfile.js 設定檔</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">npx knex init</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt"># 建立 migration（檔名自動加時間戳記）</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">npx knex migrate:make create_users</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc">npx knex migrate:make create_conversations</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="cmt"># 執行所有尚未執行的 migration</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc">npx knex migrate:latest</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"><span class="cmt"># 還原最後一次 migration</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">npx knex migrate:rollback</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">knexfile.js — 環境設定</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="fn">require</span>(<span class="str">'dotenv'</span>).<span class="fn">config</span>()</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">module.exports = {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="cmt">// 本地開發使用 SQLite，零設定</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">development: {</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2">client:          <span class="str">'better-sqlite3'</span>,</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">connection:      { filename: <span class="str">'./dev.db'</span> },</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">useNullAsDefault: <span class="kw">true</span>,   <span class="cmt">// SQLite 必填</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">migrations:      { directory: <span class="str">'./db/migrations'</span> },</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">seeds:           { directory: <span class="str">'./db/seeds'</span> },</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="cmt">// 生產環境使用 PostgreSQL</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">production: {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">client:     <span class="str">'pg'</span>,</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2">connection:  process.env.<span class="cls">DATABASE_URL</span>,</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">pool:        { min: <span class="num">2</span>, max: <span class="num">10</span> },  <span class="cmt">// 連線池，避免每次請求重新握手</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">migrations:  { directory: <span class="str">'./db/migrations'</span> },</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">seeds:       { directory: <span class="str">'./db/seeds'</span> },</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">核心資料表設計</div>
+  <p class="body-text">
+    以下是電商客服 Bot 的最小可用 schema，涵蓋用戶表、訊息記錄表與對話 session 表。
+    這三張表之間的關聯建立了 Bot 理解「這個用戶是誰、說了什麼、現在在哪個流程」的基礎。
+  </p>
+
+  <div class="schema-wrap">
+    <div class="schema-head">資料表結構示意</div>
+    <div class="schema-tables">
+      <div class="schema-table">
+        <div class="schema-table-head">users</div>
+        <div class="schema-row"><span class="col-name">id</span><span class="col-type">INTEGER</span><span class="col-pk">PK</span></div>
+        <div class="schema-row"><span class="col-name">line_user_id</span><span class="col-type">VARCHAR(50)</span><span class="col-pk">UNIQUE</span></div>
+        <div class="schema-row"><span class="col-name">display_name</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="schema-row"><span class="col-name">tier</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="schema-row"><span class="col-name">points</span><span class="col-type">INTEGER DEFAULT 0</span></div>
+        <div class="schema-row"><span class="col-name">is_blocked</span><span class="col-type">BOOLEAN DEFAULT false</span></div>
+        <div class="schema-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="schema-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMP</span></div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-head">messages</div>
+        <div class="schema-row"><span class="col-name">id</span><span class="col-type">INTEGER</span><span class="col-pk">PK</span></div>
+        <div class="schema-row"><span class="col-name">user_id</span><span class="col-type">INTEGER</span><span class="col-pk">FK→users</span></div>
+        <div class="schema-row"><span class="col-name">direction</span><span class="col-type">VARCHAR(10)</span></div>
+        <div class="schema-row"><span class="col-name">type</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="schema-row"><span class="col-name">content</span><span class="col-type">TEXT</span></div>
+        <div class="schema-row"><span class="col-name">raw_event</span><span class="col-type">JSONB / TEXT</span></div>
+        <div class="schema-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMP</span></div>
+      </div>
+      <div class="schema-table">
+        <div class="schema-table-head">conversation_states</div>
+        <div class="schema-row"><span class="col-name">id</span><span class="col-type">INTEGER</span><span class="col-pk">PK</span></div>
+        <div class="schema-row"><span class="col-name">user_id</span><span class="col-type">INTEGER</span><span class="col-pk">FK→users</span></div>
+        <div class="schema-row"><span class="col-name">state</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="schema-row"><span class="col-name">context</span><span class="col-type">JSONB / TEXT</span></div>
+        <div class="schema-row"><span class="col-name">expires_at</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="schema-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMP</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">db/migrations/20240101_create_users.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">exports.<span class="fn">up</span> = <span class="kw">async function</span>(knex) {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1"><span class="kw">await</span> knex.schema.<span class="fn">createTable</span>(<span class="str">'users'</span>, (t) => {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i2">t.<span class="fn">increments</span>(<span class="str">'id'</span>).<span class="fn">primary</span>()</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2">t.<span class="fn">string</span>(<span class="str">'line_user_id'</span>, <span class="num">50</span>).<span class="fn">notNullable</span>().<span class="fn">unique</span>()</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2">t.<span class="fn">string</span>(<span class="str">'display_name'</span>)</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2">t.<span class="fn">string</span>(<span class="str">'tier'</span>, <span class="num">20</span>).<span class="fn">defaultTo</span>(<span class="str">'guest'</span>)</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">t.<span class="fn">integer</span>(<span class="str">'points'</span>).<span class="fn">defaultTo</span>(<span class="num">0</span>)</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">t.<span class="fn">boolean</span>(<span class="str">'is_blocked'</span>).<span class="fn">defaultTo</span>(<span class="kw">false</span>)</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">t.<span class="fn">timestamps</span>(<span class="kw">true</span>, <span class="kw">true</span>)   <span class="cmt">// created_at + updated_at，自動設定當前時間</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">t.<span class="fn">index</span>(<span class="str">'line_user_id'</span>)    <span class="cmt">// 每次 Webhook 都查此欄位，索引必建</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="kw">await</span> knex.schema.<span class="fn">createTable</span>(<span class="str">'messages'</span>, (t) => {</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2">t.<span class="fn">increments</span>(<span class="str">'id'</span>).<span class="fn">primary</span>()</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">t.<span class="fn">integer</span>(<span class="str">'user_id'</span>).<span class="fn">references</span>(<span class="str">'users.id'</span>).<span class="fn">onDelete</span>(<span class="str">'CASCADE'</span>)</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2">t.<span class="fn">enu</span>(<span class="str">'direction'</span>, [<span class="str">'inbound'</span>, <span class="str">'outbound'</span>])  <span class="cmt">// 用戶送來 / Bot 送出</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">t.<span class="fn">string</span>(<span class="str">'type'</span>, <span class="num">20</span>)    <span class="cmt">// 'text', 'image', 'postback' …</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">t.<span class="fn">text</span>(<span class="str">'content'</span>)       <span class="cmt">// 純文字摘要，便於搜尋</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">t.<span class="fn">text</span>(<span class="str">'raw_event'</span>)    <span class="cmt">// JSON.stringify(event)，完整原始資料</span></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i2">t.<span class="fn">timestamp</span>(<span class="str">'created_at'</span>).<span class="fn">defaultTo</span>(knex.fn.<span class="fn">now</span>())</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2">t.<span class="fn">index</span>([<span class="str">'user_id'</span>, <span class="str">'created_at'</span>])  <span class="cmt">// 複合索引，支援「某用戶最近 N 筆」查詢</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc">exports.<span class="fn">down</span> = <span class="kw">async function</span>(knex) {</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1"><span class="cmt">// down 的順序必須是 up 的反序（先刪有外鍵的表）</span></span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1"><span class="kw">await</span> knex.schema.<span class="fn">dropTableIfExists</span>(<span class="str">'messages'</span>)</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i1"><span class="kw">await</span> knex.schema.<span class="fn">dropTableIfExists</span>(<span class="str">'users'</span>)</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-label">索引策略</span>
+    每次 Webhook 請求都會用 <code>line_user_id</code> 查詢用戶，這是整個應用最高頻率的資料庫操作。
+    <strong>沒有索引的話，這個查詢在 10 萬筆資料時可能慢 100 倍以上。</strong>
+    Migration 中的 <code>t.index('line_user_id')</code> 是必須的，不是選配的。
+  </div>
+</article>
+
+<!-- ── LESSON 6-3 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l6-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 6–3</span>
+    <h2 class="lesson-title">Repository 模式：封裝資料存取邏輯</h2>
+  </div>
+
+  <p class="body-text">
+    Repository 模式的核心思想：<strong>業務邏輯不應該知道資料如何被儲存。</strong>
+    你的 Webhook handler 知道「要取得這個用戶的訂單」，
+    但不應該知道「這件事需要執行一個帶有 JOIN 和 WHERE 子句的 SQL 查詢」。
+    將所有資料庫操作封裝在 Repository 類別中，帶來三個直接好處：
+    測試時可以用 mock 替換整個 Repository、
+    更換底層資料庫只需修改 Repository 而不影響其他程式碼、
+    SQL 邏輯集中管理不分散在各處。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/repositories/UserRepository.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> db = <span class="fn">require</span>(<span class="str">'../../db/knex'</span>)  <span class="cmt">// knex 單例</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">class</span> <span class="cls">UserRepository</span> {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="cmt">// 以 LINE userId 查詢，最常被呼叫的方法</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="kw">async</span> <span class="fn">findByLineId</span>(lineUserId) {</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2"><span class="kw">return</span> db(<span class="str">'users'</span>)</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i3">.<span class="fn">where</span>({ line_user_id: lineUserId })</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i3">.<span class="fn">first</span>()  <span class="cmt">// 回傳第一筆或 undefined（不是陣列）</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="cmt">// 查詢不到就建立——Webhook 中極常用的模式</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">async</span> <span class="fn">findOrCreate</span>(lineUserId, defaults = {}) {</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2"><span class="kw">let</span> user = <span class="kw">await</span> <span class="kw">this</span>.<span class="fn">findByLineId</span>(lineUserId)</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2"><span class="kw">if</span> (!user) {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i3">[user] = <span class="kw">await</span> db(<span class="str">'users'</span>)</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i4">.<span class="fn">insert</span>({ line_user_id: lineUserId, ...defaults })</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i4">.<span class="fn">returning</span>(<span class="str">'*'</span>)  <span class="cmt">// PostgreSQL；SQLite 需另查（見後文）</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2"><span class="kw">return</span> user</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1"><span class="cmt">// 更新部分欄位，自動設定 updated_at</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="kw">async</span> <span class="fn">update</span>(lineUserId, patch) {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i2"><span class="kw">return</span> db(<span class="str">'users'</span>)</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i3">.<span class="fn">where</span>({ line_user_id: lineUserId })</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i3">.<span class="fn">update</span>({ ...patch, updated_at: db.fn.<span class="fn">now</span>() })</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="cmt">// 原子性增加點數（避免讀取–修改–寫入的競態條件）</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="kw">async</span> <span class="fn">incrementPoints</span>(lineUserId, amount) {</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2"><span class="kw">return</span> db(<span class="str">'users'</span>)</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i3">.<span class="fn">where</span>({ line_user_id: lineUserId })</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i3">.<span class="fn">increment</span>(<span class="str">'points'</span>, amount)</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="cmt">// SQL: UPDATE users SET points = points + ? WHERE line_user_id = ?</span></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc">module.exports = <span class="kw">new</span> <span class="cls">UserRepository</span>()  <span class="cmt">// 匯出單例</span></span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/repositories/MessageRepository.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> db = <span class="fn">require</span>(<span class="str">'../../db/knex'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">class</span> <span class="cls">MessageRepository</span> {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="cmt">// 記錄一筆訊息（inbound 或 outbound）</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="kw">async</span> <span class="fn">log</span>(userId, direction, type, content, rawEvent = <span class="kw">null</span>) {</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2"><span class="kw">return</span> db(<span class="str">'messages'</span>).<span class="fn">insert</span>({</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i3">user_id:   userId,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i3">direction: direction,</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i3">type:      type,</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i3">content:   content,</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i3">raw_event: rawEvent ? <span class="cls">JSON</span>.<span class="fn">stringify</span>(rawEvent) : <span class="kw">null</span>,</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2">})</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="cmt">// 取得某用戶最近 N 筆對話記錄（依時間倒序）</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="kw">async</span> <span class="fn">getRecentByUserId</span>(userId, limit = <span class="num">20</span>) {</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2"><span class="kw">return</span> db(<span class="str">'messages'</span>)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">.<span class="fn">where</span>({ user_id: userId })</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i3">.<span class="fn">orderBy</span>(<span class="str">'created_at'</span>, <span class="str">'desc'</span>)</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i3">.<span class="fn">limit</span>(limit)</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc">module.exports = <span class="kw">new</span> <span class="cls">MessageRepository</span>()</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">SQLite 相容性注意</span>
+    Knex 的 <code>.returning('*')</code> 在 PostgreSQL 上直接回傳插入的資料列，
+    但舊版 SQLite 不支援 <code>RETURNING</code> 子句。
+    需同時支援兩種資料庫時，SQLite 環境下改為先 insert 取得 <code>lastID</code>，
+    再以 id 查詢一次，即可相容。
+  </div>
+</article>
+
+<!-- ── LESSON 6-4 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l6-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 6–4</span>
+    <h2 class="lesson-title">有限狀態機：管理多輪對話流程</h2>
+  </div>
+
+  <p class="body-text">
+    當 Bot 需要引導用戶完成多步驟流程——「收集姓名 → 收集電話 → 確認 → 完成」——
+    最常見的錯誤做法是在 message handler 裡用大量 <code>if/else</code> 判斷
+    「用戶上一句說了什麼」。這種方法在流程超過三個步驟後就難以維護。
+  </p>
+  <p class="body-text">
+    <strong>有限狀態機（FSM）</strong> 是解決這個問題的經典模式。
+    系統在任何時刻只處於一個<strong>狀態</strong>，
+    收到<strong>輸入</strong>後，依據預先定義的<strong>轉移規則</strong>，
+    決定轉移到哪個新狀態並執行對應的<strong>動作</strong>。
+    對話流程中，每個「等待用戶輸入」的步驟就是一個狀態；每則訊息就是一個輸入。
+  </p>
+
+  <div class="sub-heading">FSM 視覺化：會員註冊流程</div>
+  <div class="flow-wrap">
+    <div class="flow-row">
+      <div class="fnode dark">IDLE<div class="fsub">初始狀態</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode red">AWAIT_NAME<div class="fsub">等待輸入姓名</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode red">AWAIT_PHONE<div class="fsub">等待輸入電話</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode red">AWAIT_CONFIRM<div class="fsub">等待確認</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode dark">DONE<div class="fsub">完成</div></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/fsm/registrationFSM.js — 狀態機定義</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> REGISTRATION_FSM = {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">IDLE: {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i2">transitions: {</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i3">START_REGISTER: {</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i4">next: <span class="str">'AWAIT_NAME'</span>,</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i4"><span class="fn">action</span>: <span class="kw">async</span> (ctx, client, replyToken) => {</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(replyToken, {</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i6">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i6">text: <span class="str">'請輸入您的姓名（2–20 個字元）：'</span>,</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1">AWAIT_NAME: {</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">transitions: {</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">TEXT_INPUT: {</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i4"><span class="cmt">// guard 驗證輸入，失敗則不轉移狀態</span></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i4">guard: (text) => text.<span class="fn">trim</span>().length >= <span class="num">2</span> && text.<span class="fn">trim</span>().length <= <span class="num">20</span>,</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i4"><span class="fn">onGuardFail</span>: <span class="kw">async</span> (ctx, client, rt) => {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(rt, {</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i6">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i6">text: <span class="str">'姓名需介於 2–20 個字元，請重新輸入：'</span>,</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i4">next: <span class="str">'AWAIT_PHONE'</span>,</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i4"><span class="fn">action</span>: <span class="kw">async</span> (ctx, client, rt, input) => {</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i5">ctx.name = input.<span class="fn">trim</span>()  <span class="cmt">// 儲存到 context</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(rt, {</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i6">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i6">text: <span class="str">`${ctx.name}，請輸入手機號碼（格式：09xxxxxxxx）：`</span>,</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i1">AWAIT_PHONE: {</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i2">transitions: {</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i3">TEXT_INPUT: {</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i4">guard: (text) => <span class="str">/^09\d{8}$/</span>.<span class="fn">test</span>(text.<span class="fn">trim</span>()),</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i4"><span class="fn">onGuardFail</span>: <span class="kw">async</span> (ctx, client, rt) =></span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i5">client.<span class="fn">replyMessage</span>(rt, { type: <span class="str">'text'</span>, text: <span class="str">'格式不正確，請輸入 09 開頭的 10 位數字：'</span> }),</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i4">next: <span class="str">'AWAIT_CONFIRM'</span>,</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i4"><span class="fn">action</span>: <span class="kw">async</span> (ctx, client, rt, input) => {</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i5">ctx.phone = input.<span class="fn">trim</span>()</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(rt, {</span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i6">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i6">text: <span class="str">`確認資料：\n姓名：${ctx.name}\n電話：${ctx.phone}\n\n輸入「確認」送出，或「重新」重填。`</span>,</span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">57</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">58</span><span class="lc i1">AWAIT_CONFIRM: {</span></div>
+      <div class="cl"><span class="ln">59</span><span class="lc i2">transitions: {</span></div>
+      <div class="cl"><span class="ln">60</span><span class="lc i3">CONFIRM: {</span></div>
+      <div class="cl"><span class="ln">61</span><span class="lc i4">next: <span class="str">'DONE'</span>,</span></div>
+      <div class="cl"><span class="ln">62</span><span class="lc i4"><span class="fn">action</span>: <span class="kw">async</span> (ctx, client, rt, input, userId) => {</span></div>
+      <div class="cl"><span class="ln">63</span><span class="lc i5"><span class="kw">const</span> UserRepo = <span class="fn">require</span>(<span class="str">'../repositories/UserRepository'</span>)</span></div>
+      <div class="cl"><span class="ln">64</span><span class="lc i5"><span class="kw">await</span> UserRepo.<span class="fn">update</span>(userId, {</span></div>
+      <div class="cl"><span class="ln">65</span><span class="lc i6">display_name: ctx.name,</span></div>
+      <div class="cl"><span class="ln">66</span><span class="lc i6">phone:        ctx.phone,</span></div>
+      <div class="cl"><span class="ln">67</span><span class="lc i6">tier:         <span class="str">'member'</span>,</span></div>
+      <div class="cl"><span class="ln">68</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">69</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(rt, {</span></div>
+      <div class="cl"><span class="ln">70</span><span class="lc i6">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">71</span><span class="lc i6">text: <span class="str">`${ctx.name} 您好，會員註冊完成！`</span>,</span></div>
+      <div class="cl"><span class="ln">72</span><span class="lc i5">})</span></div>
+      <div class="cl"><span class="ln">73</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">74</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">75</span><span class="lc i3">RESTART: {</span></div>
+      <div class="cl"><span class="ln">76</span><span class="lc i4">next: <span class="str">'AWAIT_NAME'</span>,  <span class="cmt">// 返回第一步</span></span></div>
+      <div class="cl"><span class="ln">77</span><span class="lc i4"><span class="fn">action</span>: <span class="kw">async</span> (ctx, client, rt) => {</span></div>
+      <div class="cl"><span class="ln">78</span><span class="lc i5">ctx.name = <span class="kw">null</span></span></div>
+      <div class="cl"><span class="ln">79</span><span class="lc i5">ctx.phone = <span class="kw">null</span>  <span class="cmt">// 清空 context</span></span></div>
+      <div class="cl"><span class="ln">80</span><span class="lc i5"><span class="kw">await</span> client.<span class="fn">replyMessage</span>(rt, { type: <span class="str">'text'</span>, text: <span class="str">'好的，請重新輸入您的姓名：'</span> })</span></div>
+      <div class="cl"><span class="ln">81</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">82</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">83</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">84</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">85</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">86</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">87</span><span class="lc">module.exports = { REGISTRATION_FSM }</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">FSM Engine：通用執行器</div>
+  <p class="body-text">
+    狀態機的定義與執行邏輯應該分離。
+    以下通用的 FSMEngine 接受任意狀態機定義、當前狀態、輸入事件，
+    執行轉移並回傳新狀態與更新後的 context。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/fsm/FSMEngine.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">class</span> <span class="cls">FSMEngine</span> {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1"><span class="cmt">/**</span></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="cmt"> * 執行一次狀態轉移</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="cmt"> * @returns {{ newState, context, handled }}</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="cmt"> *   handled = false 表示無對應轉移規則</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="cmt"> */</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="kw">async</span> <span class="fn">dispatch</span>(fsm, currentState, context, eventType, input, client, replyToken, userId) {</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2"><span class="kw">const</span> stateDef = fsm[currentState]</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2"><span class="kw">if</span> (!stateDef) <span class="kw">return</span> { newState: currentState, context, handled: <span class="kw">false</span> }</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i2"><span class="kw">const</span> transition = stateDef.transitions[eventType]</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2"><span class="kw">if</span> (!transition) <span class="kw">return</span> { newState: currentState, context, handled: <span class="kw">false</span> }</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2"><span class="cmt">// 執行 guard（驗證輸入）</span></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2"><span class="kw">if</span> (transition.guard && !transition.<span class="fn">guard</span>(input)) {</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i3"><span class="kw">await</span> transition.<span class="fn">onGuardFail</span>(context, client, replyToken)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3"><span class="kw">return</span> { newState: currentState, context, handled: <span class="kw">true</span> }  <span class="cmt">// 狀態不變</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i2"><span class="cmt">// 執行 action（傳送回覆、寫入資料庫等）</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2"><span class="kw">if</span> (transition.action) {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i3"><span class="kw">await</span> transition.<span class="fn">action</span>(context, client, replyToken, input, userId)</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i3">newState: transition.next,</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i3">context,   <span class="cmt">// context 是可變物件，action 已就地修改</span></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i3">handled: <span class="kw">true</span>,</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1"><span class="cmt">// 將文字輸入正規化為 FSM 事件類型</span></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i1"><span class="fn">classifyTextInput</span>(text) {</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="kw">const</span> norm = text.<span class="fn">trim</span>().<span class="fn">toLowerCase</span>()</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2"><span class="kw">if</span> ([<span class="str">'確認'</span>, <span class="str">'confirm'</span>, <span class="str">'yes'</span>, <span class="str">'y'</span>].<span class="fn">includes</span>(norm)) <span class="kw">return</span> <span class="str">'CONFIRM'</span></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2"><span class="kw">if</span> ([<span class="str">'重新'</span>, <span class="str">'重填'</span>, <span class="str">'restart'</span>, <span class="str">'no'</span>].<span class="fn">includes</span>(norm)) <span class="kw">return</span> <span class="str">'RESTART'</span></span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i2"><span class="kw">if</span> (norm === <span class="str">'取消'</span>) <span class="kw">return</span> <span class="str">'CANCEL'</span></span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i2"><span class="kw">return</span> <span class="str">'TEXT_INPUT'</span></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc">module.exports = <span class="kw">new</span> <span class="cls">FSMEngine</span>()</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 6-5 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l6-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 6–5</span>
+    <h2 class="lesson-title">Redis Session 儲存與 FSM 整合</h2>
+  </div>
+
+  <p class="body-text">
+    FSM 的狀態（<code>currentState</code> 和 <code>context</code>）
+    必須在兩次 Webhook 請求之間持久保存，但不需要保存太久。
+    將 session 存入 Redis 有兩個核心優勢：
+    讀寫延遲約 0.1–0.3 ms，遠快於關聯式資料庫；
+    可為每個 session 設定 TTL（如 30 分鐘後自動過期），
+    用戶放棄流程後無需手動清理。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/session/RedisSessionStore.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> Redis = <span class="fn">require</span>(<span class="str">'ioredis'</span>)  <span class="cmt">// npm install ioredis</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> redis = <span class="kw">new</span> <span class="cls">Redis</span>(process.env.REDIS_URL || <span class="str">'redis://localhost:6379'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">const</span> SESSION_TTL = <span class="num">60</span> * <span class="num">30</span>  <span class="cmt">// 30 分鐘（秒為單位）</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="kw">class</span> <span class="cls">RedisSessionStore</span> {</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="cmt">// Key 格式：session:{lineUserId}:{fsmName}</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="cmt">// fsmName 讓同一用戶可並行跑多個不同流程</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1"><span class="fn">_key</span>(userId, fsmName) {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2"><span class="kw">return</span> <span class="str">`session:${userId}:${fsmName}`</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="cmt">// 取得 session；若不存在回傳預設值</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1"><span class="kw">async</span> <span class="fn">get</span>(userId, fsmName, initialState = <span class="str">'IDLE'</span>) {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2"><span class="kw">const</span> raw = <span class="kw">await</span> redis.<span class="fn">get</span>(<span class="kw">this</span>.<span class="fn">_key</span>(userId, fsmName))</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="kw">if</span> (!raw) <span class="kw">return</span> { state: initialState, context: {} }</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2"><span class="kw">return</span> JSON.<span class="fn">parse</span>(raw)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="cmt">// 儲存 session，重設 TTL</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="kw">async</span> <span class="fn">set</span>(userId, fsmName, state, context) {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">await</span> redis.<span class="fn">setex</span>(</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i3"><span class="kw">this</span>.<span class="fn">_key</span>(userId, fsmName),</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i3">SESSION_TTL,</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i3">JSON.<span class="fn">stringify</span>({ state, context }),</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="cmt">// 流程結束後手動清除（不等 TTL）</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="kw">async</span> <span class="fn">clear</span>(userId, fsmName) {</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2"><span class="kw">await</span> redis.<span class="fn">del</span>(<span class="kw">this</span>.<span class="fn">_key</span>(userId, fsmName))</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc">module.exports = <span class="kw">new</span> <span class="cls">RedisSessionStore</span>()</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">在 Message Handler 中整合完整流程</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/messageHandler.js — 整合 FSM + Session + Repository</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> SessionStore       = <span class="fn">require</span>(<span class="str">'../session/RedisSessionStore'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> FSMEngine         = <span class="fn">require</span>(<span class="str">'../fsm/FSMEngine'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> { REGISTRATION_FSM } = <span class="fn">require</span>(<span class="str">'../fsm/registrationFSM'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">const</span> UserRepo          = <span class="fn">require</span>(<span class="str">'../repositories/UserRepository'</span>)</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">const</span> MessageRepo       = <span class="fn">require</span>(<span class="str">'../repositories/MessageRepository'</span>)</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="kw">async function</span> <span class="fn">handleMessage</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="kw">const</span> userId = event.source.userId</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="kw">const</span> text   = event.message.type === <span class="str">'text'</span> ? event.message.text : <span class="str">''</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="cmt">// 1. 取得或建立用戶記錄</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="kw">const</span> user = <span class="kw">await</span> UserRepo.<span class="fn">findOrCreate</span>(userId)</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="cmt">// 2. 非同步記錄訊息（不阻塞主流程）</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">MessageRepo.<span class="fn">log</span>(user.id, <span class="str">'inbound'</span>, event.message.type, text, event)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">.<span class="fn">catch</span>(err => console.<span class="fn">error</span>(<span class="str">'MessageLog failed:'</span>, err))</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1"><span class="cmt">// 3. 取得此用戶的 registration FSM session</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1"><span class="kw">const</span> session = <span class="kw">await</span> SessionStore.<span class="fn">get</span>(userId, <span class="str">'registration'</span>)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="cmt">// 4. 用戶發送「開始註冊」，觸發 START_REGISTER</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="kw">if</span> (text === <span class="str">'開始註冊'</span> && session.state === <span class="str">'IDLE'</span>) {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">const</span> result = <span class="kw">await</span> FSMEngine.<span class="fn">dispatch</span>(</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i3">REGISTRATION_FSM, <span class="str">'IDLE'</span>, {}, <span class="str">'START_REGISTER'</span>,</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i3"><span class="kw">null</span>, client, event.replyToken, userId,</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">)</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2"><span class="kw">await</span> SessionStore.<span class="fn">set</span>(userId, <span class="str">'registration'</span>, result.newState, result.context)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2"><span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="cmt">// 5. 正在 FSM 流程中，繼續處理</span></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1"><span class="kw">if</span> (session.state !== <span class="str">'IDLE'</span> && session.state !== <span class="str">'DONE'</span>) {</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2"><span class="kw">const</span> eventType = FSMEngine.<span class="fn">classifyTextInput</span>(text)</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2"><span class="kw">const</span> result = <span class="kw">await</span> FSMEngine.<span class="fn">dispatch</span>(</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i3">REGISTRATION_FSM, session.state, session.context,</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i3">eventType, text, client, event.replyToken, userId,</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2">)</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i2"><span class="kw">if</span> (result.newState === <span class="str">'DONE'</span>) {</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i3"><span class="kw">await</span> SessionStore.<span class="fn">clear</span>(userId, <span class="str">'registration'</span>)  <span class="cmt">// 完成，清除 session</span></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i2">} <span class="kw">else</span> {</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i3"><span class="kw">await</span> SessionStore.<span class="fn">set</span>(userId, <span class="str">'registration'</span>, result.newState, result.context)</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i2"><span class="kw">return</span>  <span class="cmt">// FSM 處理完畢，不執行一般訊息邏輯</span></span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i1"><span class="cmt">// 6. 非 FSM 流程中的一般訊息回覆</span></span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i1"><span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i2">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc i2">text: <span class="str">`您好 ${user.display_name || ''}，請使用下方選單或輸入「開始註冊」完成會員設定。`</span>,</span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc">module.exports = { handleMessage }</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">無 Redis 的備選方案</span>
+    若環境不便安裝 Redis，可將 session 存入資料庫的 <code>conversation_states</code> 表。
+    讀寫延遲會增加，但功能邏輯完全相同——這是 Repository 模式的價值：
+    把 <code>RedisSessionStore</code> 換成 <code>DBSessionStore</code>，
+    <code>handleMessage</code> 中的程式碼完全不需要修改。
+  </div>
+
+  <div class="sub-heading">完成本章後的專案目錄</div>
+
+  <div class="code-figure">
+    <div class="code-caption">專案結構</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">.</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">├── db/</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">├── knex.js              <span class="cmt">// knex 實例（單例）</span></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">├── migrations/          <span class="cmt">// 時間戳記命名的 migration 檔</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">└── seeds/               <span class="cmt">// 測試資料</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc">├── src/</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">├── repositories/</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">├── UserRepository.js</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">└── MessageRepository.js</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">├── session/</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">└── RedisSessionStore.js</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">├── fsm/</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2">├── FSMEngine.js</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">└── registrationFSM.js</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">├── handlers/</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">├── messageHandler.js    <span class="cmt">// 整合層</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2">└── followHandler.js</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1">└── router.js</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc">├── knexfile.js</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc">├── index.js</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc">└── .env</span></div>
+    </div>
+  </div>
+
+</article>
+</main>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l6-1" class="toc-link">6–1 資料庫選型</a></li>
+      <li class="toc-item"><a href="#l6-2" class="toc-link">6–2 Migration 與資料表設計</a></li>
+      <li class="toc-item"><a href="#l6-3" class="toc-link">6–3 Repository 模式</a></li>
+      <li class="toc-item"><a href="#l6-4" class="toc-link">6–4 有限狀態機</a></li>
+      <li class="toc-item"><a href="#l6-5" class="toc-link">6–5 Redis Session 整合</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">核心術語</div>
+    <div class="term-row">
+      <div class="term-name">Migration</div>
+      <div class="term-def">資料庫結構變更的版本化記錄，可執行（up）與還原（down）。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Repository Pattern</div>
+      <div class="term-def">將所有資料存取封裝在類別中，業務邏輯不直接操作資料庫。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">FSM</div>
+      <div class="term-def">有限狀態機：系統在有限個狀態間依轉移規則切換，管理多輪對話的標準模式。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Guard</div>
+      <div class="term-def">FSM 轉移前的驗證函式，輸入不合法則停留在當前狀態。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">TTL</div>
+      <div class="term-def">Time To Live，Redis 鍵值的過期時間，session 到期後自動刪除。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Connection Pool</div>
+      <div class="term-def">預先建立並維護多條資料庫連線，避免每次請求重新握手的開銷。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Atomic Operation</div>
+      <div class="term-def">不可被打斷的單一操作。SQL 的 INCREMENT 原子執行，避免並發競態。</div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item"><strong>Knex.js 官方文件</strong>Query Builder API 與 Migration 完整參考。knexjs.org</li>
+      <li class="res-item"><strong>ioredis GitHub</strong>Node.js Redis 客戶端，支援 Cluster 與 Sentinel。github.com/redis/ioredis</li>
+      <li class="res-item"><strong>Use The Index, Luke</strong>索引設計的完整教學，資料庫效能必讀。use-the-index-luke.com</li>
+      <li class="res-item"><strong>XState</strong>生產級 FSM 函式庫，本章手工實作的進階替代方案。stately.ai/xstate</li>
+      <li class="res-item"><strong>PostgreSQL JSONB</strong>官方文件 §8.14，在關聯型資料庫中儲存非結構化 JSON。</li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="quiz-wrap">
+      <div class="quiz-q">當 FSM 的 guard 函式回傳 false 時，正確的行為是？</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>A.</span>轉移到 next 狀態，同時執行 onGuardFail</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, true)"><span>B.</span>執行 onGuardFail，狀態保持不變</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>C.</span>轉移到 IDLE，重設 context</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>D.</span>拋出例外，由呼叫端處理</div>
+      <div class="quiz-feedback" id="qf">
+        正確。Guard 失敗代表輸入不合法（如電話格式錯誤），
+        應提示用戶重新輸入，停留在當前狀態繼續等待下一次有效輸入，
+        而不是轉移到其他狀態或拋出錯誤。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div>
+
+</div><!-- end page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter5.html" class="nav-btn">← CH.05 Rich Menu</a>
+    <div class="nav-loc">CH.06 / 10 &nbsp;—&nbsp; 資料庫整合與狀態管理</div>
+    <a href="chapter7.html" class="nav-btn fwd">CH.07 LIFF 應用 →</a>
+  </div>
+</nav>
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement
+  const pct = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100
+  document.getElementById('rp').style.width = Math.min(pct, 100) + '%'
+})
+
+// TOC active highlight
+const lessons  = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const match = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+lessons.forEach(l => io.observe(l))
+
+// Quiz interaction
+function answerQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt')
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default' })
+  el.classList.add(correct ? 'correct' : 'wrong')
+  if (!correct) opts[1].classList.add('correct')
+  document.getElementById('qf').style.display = 'block'
+}
+</script>
+</body>
+</html>

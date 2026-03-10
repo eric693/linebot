@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.05 — Rich Menu 固定選單設計</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ── MASTHEAD ─────────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ── PAGE ─────────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num { font-size: 4.5rem; font-weight: 900; line-height: 1; color: var(--ink); letter-spacing: -0.04em; }
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900; line-height: 1.15; letter-spacing: -0.025em; }
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ── OBJECTIVES ───────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ── CONTENT LAYOUT ───────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ── LESSON ───────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ── CODE BLOCKS ──────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+
+.code-block {
+  background: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  padding: 1.5rem 0;
+  overflow-x: auto;
+  border-left: 3px solid var(--red);
+}
+.cl {
+  display: flex;
+  padding: 0 1.75rem 0 0;
+  min-height: 1.85em;
+}
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block;
+  width: 3rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  color: #4A4440;
+  user-select: none;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+
+/* Indent helpers */
+.i1 { padding-left: 2ch; }
+.i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; }
+.i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; }
+.i6 { padding-left: 12ch; }
+
+/* Syntax colours */
+.kw  { color: #C47A6A; }
+.str { color: #8BAF7A; }
+.fn  { color: #7AABCF; }
+.num { color: #C49A5A; }
+.cls { color: #C4B570; }
+.cmt { color: #7A6F6A; font-style: italic; }
+.pun { color: #9A9090; }
+
+/* ── CALLOUTS ─────────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem;
+  color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.08); padding: 0.1em 0.4em;
+}
+
+/* ── DEF LIST ─────────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── TABLE ────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2);
+  border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── RICH MENU DIAGRAM ────────────────────────── */
+.rm-diagram { margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2); }
+.rm-diagram-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.rm-canvas { padding: 1rem; }
+.rm-grid { display: grid; gap: 3px; }
+.rm-2x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 60px); }
+.rm-1x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 60px; }
+.rm-cell {
+  background: var(--paper-4); border: 1px dashed var(--ink-4);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 0.25rem; gap: 0.2rem;
+}
+.rm-cell.span3 { grid-column: span 3; }
+.rm-cell.accent { background: var(--red-faint); border-color: var(--red); }
+.rm-cell-label { font-family: var(--mono); font-size: 0.62rem; font-weight: 600; color: var(--ink-3); }
+.rm-cell-size  { font-family: var(--mono); font-size: 0.54rem; color: var(--ink-4); }
+.rm-cell.accent .rm-cell-label { color: var(--red); }
+.rm-cell.accent .rm-cell-size  { color: var(--red); opacity: 0.7; }
+.rm-foot {
+  font-family: var(--mono); font-size: 0.6rem; color: var(--ink-4);
+  padding: 0.4rem 1rem; border-top: 1px solid var(--paper-3); letter-spacing: 0.06em;
+}
+
+/* ── LIFECYCLE TABLE ──────────────────────────── */
+.lifecycle-table { margin: 1.5rem 0; border: 1px solid var(--paper-3); }
+.lifecycle-row {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-bottom: 1px solid var(--paper-3);
+}
+.lifecycle-row:last-child { border-bottom: none; }
+.lifecycle-method {
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+  color: var(--ink); padding: 0.7rem 0.9rem; background: var(--paper-3);
+  border-right: 1px solid var(--paper-4); word-break: break-all; line-height: 1.5;
+}
+.lifecycle-row.header .lifecycle-method {
+  background: var(--ink); color: var(--paper); border-color: #3E3530;
+  font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.lifecycle-desc { font-size: 0.83rem; color: var(--ink-2); padding: 0.7rem 0.9rem; line-height: 1.7; }
+.lifecycle-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+.lifecycle-row.header .lifecycle-desc {
+  color: var(--paper-3); font-family: var(--mono); font-size: 0.58rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+/* ── FLOW ─────────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; padding-bottom: 0.5rem; }
+.flow-row {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.68rem;
+  min-width: max-content; gap: 0;
+}
+.fnode {
+  border: 1px solid var(--ink); padding: 0.6rem 0.9rem;
+  background: var(--paper-2); color: var(--ink);
+  text-align: center; line-height: 1.4;
+  min-width: 110px; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fnode.dark { background: var(--ink); color: var(--paper); }
+.fnode.red  { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.fsub { font-size: 0.56rem; color: var(--ink-4); display: block; margin-top: 0.2rem; }
+.fnode.dark .fsub { color: #8C8070; }
+.farrow { padding: 0 0.4rem; color: var(--ink-4); display: flex; align-items: center; }
+
+/* ── SIDEBAR ──────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820;
+  cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ── NAV ──────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+  .lifecycle-row { grid-template-columns: 140px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.05 — Rich Menu 固定選單設計</span>
+  </div>
+  <div class="masthead-right">第 5 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- HEADER -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">05</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">3 小時</div>
+      <div class="ch-stat">基礎至中級</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含動態切換</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title"><span>Rich Menu</span><br>固定選單設計</h1>
+    <p class="ch-standfirst">
+      Rich Menu 是固定顯示在聊天視窗底部的圖形化選單，
+      讓用戶不需要輸入任何指令就能存取 Bot 的核心功能。
+      一個設計良好的 Rich Menu 能將用戶的第一步學習成本降至零。
+      本章從圖片規格到 API 完整流程，涵蓋所有實作細節，
+      並深入講解依用戶狀態動態切換 Rich Menu 的進階技巧。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>理解 Rich Menu 的結構與 API 工作流程</li>
+    <li>掌握各種版型的圖片規格與熱區座標計算</li>
+    <li>透過 API 上傳圖片並建立 Rich Menu 物件</li>
+    <li>設定帳號預設選單與用戶層級的綁定</li>
+    <li>使用 Alias 實作客戶端即時分頁切換</li>
+    <li>依用戶登入狀態動態切換對應版本的 Rich Menu</li>
+  </ul>
+</div>
+
+<!-- CONTENT -->
+<div class="content-wrap">
+<main>
+
+<!-- LESSON 5-1 -->
+<article class="lesson" id="l5-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 5–1</span>
+    <h2 class="lesson-title">Rich Menu 架構與工作流程</h2>
+  </div>
+
+  <p class="body-text">
+    Rich Menu 是 LINE Official Account 的固定底部選單，在對話視窗中始終可見。
+    它的底層由兩個部分組成：一張<strong>圖片</strong>定義視覺外觀，
+    一個 <strong>Rich Menu 物件</strong>定義熱區（area）與每個熱區對應的 action。
+    圖片與物件分開管理——你可以在不換圖的情況下修改按鈕邏輯，
+    或在不重設物件的情況下替換視覺設計。
+  </p>
+
+  <div class="flow-wrap">
+    <div class="flow-row">
+      <div class="fnode dark">設計圖片<div class="fsub">Figma / Photoshop</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode">建立物件<div class="fsub">createRichMenu()</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode red">上傳圖片<div class="fsub">setRichMenuImage()</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode">設為預設<div class="fsub">setDefaultRichMenu()</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode dark">用戶看到<div class="fsub">Chat window</div></div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    這個流程的順序不可顛倒：必須先建立 Rich Menu 物件取得 <code>richMenuId</code>，
+    才能將圖片上傳到該 ID 所對應的位置。
+    <code>createRichMenu()</code> 回傳 <code>richMenuId</code>，後續所有操作都以它作為識別。
+  </p>
+
+  <div class="sub-heading">基本限制與規格</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>限制項目</th><th>數值</th><th>備註</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>每個 Channel 的 Rich Menu 上限</td>
+        <td>1,000 個</td>
+        <td>含已建立但未啟用的</td>
+      </tr>
+      <tr>
+        <td>每個用戶同時顯示的 Rich Menu</td>
+        <td>1 個</td>
+        <td>用戶層級綁定優先於預設</td>
+      </tr>
+      <tr>
+        <td>每個 Rich Menu 的熱區上限</td>
+        <td>20 個</td>
+        <td>觸控體驗考量，建議 6 個以內</td>
+      </tr>
+      <tr>
+        <td>chatBarText 字元長度</td>
+        <td>最多 14 字元</td>
+        <td>中英文均以 1 字元計算</td>
+      </tr>
+      <tr>
+        <td>圖片格式</td>
+        <td>JPEG 或 PNG</td>
+        <td>不支援 GIF 動圖</td>
+      </tr>
+      <tr>
+        <td>圖片檔案大小</td>
+        <td>最大 1 MB</td>
+        <td>建議壓縮至 500KB 以下</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+
+<!-- LESSON 5-2 -->
+<article class="lesson" id="l5-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 5–2</span>
+    <h2 class="lesson-title">圖片規格、版型設計與熱區座標</h2>
+  </div>
+
+  <p class="body-text">
+    LINE 規定圖片寬度只能是 <strong>800px 或 2500px</strong>，
+    高度介於 250px 到 1686px 之間，且寬高比必須大於或等於 1.45。
+    高解析度版本（2500px）是更好的選擇——
+    現代旗艦手機螢幕的像素密度已高到 800px 版本在這些裝置上會顯得模糊。
+  </p>
+
+  <div class="sub-heading">版型 A — 2 列 3 欄（最廣泛使用）</div>
+  <p class="body-text">
+    六個等大格子的版型最常見，適合展示六個主要功能入口。
+    2500×1686px 的畫布均分為 2 列 3 欄，每個格子約 833×843px。
+  </p>
+
+  <div class="rm-diagram">
+    <div class="rm-diagram-head">版型 A — 2×3 等分 / 2500×1686px / 6 個熱區</div>
+    <div class="rm-canvas">
+      <div class="rm-grid rm-2x3">
+        <div class="rm-cell"><div class="rm-cell-label">熱區 1</div><div class="rm-cell-size">x:0 y:0 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">熱區 2</div><div class="rm-cell-size">x:833 y:0 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">熱區 3</div><div class="rm-cell-size">x:1666 y:0 w:834 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">熱區 4</div><div class="rm-cell-size">x:0 y:843 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">熱區 5</div><div class="rm-cell-size">x:833 y:843 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">熱區 6</div><div class="rm-cell-size">x:1666 y:843 w:834 h:843</div></div>
+      </div>
+    </div>
+    <div class="rm-foot">6 個熱區，觸控面積充裕，適合 6 個主要功能入口</div>
+  </div>
+
+  <div class="sub-heading">版型 B — 上方橫幅 + 下排三格</div>
+  <div class="rm-diagram">
+    <div class="rm-diagram-head">版型 B — 上橫幅 + 下 3 格 / 2500×1686px / 4 個熱區</div>
+    <div class="rm-canvas">
+      <div class="rm-grid rm-2x3">
+        <div class="rm-cell span3 accent"><div class="rm-cell-label">橫幅熱區（跨 3 欄）</div><div class="rm-cell-size">x:0 y:0 w:2500 h:843 — URI 或 postback</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">功能 1</div><div class="rm-cell-size">x:0 y:843 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">功能 2</div><div class="rm-cell-size">x:833 y:843 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">功能 3</div><div class="rm-cell-size">x:1666 y:843 w:834 h:843</div></div>
+      </div>
+    </div>
+    <div class="rm-foot">4 個熱區；橫幅適合品牌主視覺或限時活動</div>
+  </div>
+
+  <div class="sub-heading">版型 C — 半高 1 列 3 格</div>
+  <div class="rm-diagram">
+    <div class="rm-diagram-head">版型 C — 半高 1×3 / 2500×843px / 3 個熱區</div>
+    <div class="rm-canvas">
+      <div class="rm-grid rm-1x3">
+        <div class="rm-cell"><div class="rm-cell-label">功能 1</div><div class="rm-cell-size">x:0 y:0 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">功能 2</div><div class="rm-cell-size">x:833 y:0 w:833 h:843</div></div>
+        <div class="rm-cell"><div class="rm-cell-label">功能 3</div><div class="rm-cell-size">x:1666 y:0 w:834 h:843</div></div>
+      </div>
+    </div>
+    <div class="rm-foot">3 個熱區；半高版型視覺佔比小，適合輔助入口</div>
+  </div>
+
+  <div class="sub-heading">熱區座標系統</div>
+  <p class="body-text">
+    <code>bounds</code> 欄位定義矩形範圍，座標系統以圖片<strong>左上角為原點</strong>，
+    x 軸向右，y 軸向下，單位為像素，對應實際上傳圖片的像素尺寸。
+    在 Figma 中設計時，選取 Frame 後右側面板的 x/y/W/H 數值可直接複製使用。
+  </p>
+
+  <div class="callout warn">
+    <span class="callout-label">尺寸不一致錯誤</span>
+    圖片的實際像素尺寸必須與 Rich Menu 物件中 <code>size.width</code> 和 <code>size.height</code> 完全一致。
+    若圖片是 2500×1686px 但物件的 <code>size</code> 填寫 800×540，API 會回傳 400 錯誤。
+    <code>bounds</code> 中的座標也必須以 <code>size</code> 指定的尺寸為基準計算。
+  </div>
+</article>
+
+<!-- LESSON 5-3 -->
+<article class="lesson" id="l5-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 5–3</span>
+    <h2 class="lesson-title">完整 API 建立流程與部署腳本</h2>
+  </div>
+
+  <p class="body-text">
+    Rich Menu 的所有生命週期操作都由 API 管理。
+    需要以程式控制多個版本或實現動態切換的場景，必須全程使用 API。
+    以下是從建立到上線的完整流程與對應的 SDK 方法。
+  </p>
+
+  <div class="lifecycle-table">
+    <div class="lifecycle-row header">
+      <div class="lifecycle-method">SDK 方法</div>
+      <div class="lifecycle-desc">說明</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">createRichMenu()</div>
+      <div class="lifecycle-desc">建立 Rich Menu 物件，回傳 <code>richMenuId</code>。必須先執行此步，才能上傳圖片。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">setRichMenuImage()</div>
+      <div class="lifecycle-desc">將圖片以 Buffer 形式上傳到指定的 <code>richMenuId</code>。接受 JPEG 或 PNG。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">setDefaultRichMenu()</div>
+      <div class="lifecycle-desc">將指定的 Rich Menu 設為所有未特別指定用戶看到的預設版本。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">linkRichMenuToUser()</div>
+      <div class="lifecycle-desc">將指定的 Rich Menu 綁定給特定用戶，覆蓋預設。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">linkRichMenuToMultipleUsers()</div>
+      <div class="lifecycle-desc">批次綁定，一次最多 500 個 <code>userId</code>。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">unlinkRichMenuFromUser()</div>
+      <div class="lifecycle-desc">解除用戶的 Rich Menu 綁定，該用戶回退為顯示預設版本。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">getRichMenuIdOfUser()</div>
+      <div class="lifecycle-desc">查詢特定用戶目前綁定的 <code>richMenuId</code>。若未綁定會拋出錯誤（非回傳 null）。</div>
+    </div>
+    <div class="lifecycle-row">
+      <div class="lifecycle-method">deleteRichMenu()</div>
+      <div class="lifecycle-desc">刪除指定的 Rich Menu 物件及其圖片。若有用戶仍在使用，需先解除綁定。</div>
+    </div>
+  </div>
+
+  <div class="sub-heading">建立 2×3 版型 Rich Menu 物件</div>
+
+  <div class="code-figure">
+    <div class="code-caption">Rich Menu 物件定義（2×3 版型，6 個熱區）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> richMenuDef = {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc i1">size: { width: <span class="num">2500</span>, height: <span class="num">1686</span> },  <span class="cmt">// 必須與上傳圖片的實際像素一致</span></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">selected:    <span class="kw">true</span>,              <span class="cmt">// 預設展開</span></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">name:        <span class="str">'主選單 v3 - 會員版'</span>,  <span class="cmt">// 管理用名稱，用戶看不到</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">chatBarText: <span class="str">'查看選單'</span>,          <span class="cmt">// 收起態文字，最多 14 字元</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">areas: [</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2"><span class="cmt">// ── 第一列 ─────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i3">bounds: { x: <span class="num">0</span>, y: <span class="num">0</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i3">action: {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i4">type:        <span class="str">'postback'</span>,</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i4">label:       <span class="str">'查詢訂單'</span>,</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i4">data:        <span class="str">'action=query&type=order'</span>,</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i4">displayText: <span class="str">'查詢我的訂單'</span>,</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3">bounds: { x: <span class="num">833</span>, y: <span class="num">0</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">action: {</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i4">type:        <span class="str">'postback'</span>,</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i4">label:       <span class="str">'點數查詢'</span>,</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i4">data:        <span class="str">'action=query&type=points'</span>,</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i4">displayText: <span class="str">'查詢我的點數'</span>,</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i3">bounds: { x: <span class="num">1666</span>, y: <span class="num">0</span>, width: <span class="num">834</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i3">action: { type: <span class="str">'uri'</span>, label: <span class="str">'官方網站'</span>, uri: <span class="str">'https://www.example.com'</span> },</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i2"><span class="cmt">// ── 第二列 ─────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i3">bounds: { x: <span class="num">0</span>, y: <span class="num">843</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i3">action: { type: <span class="str">'postback'</span>, label: <span class="str">'最新優惠'</span>, data: <span class="str">'action=promo'</span>, displayText: <span class="str">'查看最新優惠'</span> },</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i3">bounds: { x: <span class="num">833</span>, y: <span class="num">843</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i3">action: { type: <span class="str">'postback'</span>, label: <span class="str">'聯繫客服'</span>, data: <span class="str">'action=support'</span>, displayText: <span class="str">'我要聯繫客服'</span> },</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i3">bounds: { x: <span class="num">1666</span>, y: <span class="num">843</span>, width: <span class="num">834</span>, height: <span class="num">843</span> },</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i3">action: { type: <span class="str">'postback'</span>, label: <span class="str">'會員中心'</span>, data: <span class="str">'action=member'</span>, displayText: <span class="str">'前往會員中心'</span> },</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i1">],</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">上傳圖片與部署</div>
+
+  <div class="code-figure">
+    <div class="code-caption">建立物件 → 上傳圖片 → 設為預設</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> fs   = <span class="fn">require</span>(<span class="str">'fs'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> path = <span class="fn">require</span>(<span class="str">'path'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt">// Step 1: 建立 Rich Menu 物件，取得 richMenuId</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">const</span> { richMenuId } = <span class="kw">await</span> client.<span class="fn">createRichMenu</span>(richMenuDef)</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc">console.<span class="fn">log</span>(<span class="str">'Created:'</span>, richMenuId)</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"><span class="cmt">// Step 2: 讀取圖片檔案並上傳</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="kw">const</span> imageBuffer = fs.<span class="fn">readFileSync</span>(path.<span class="fn">join</span>(__dirname, <span class="str">'assets/rm-main.png'</span>))</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="kw">await</span> client.<span class="fn">setRichMenuImage</span>(richMenuId, <span class="str">'image/png'</span>, imageBuffer)</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">console.<span class="fn">log</span>(<span class="str">'Image uploaded'</span>)</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"><span class="cmt">// Step 3: 設為帳號預設（所有未特別綁定的用戶都會看到這個）</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"><span class="kw">await</span> client.<span class="fn">setDefaultRichMenu</span>(richMenuId)</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">console.<span class="fn">log</span>(<span class="str">'Set as default'</span>)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="cmt">// 綁定給特定用戶（覆蓋預設）</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="kw">await</span> client.<span class="fn">linkRichMenuToUser</span>(userId, richMenuId)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"><span class="cmt">// 解除用戶綁定（回退為預設）</span></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"><span class="kw">await</span> client.<span class="fn">unlinkRichMenuFromUser</span>(userId)</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"><span class="cmt">// 查詢特定用戶目前的 Rich Menu（未綁定會拋出錯誤，非回傳 null）</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">const</span> result = <span class="kw">await</span> client.<span class="fn">getRichMenuIdOfUser</span>(userId)</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">'Current menu:'</span>, result.richMenuId)</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc">} <span class="kw">catch</span> (_) {</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">'No individual binding, showing default'</span>)</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">封裝為可重用的部署腳本</div>
+  <p class="body-text">
+    Rich Menu 的建立通常是一次性的部署動作，而非每次 Webhook 觸發時執行。
+    最佳實踐是將整個流程封裝成獨立的命令列腳本，
+    把 <code>richMenuId</code> 存入 <code>.env</code> 供應用程式使用。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">scripts/deploy-rich-menu.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="fn">require</span>(<span class="str">'dotenv'</span>).<span class="fn">config</span>()</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> line = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> fs   = <span class="fn">require</span>(<span class="str">'fs'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">const</span> path = <span class="fn">require</span>(<span class="str">'path'</span>)</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.<span class="cls">Client</span>({</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="kw">async function</span> <span class="fn">deployRichMenu</span>({ definition, imagePath, mimeType, setAsDefault }) {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="cmt">// 1. 建立物件</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">const</span> { richMenuId } = <span class="kw">await</span> client.<span class="fn">createRichMenu</span>(definition)</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">`[1/3] Created richMenuId: ${richMenuId}`</span>)</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="cmt">// 2. 上傳圖片</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="kw">const</span> buf = fs.<span class="fn">readFileSync</span>(imagePath)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1"><span class="kw">await</span> client.<span class="fn">setRichMenuImage</span>(richMenuId, mimeType, buf)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">'[2/3] Image uploaded'</span>)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="cmt">// 3. 視需要設為預設</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="kw">if</span> (setAsDefault) {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">await</span> client.<span class="fn">setDefaultRichMenu</span>(richMenuId)</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'[3/3] Set as default'</span>)</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1"><span class="kw">return</span> richMenuId</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc"><span class="cmt">// 執行入口</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc"><span class="kw">const</span> { memberMenuDef } = <span class="fn">require</span>(<span class="str">'../src/richMenus/definitions'</span>)</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc"><span class="fn">deployRichMenu</span>({</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1">definition:   memberMenuDef,</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i1">imagePath:    path.<span class="fn">join</span>(__dirname, <span class="str">'../assets/rm-member.png'</span>),</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i1">mimeType:     <span class="str">'image/png'</span>,</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i1">setAsDefault: <span class="kw">false</span>,   <span class="cmt">// 會員版不設預設；訪客版才設預設</span></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i1">.<span class="fn">then</span>(id => console.<span class="fn">log</span>(<span class="str">`\nDone. Add to .env:\nRICH_MENU_MEMBER=${id}`</span>))</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i1">.<span class="fn">catch</span>(err => { console.<span class="fn">error</span>(err); process.<span class="fn">exit</span>(<span class="num">1</span>) })</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- LESSON 5-4 -->
+<article class="lesson" id="l5-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 5–4</span>
+    <h2 class="lesson-title">Rich Menu Alias 與分頁切換</h2>
+  </div>
+
+  <p class="body-text">
+    LINE 允許在同一個 Rich Menu 的多個頁籤之間切換，
+    不需要呼叫 API 重新綁定。這透過 <strong>Rich Menu Alias</strong> 機制實現：
+    為每個 Rich Menu 建立一個別名，然後在熱區 action 中使用
+    <code>type: "richmenuswitch"</code> 直接切換到另一個別名對應的選單。
+    整個切換在客戶端完成，不觸發 Webhook，速度極快。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">建立 Alias 並設定 richmenuswitch action</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// Step 1: 為每個 Rich Menu 建立 Alias</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">await</span> client.<span class="fn">createRichMenuAlias</span>(richMenuId_main,  <span class="str">'main-menu'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">await</span> client.<span class="fn">createRichMenuAlias</span>(richMenuId_promo, <span class="str">'promo-menu'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt">// Alias 名稱：英數字 + 連字號 + 底線，全域唯一</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt">// Step 2: 在熱區中加入 richmenuswitch action</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="kw">const</span> switchAction = {</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">type:             <span class="str">'richmenuswitch'</span>,  <span class="cmt">// 僅用於 Rich Menu 的特殊 action</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1">richMenuAliasId:  <span class="str">'promo-menu'</span>,      <span class="cmt">// 切換到的目標 alias</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">data:             <span class="str">'tab=promo'</span>,        <span class="cmt">// 選填：切換時傳給 Webhook 的附加資料</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"><span class="cmt">// 查詢所有 Alias</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"><span class="kw">const</span> aliases = <span class="kw">await</span> client.<span class="fn">getRichMenuAliasList</span>()</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">console.<span class="fn">log</span>(aliases)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="cmt">// 刪除 Alias（Rich Menu 物件本身不受影響）</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="kw">await</span> client.<span class="fn">deleteRichMenuAlias</span>(<span class="str">'promo-menu'</span>)</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">data 欄位說明</span>
+    <code>richmenuswitch</code> action 中的 <code>data</code> 欄位是選填的。
+    若填入，用戶切換 Rich Menu 時會觸發一個 <code>postback</code> 事件攜帶此 data，
+    讓 Bot 知道用戶切換了哪個分頁並做後續處理。
+    若不填，切換完全在客戶端完成，不觸發任何 Webhook 事件。
+  </div>
+</article>
+
+<!-- LESSON 5-5 -->
+<article class="lesson" id="l5-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 5–5</span>
+    <h2 class="lesson-title">依用戶狀態動態切換 Rich Menu</h2>
+  </div>
+
+  <p class="body-text">
+    動態切換 Rich Menu 是最能提升 Bot 使用體驗的技巧之一。
+    未登入的訪客看到引導登入的選單，登入後的會員看到個人化功能選單，
+    VIP 會員看到專屬服務入口——每個用戶在正確的時機看到最相關的選單。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/richMenus/richMenuManager.js — 多版本管理模組</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// Rich Menu ID 統一在此管理（由部署腳本寫入 .env）</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> RICH_MENU_IDS = {</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">guest:   process.env.RICH_MENU_GUEST,    <span class="cmt">// 訪客版（引導登入）</span></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">member:  process.env.RICH_MENU_MEMBER,   <span class="cmt">// 一般會員版</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">vip:     process.env.RICH_MENU_VIP,      <span class="cmt">// VIP 會員版</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">blocked: process.env.RICH_MENU_BLOCKED,  <span class="cmt">// 黑名單用戶版（功能受限）</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="cmt">// 根據用戶資料決定應顯示哪個 Rich Menu</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="kw">function</span> <span class="fn">resolveRichMenu</span>(user) {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="kw">if</span> (!user)              <span class="kw">return</span> RICH_MENU_IDS.guest</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="kw">if</span> (user.isBlocked)     <span class="kw">return</span> RICH_MENU_IDS.blocked</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">if</span> (user.tier === <span class="str">'vip'</span>) <span class="kw">return</span> RICH_MENU_IDS.vip</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="kw">return</span> RICH_MENU_IDS.member</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="cmt">// 切換用戶的 Rich Menu（若已是目標版本則跳過）</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="kw">async function</span> <span class="fn">syncRichMenu</span>(userId, user, client) {</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1"><span class="kw">const</span> targetId = <span class="fn">resolveRichMenu</span>(user)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="cmt">// 查詢當前綁定，若已是目標則不重複呼叫 API</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">const</span> current = <span class="kw">await</span> client.<span class="fn">getRichMenuIdOfUser</span>(userId)</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2"><span class="kw">if</span> (current.richMenuId === targetId) {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i3">console.<span class="fn">log</span>(<span class="str">`[RichMenu] ${userId} already on target`</span>)</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i3"><span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1">} <span class="kw">catch</span> (_) {</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2"><span class="cmt">// 用戶未綁定任何 Rich Menu（使用預設），繼續切換</span></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1"><span class="kw">await</span> client.<span class="fn">linkRichMenuToUser</span>(userId, targetId)</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">`[RichMenu] Switched ${userId} → ${targetId}`</span>)</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc">module.exports = { resolveRichMenu, syncRichMenu, RICH_MENU_IDS }</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">在 follow 事件中觸發切換</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/followHandler.js — 整合 Rich Menu 切換</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> { syncRichMenu } = <span class="fn">require</span>(<span class="str">'../richMenus/richMenuManager'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> UserService      = <span class="fn">require</span>(<span class="str">'../services/userService'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">async function</span> <span class="fn">onFollow</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="kw">const</span> userId = event.source.userId</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="cmt">// 從資料庫取得用戶資料（新用戶回傳 null）</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="kw">let</span> user = <span class="kw">await</span> UserService.<span class="fn">findByLineId</span>(userId)</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1"><span class="kw">if</span> (!user) {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2"><span class="cmt">// 全新用戶：建立記錄</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i2"><span class="kw">let</span> profile</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2"><span class="kw">try</span>   { profile = <span class="kw">await</span> client.<span class="fn">getProfile</span>(userId) }</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2"><span class="kw">catch</span> (_) { profile = { displayName: <span class="str">'新朋友'</span> } }</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2">user = <span class="kw">await</span> UserService.<span class="fn">create</span>({</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i3">lineUserId:  userId,</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i3">displayName: profile.displayName,</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3">tier:        <span class="str">'guest'</span>,</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">followedAt:  <span class="kw">new</span> <span class="cls">Date</span>(),</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">})</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">} <span class="kw">else</span> {</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2"><span class="cmt">// 回歸用戶：更新 isActive 狀態</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">await</span> UserService.<span class="fn">update</span>(userId, { isActive: <span class="kw">true</span>, refollowedAt: <span class="kw">new</span> <span class="cls">Date</span>() })</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1"><span class="cmt">// 異步切換 Rich Menu（不阻塞歡迎訊息的傳送）</span></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1"><span class="fn">syncRichMenu</span>(userId, user, client)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2">.<span class="fn">catch</span>(err => console.<span class="fn">error</span>(<span class="str">'syncRichMenu failed:'</span>, err))</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="cmt">// 傳送歡迎訊息</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="kw">const</span> greeting = user.tier === <span class="str">'guest'</span></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2">? <span class="str">'歡迎！請點選下方選單中的「會員登入」完成綁定，即可享有完整功能。'</span></span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2">: <span class="str">'歡迎回來！你的會員狀態已恢復，選單功能全數可用。'</span></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i1"><span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2">text: greeting,</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    第 27–28 行刻意不使用 <code>await</code>。Rich Menu 切換是輔助操作，
+    不應阻塞歡迎訊息的傳送。即使切換失敗，用戶仍能收到歡迎訊息；
+    <code>.catch()</code> 確保問題不會靜默失敗，會記錄錯誤供後續排查。
+  </p>
+
+  <div class="callout tip">
+    <span class="callout-label">其他觸發切換的時機</span>
+    除了 follow 事件，以下情境也應呼叫 <code>syncRichMenu()</code>：
+    用戶透過 LIFF 完成帳號綁定後（立即從訪客版切至會員版）；
+    後台系統更新用戶等級時（升降 VIP）；
+    postback handler 中用戶完成特定里程碑動作後。
+  </div>
+</article>
+
+</main>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l5-1" class="toc-link">5–1 架構與工作流程</a></li>
+      <li class="toc-item"><a href="#l5-2" class="toc-link">5–2 圖片規格與熱區座標</a></li>
+      <li class="toc-item"><a href="#l5-3" class="toc-link">5–3 API 建立與部署腳本</a></li>
+      <li class="toc-item"><a href="#l5-4" class="toc-link">5–4 Alias 與分頁切換</a></li>
+      <li class="toc-item"><a href="#l5-5" class="toc-link">5–5 動態切換 Rich Menu</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">核心術語</div>
+    <div class="term-row">
+      <div class="term-name">Rich Menu</div>
+      <div class="term-def">固定顯示在聊天視窗底部的圖形化選單，由圖片與熱區物件組成。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">热區（area）</div>
+      <div class="term-def">Rich Menu 上可點擊的矩形區域，每個熱區對應一個 action。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">chatBarText</div>
+      <div class="term-def">Rich Menu 收起時顯示的文字標籤，最多 14 字元。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Rich Menu Alias</div>
+      <div class="term-def">Rich Menu 的名稱別名，用於 richmenuswitch action 的目標指定。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">richmenuswitch</div>
+      <div class="term-def">在客戶端即時切換至另一個 Rich Menu 的特殊 action 類型。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">bounds</div>
+      <div class="term-def">定義熱區矩形的物件，包含 x、y、width、height 四個欄位。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">selected</div>
+      <div class="term-def">Rich Menu 物件的欄位，true 表示預設展開，false 表示預設收起。</div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item"><strong>LINE Rich Menu API 文件</strong>官方 API 參考，含所有欄位說明與限制。developers.line.biz</li>
+      <li class="res-item"><strong>Rich Menu Alias API</strong>Alias 的建立、查詢、刪除與 richmenuswitch 完整說明。</li>
+      <li class="res-item"><strong>Flex Message Simulator</strong>可順便用來預覽 Rich Menu 的 JSON 結構。developers.line.biz/flex-simulator</li>
+      <li class="res-item"><strong>LINE Bot Designer</strong>LINE 官方提供的圖形化 Rich Menu 設計工具，含座標輔助。</li>
+      <li class="res-item"><strong>Figma Rich Menu 模板</strong>社群提供的 2500×1686px 標準版型模板，含熱區參考線。</li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="quiz-wrap">
+      <div class="quiz-q">建立 Rich Menu 的正確步驟順序是？</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>A.</span>上傳圖片 → 建立物件 → 設為預設</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, true)"><span>B.</span>建立物件 → 上傳圖片 → 設為預設</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>C.</span>建立物件 → 設為預設 → 上傳圖片</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>D.</span>順序不重要，三個步驟可並行執行</div>
+      <div class="quiz-feedback" id="qf">
+        正確。必須先呼叫 createRichMenu() 取得 richMenuId，
+        才能用這個 ID 呼叫 setRichMenuImage() 上傳圖片。
+        圖片上傳完成後，Rich Menu 才算建立完成，可以設為預設或綁定給用戶。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div>
+
+</div><!-- end page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter4.html" class="nav-btn">← CH.04 Flex Message</a>
+    <div class="nav-loc">CH.05 / 10 &nbsp;—&nbsp; Rich Menu 固定選單設計</div>
+    <a href="chapter6.html" class="nav-btn fwd">CH.06 資料庫整合 →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement
+  const pct = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100
+  document.getElementById('rp').style.width = Math.min(pct, 100) + '%'
+})
+
+const lessons  = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const match = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+lessons.forEach(l => io.observe(l))
+
+function answerQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt')
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default' })
+  el.classList.add(correct ? 'correct' : 'wrong')
+  if (!correct) opts[1].classList.add('correct')
+  document.getElementById('qf').style.display = 'block'
+}
+</script>
+</body>
+</html>

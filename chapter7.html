@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.07 — LIFF 應用程式開發</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ── MASTHEAD ───────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ── PAGE ───────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900;
+  line-height: 1.15; letter-spacing: -0.025em;
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ── OBJECTIVES ─────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ── CONTENT LAYOUT ─────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ── LESSON ─────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ── CODE BLOCKS ────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+
+.code-block {
+  background: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  padding: 1.5rem 0;
+  overflow-x: auto;
+  border-left: 3px solid var(--red);
+}
+.cl {
+  display: flex;
+  padding: 0 1.75rem 0 0;
+  min-height: 1.85em;
+}
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block;
+  width: 3rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  color: #4A4440;
+  user-select: none;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+
+/* Indent helpers */
+.i1 { padding-left: 2ch; }
+.i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; }
+.i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; }
+.i6 { padding-left: 12ch; }
+
+/* Syntax colours */
+.kw  { color: #C47A6A; }
+.str { color: #8BAF7A; }
+.fn  { color: #7AABCF; }
+.num { color: #C49A5A; }
+.cls { color: #C4B570; }
+.cmt { color: #7A6F6A; font-style: italic; }
+
+/* ── CALLOUTS ───────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem;
+  color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.08); padding: 0.1em 0.4em;
+}
+
+/* ── DEF LIST ───────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── TABLE ──────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2);
+  border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── FLOW ───────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; padding-bottom: 0.5rem; }
+.flow-row {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.68rem;
+  min-width: max-content;
+}
+.fnode {
+  border: 1px solid var(--ink); padding: 0.6rem 0.9rem;
+  background: var(--paper-2); color: var(--ink);
+  text-align: center; line-height: 1.4; min-width: 110px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fnode.dark { background: var(--ink); color: var(--paper); }
+.fnode.red  { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.fnode.wide { min-width: 160px; }
+.fsub { font-size: 0.56rem; color: var(--ink-4); display: block; margin-top: 0.2rem; }
+.fnode.dark .fsub { color: #8C8070; }
+.fnode.red  .fsub { color: var(--red); opacity: 0.7; }
+.farrow { padding: 0 0.4rem; color: var(--ink-4); display: flex; align-items: center; }
+
+/* ── ARCH DIAGRAM ───────────────────────────── */
+.arch-wrap {
+  margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2);
+}
+.arch-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.arch-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.arch-row  { display: flex; gap: 0.5rem; align-items: stretch; }
+.arch-box {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--ink-2);
+  border: 1px solid var(--paper-4); background: var(--paper);
+  padding: 0.5rem 0.75rem; line-height: 1.5; flex: 1; text-align: center;
+}
+.arch-box strong { display: block; color: var(--ink); font-weight: 700; margin-bottom: 0.15rem; }
+.arch-box.dark { background: var(--ink); color: #9A9090; }
+.arch-box.dark strong { color: var(--paper); }
+.arch-box.accent { border-color: var(--red); background: var(--red-faint); }
+.arch-box.accent strong { color: var(--red); }
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4);
+  padding: 0 0.25rem;
+}
+.arch-label {
+  font-family: var(--mono); font-size: 0.58rem; color: var(--ink-4);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center; padding: 0.25rem 0;
+}
+
+/* ── SIDEBAR ────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820;
+  cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ── NAV ────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.07 — LIFF 應用程式開發</span>
+  </div>
+  <div class="masthead-right">第 7 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ══════════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">07</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">4 小時</div>
+      <div class="ch-stat">中級</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含帳號綁定實作</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title"><span>LIFF</span><br>應用程式開發</h1>
+    <p class="ch-standfirst">
+      LIFF（LINE Front-end Framework）讓你在 LINE 的聊天介面內嵌入
+      完整的網頁應用程式。用戶不需要離開 LINE、不需要另行登入，
+      就能使用表單、地圖、選單等豐富的互動介面，並在操作完成後直接傳送訊息回聊天室。
+      本章從 LIFF 的運作原理到實作帳號綁定流程，系統性地建立
+      Bot 與網頁之間的雙向溝通能力。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>理解 LIFF 的執行環境與 context 差異</li>
+    <li>建立並設定 LIFF App，取得 LIFF ID</li>
+    <li>用 liff.init() 完成初始化並取得用戶 ID Token</li>
+    <li>在後端驗證 ID Token，安全地識別用戶身份</li>
+    <li>實作 LINE 帳號與業務系統的綁定流程</li>
+    <li>使用 liff.sendMessages() 從 LIFF 傳送訊息回聊天室</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 7-1 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l7-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 7–1</span>
+    <h2 class="lesson-title">LIFF 的執行環境與架構概念</h2>
+  </div>
+
+  <p class="body-text">
+    LIFF 是一個在 LINE 客戶端內部開啟的 WebView 環境。
+    從技術角度看，它就是一個普通的網頁；
+    從用戶體驗角度看，它是嵌入在聊天室中的應用程式介面，
+    開啟與關閉都不中斷對話。
+    LIFF 的最大價值在於：網頁可以透過 LIFF SDK 存取 LINE 平台的原生能力——
+    取得已登入用戶的身份、直接傳送訊息到聊天室、存取裝置的掃碼功能等。
+  </p>
+
+  <div class="sub-heading">三種 LIFF 視窗尺寸</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>尺寸</th><th>視窗高度</th><th>適合場景</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>compact</code></td>
+        <td>螢幕高度 50%</td>
+        <td>簡短的確認表單、快速選擇、QR Code 掃描</td>
+      </tr>
+      <tr>
+        <td><code>tall</code></td>
+        <td>螢幕高度 80%</td>
+        <td>較長的表單、商品列表、地址輸入</td>
+      </tr>
+      <tr>
+        <td><code>full</code></td>
+        <td>螢幕高度 100%</td>
+        <td>複雜的多步驟流程、地圖、內嵌購物頁面</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">LIFF Context 的差異</div>
+  <p class="body-text">
+    LIFF 可以從兩種管道開啟：從 LINE 內部（InApp）或從外部瀏覽器（External）。
+    這個差異影響能使用的 API 範圍。
+    <code>liff.getContext()</code> 回傳的 <code>type</code> 欄位告訴你當前執行環境：
+  </p>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">utou</div>
+      <div class="def-desc">從一對一聊天開啟。<code>liff.sendMessages()</code> 可用，訊息發送到該對話。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">room</div>
+      <div class="def-desc">從多人房間開啟。<code>sendMessages()</code> 可用，訊息發送到該房間。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">group</div>
+      <div class="def-desc">從群組開啟。<code>sendMessages()</code> 可用，訊息發送到該群組。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">external</div>
+      <div class="def-desc">從外部瀏覽器開啟。<code>sendMessages()</code> <strong>不可用</strong>，其他 API 仍可使用。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">none</div>
+      <div class="def-desc">透過 LINE 以外的管道開啟，且未登入。部分 API 需要先呼叫 <code>liff.login()</code>。</div>
+    </div>
+  </div>
+
+  <div class="sub-heading">LIFF 與 Bot 的整體架構</div>
+
+  <div class="arch-wrap">
+    <div class="arch-head">LIFF + Bot 系統架構</div>
+    <div class="arch-body">
+      <div class="arch-label">LINE 平台</div>
+      <div class="arch-row">
+        <div class="arch-box dark"><strong>LINE App</strong>聊天室 / WebView</div>
+        <div class="arch-arrow">⟷</div>
+        <div class="arch-box dark"><strong>LINE Platform</strong>Messaging API / LIFF Server</div>
+      </div>
+      <div class="arch-arrow" style="align-self:center; padding: 0.25rem 0;">↕</div>
+      <div class="arch-label">你的伺服器</div>
+      <div class="arch-row">
+        <div class="arch-box accent"><strong>LIFF App（前端）</strong>HTML / React，使用 LIFF SDK</div>
+        <div class="arch-arrow">⟷</div>
+        <div class="arch-box accent"><strong>Bot Server（後端）</strong>Webhook 處理 + LIFF API</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-box"><strong>靜態資源托管</strong>Vercel / Netlify / GitHub Pages</div>
+        <div class="arch-arrow">⟷</div>
+        <div class="arch-box"><strong>資料庫</strong>用戶綁定記錄 / 業務資料</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    LIFF 前端與 Bot 後端是<strong>兩個獨立的部署單元</strong>。
+    LIFF 頁面可以托管在任何支援 HTTPS 的靜態主機上，
+    Bot 伺服器則負責接收 LINE 的 Webhook 和來自 LIFF 頁面的 API 請求。
+    兩者透過你自己的後端 API 溝通，LIFF SDK 負責橋接 LINE 的身份系統。
+  </p>
+</article>
+
+<!-- ── LESSON 7-2 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l7-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 7–2</span>
+    <h2 class="lesson-title">建立 LIFF App 與初始化 SDK</h2>
+  </div>
+
+  <p class="body-text">
+    在 LINE Developers Console 建立 LIFF App 後，
+    系統會分配一個 <strong>LIFF ID</strong>（格式：<code>xxxxxxxxxx-yyyyyyyy</code>）。
+    LIFF URL 的格式為 <code>https://liff.line.me/{liffId}</code>，
+    這個 URL 可以放在 Bot 訊息的按鈕、Rich Menu 的熱區、或 Quick Reply 中，
+    讓用戶點擊後直接開啟你的 LIFF 頁面。
+  </p>
+
+  <div class="sub-heading">在 Console 設定 LIFF App</div>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">Endpoint URL</div>
+      <div class="def-desc">
+        LIFF 頁面的 HTTPS 網址。開發時可用 ngrok 產生暫時的 HTTPS URL，
+        生產環境需使用正式域名。必須是 HTTPS，不接受 HTTP。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">Size</div>
+      <div class="def-desc">視窗尺寸：<code>compact</code>、<code>tall</code>、<code>full</code>。建立後可修改。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">Scope</div>
+      <div class="def-desc">
+        LIFF 需要存取的用戶資料範圍。
+        <code>profile</code>：取得顯示名稱與大頭貼；
+        <code>openid</code>：取得 ID Token（帳號綁定必須勾選）；
+        <code>email</code>：取得電子郵件（需用戶額外同意）。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">Bot link feature</div>
+      <div class="def-desc">
+        設為 <code>Aggressive</code> 時，用戶開啟 LIFF 頁面若尚未加好友，
+        會自動彈出加好友的提示視窗。
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">安裝 LIFF SDK 並初始化</div>
+
+  <div class="code-figure">
+    <div class="code-caption">安裝 LIFF SDK</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># npm 安裝（適合 React / Vue 等框架專案）</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">npm install @line/liff</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt"># 或使用 CDN（適合純 HTML 頁面）</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">&lt;script src="https://static.line-scdn.net/liff/edge/2/sdk.js"&gt;&lt;/script&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">liff-app/src/main.js — 初始化與基本資訊取得</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">import</span> liff <span class="kw">from</span> <span class="str">'@line/liff'</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">async function</span> <span class="fn">initLiff</span>() {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2"><span class="cmt">// liff.init() 必須是頁面載入後最先呼叫的 LIFF 方法</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2"><span class="kw">await</span> liff.<span class="fn">init</span>({ liffId: <span class="str">'2006123456-Ab8cDeF9'</span> })</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2"><span class="cmt">// 取得執行環境資訊</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2"><span class="kw">const</span> context = liff.<span class="fn">getContext</span>()</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'context type:'</span>, context.type)  <span class="cmt">// 'utou' | 'group' | 'external' …</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i2"><span class="cmt">// 判斷是否在 LINE 內部開啟</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2"><span class="kw">const</span> isInClient = liff.<span class="fn">isInClient</span>()</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2"><span class="kw">const</span> isLoggedIn = liff.<span class="fn">isLoggedIn</span>()</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2"><span class="cmt">// 若在外部瀏覽器且未登入，導向 LINE 登入</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="kw">if</span> (!isInClient && !isLoggedIn) {</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3">liff.<span class="fn">login</span>({ redirectUri: window.location.href })</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3"><span class="kw">return</span>  <span class="cmt">// login() 會導向 LINE 登入頁，後續程式不執行</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2"><span class="cmt">// 取得用戶基本資料（需 profile scope）</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">const</span> profile = <span class="kw">await</span> liff.<span class="fn">getProfile</span>()</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'userId:'</span>,      profile.userId)</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'displayName:'</span>, profile.displayName)</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'pictureUrl:'</span>,  profile.pictureUrl)</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2"><span class="cmt">// 取得 ID Token（需 openid scope）——用於後端驗證</span></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2"><span class="kw">const</span> idToken = liff.<span class="fn">getIDToken</span>()</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i2">console.<span class="fn">log</span>(<span class="str">'idToken:'</span>, idToken)  <span class="cmt">// JWT，傳給後端驗證用</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2">console.<span class="fn">error</span>(<span class="str">'LIFF init failed:'</span>, err.code, err.message)</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2"><span class="cmt">// 常見錯誤：INVALID_ARGUMENT（liffId 錯誤）</span></span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="cmt">//           FORBIDDEN（Endpoint URL 不符）</span></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2"><span class="cmt">//           INIT_FAILED（SDK 載入失敗）</span></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc"><span class="fn">initLiff</span>()</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-label">不要信任前端傳來的 userId</span>
+    <code>liff.getProfile().userId</code> 是在前端取得的，
+    任何人都可以偽造這個值傳到你的後端。
+    <strong>帳號綁定、身份識別等安全操作，必須透過 ID Token 在後端驗證，
+    絕對不能直接信任前端傳來的 userId 字串。</strong>
+    正確做法見下一課節的 ID Token 驗證流程。
+  </div>
+</article>
+
+<!-- ── LESSON 7-3 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l7-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 7–3</span>
+    <h2 class="lesson-title">ID Token 驗證與安全身份識別</h2>
+  </div>
+
+  <p class="body-text">
+    LIFF SDK 的 <code>liff.getIDToken()</code> 回傳一個 JWT 格式的 ID Token。
+    這個 token 是由 LINE 平台簽發的，包含用戶的 <code>sub</code>（即 LINE userId）
+    和其他宣告（claims），並以 LINE 的私鑰簽名。
+    後端向 LINE 的驗證端點送出這個 token，
+    確認它確實是 LINE 簽發的、且對應到你的 Channel，
+    才能安全地從中取出用戶身份。
+  </p>
+
+  <div class="sub-heading">ID Token 驗證流程</div>
+
+  <div class="flow-wrap">
+    <div class="flow-row">
+      <div class="fnode red wide">LIFF 取得 ID Token<div class="fsub">liff.getIDToken()</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode wide">POST 到你的後端<div class="fsub">帶 idToken 參數</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode wide">後端呼叫 LINE API<div class="fsub">verify endpoint</div></div>
+      <div class="farrow">→</div>
+      <div class="fnode dark wide">取得 sub（userId）<div class="fsub">安全，可信任</div></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">前端 — 將 ID Token 傳送到後端</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">async function</span> <span class="fn">bindAccount</span>(memberCode) {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc i1"><span class="cmt">// 取得 ID Token（必須已完成 liff.init() 且 scope 包含 openid）</span></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1"><span class="kw">const</span> idToken = liff.<span class="fn">getIDToken</span>()</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="kw">if</span> (!idToken) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'ID Token not available. Check openid scope.'</span>)</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="cmt">// 把 idToken 和業務資料一起 POST 到後端</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/liff/bind'</span>, {</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">method:  <span class="str">'POST'</span>,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i3">idToken,     <span class="cmt">// 後端用此驗證身份</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i3">memberCode,  <span class="cmt">// 用戶在表單輸入的會員編號</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2">}),</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">`Bind failed: ${res.status}`</span>)</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="kw">return</span> res.<span class="fn">json</span>()</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">後端 — 驗證 ID Token 並取得 userId（Node.js）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> axios   = <span class="fn">require</span>(<span class="str">'axios'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> router  = express.<span class="fn">Router</span>()</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt">// LINE ID Token 驗證端點（官方文件：developers.line.biz）</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="kw">const</span> LINE_VERIFY_URL = <span class="str">'https://api.line.me/oauth2/v2.1/verify'</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"><span class="cmt">/**</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="cmt"> * 向 LINE 驗證 ID Token，回傳 payload（含 sub = lineUserId）</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="cmt"> * 驗證失敗（偽造 / 過期 / 錯誤 Channel）會丟出例外</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="cmt"> */</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"><span class="kw">async function</span> <span class="fn">verifyIdToken</span>(idToken) {</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">const</span> params = <span class="kw">new</span> <span class="cls">URLSearchParams</span>({</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">id_token:  idToken,</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2">client_id: process.env.LINE_CHANNEL_ID,  <span class="cmt">// Channel ID（非 Access Token）</span></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1"><span class="kw">const</span> { data } = <span class="kw">await</span> axios.<span class="fn">post</span>(LINE_VERIFY_URL, params, {</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/x-www-form-urlencoded'</span> },</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="cmt">// data.sub 是該 Channel 下唯一識別用戶的 LINE userId</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1"><span class="cmt">// data.name 是顯示名稱，data.picture 是大頭貼 URL</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="kw">return</span> data</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc">router.<span class="fn">post</span>(<span class="str">'/api/liff/bind'</span>, <span class="kw">async</span> (req, res) => {</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1"><span class="kw">const</span> { idToken, memberCode } = req.body</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="kw">if</span> (!idToken || !memberCode) {</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i2"><span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ error: <span class="str">'idToken and memberCode are required'</span> })</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="cmt">// Step 1: 向 LINE 驗證 ID Token，取得可信任的 userId</span></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2"><span class="kw">const</span> payload = <span class="kw">await</span> <span class="fn">verifyIdToken</span>(idToken)</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2"><span class="kw">const</span> lineUserId = payload.sub</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i2"><span class="cmt">// Step 2: 在資料庫中查找該 memberCode 對應的業務帳號</span></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i2"><span class="kw">const</span> member = <span class="kw">await</span> MemberRepo.<span class="fn">findByCode</span>(memberCode)</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i2"><span class="kw">if</span> (!member) {</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i3"><span class="cmt">// 找不到對應會員，回傳錯誤</span></span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i3"><span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ error: <span class="str">'Member not found'</span> })</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i2"><span class="cmt">// Step 3: 將 LINE userId 寫入業務帳號的綁定欄位</span></span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i2"><span class="kw">await</span> MemberRepo.<span class="fn">update</span>(member.id, { lineUserId, boundAt: <span class="kw">new</span> <span class="cls">Date</span>() })</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc i2"><span class="cmt">// Step 4: 切換 Rich Menu（從訪客版→會員版）</span></span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i2"><span class="kw">await</span> syncRichMenu(lineUserId, { tier: member.tier }, lineClient)</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i2"><span class="kw">return</span> res.<span class="fn">json</span>({ success: <span class="kw">true</span>, displayName: payload.name })</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i2">console.<span class="fn">error</span>(<span class="str">'Bind error:'</span>, err.message)</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i2"><span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ error: <span class="str">'ID Token verification failed'</span> })</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">57</span><span class="lc">})</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">client_id 與 Channel Access Token 的區別</span>
+    驗證 ID Token 時傳入的是 <code>client_id</code>，對應的是 Channel 的 <strong>Channel ID</strong>（純數字），
+    而不是 Channel Access Token（長字串）。
+    Channel ID 可以在 LINE Developers Console 的 Basic settings 頁面找到。
+    兩者混淆是最常見的初始化錯誤之一，請確認 <code>.env</code> 中的 <code>LINE_CHANNEL_ID</code>
+    存放的是 Channel ID 而非 Access Token。
+  </div>
+</article>
+
+<!-- ── LESSON 7-4 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l7-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 7–4</span>
+    <h2 class="lesson-title">帳號綁定流程完整實作</h2>
+  </div>
+
+  <p class="body-text">
+    帳號綁定是 LIFF 最核心的應用場景：讓用戶在 LINE 聊天室中，
+    用他們在實體店或官網的既有帳號登入，
+    將 LINE 身份與業務系統的會員身份永久關聯。
+    綁定完成後，Bot 收到任何來自該用戶的 Webhook 事件，
+    就能直接從資料庫查到他的完整業務資料，無需再次詢問。
+  </p>
+
+  <div class="sub-heading">完整的前端綁定頁面</div>
+
+  <div class="code-figure">
+    <div class="code-caption">liff-app/bind.html — 帳號綁定表單（純 HTML 版）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">&lt;!DOCTYPE html&gt;</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">&lt;html lang="zh-TW"&gt;</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">&lt;head&gt;</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">&lt;meta charset="UTF-8"&gt;</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">&lt;title&gt;帳號綁定&lt;/title&gt;</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">&lt;script src="https://static.line-scdn.net/liff/edge/2/sdk.js"&gt;&lt;/script&gt;</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">&lt;/head&gt;</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">&lt;body&gt;</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1">&lt;div id="app"&gt;</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">&lt;p id="status"&gt;初始化中…&lt;/p&gt;</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">&lt;form id="bind-form" style="display:none"&gt;</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i3">&lt;input type="text" id="member-code" placeholder="請輸入會員編號" required&gt;</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i3">&lt;button type="submit"&gt;確認綁定&lt;/button&gt;</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">&lt;/form&gt;</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">&lt;/div&gt;</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc">&lt;script&gt;</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="kw">let</span> idToken = <span class="kw">null</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"><span class="kw">async function</span> <span class="fn">init</span>() {</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2"><span class="kw">await</span> liff.<span class="fn">init</span>({ liffId: <span class="str">'YOUR_LIFF_ID'</span> })</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2"><span class="kw">if</span> (!liff.<span class="fn">isLoggedIn</span>()) {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i3">liff.<span class="fn">login</span>()</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i3"><span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2">idToken = liff.<span class="fn">getIDToken</span>()</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i2">document.<span class="fn">getElementById</span>(<span class="str">'status'</span>).textContent = <span class="str">'請輸入您的會員編號：'</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i2">document.<span class="fn">getElementById</span>(<span class="str">'bind-form'</span>).style.display = <span class="str">'block'</span></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2">document.<span class="fn">getElementById</span>(<span class="str">'status'</span>).textContent = <span class="str">'初始化失敗，請關閉後重試。'</span></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc">document.<span class="fn">getElementById</span>(<span class="str">'bind-form'</span>).<span class="fn">addEventListener</span>(<span class="str">'submit'</span>, <span class="kw">async</span> (e) => {</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i1">e.<span class="fn">preventDefault</span>()</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i1"><span class="kw">const</span> memberCode = document.<span class="fn">getElementById</span>(<span class="str">'member-code'</span>).value.<span class="fn">trim</span>()</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i1"><span class="kw">if</span> (!memberCode) <span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i2"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/liff/bind'</span>, {</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i3">method:  <span class="str">'POST'</span>,</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i3">headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i3">body: <span class="cls">JSON</span>.<span class="fn">stringify</span>({ idToken, memberCode }),</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i2">})</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i2"><span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i2"><span class="kw">if</span> (data.success) {</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i3"><span class="cmt">// 綁定成功：傳送確認訊息到聊天室，再關閉 LIFF</span></span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i3"><span class="kw">await</span> liff.<span class="fn">sendMessages</span>([{</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i4">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i4">text: <span class="str">`帳號綁定完成！歡迎 ${data.displayName} 成為會員。`</span>,</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i3">}])</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc i3">liff.<span class="fn">closeWindow</span>()  <span class="cmt">// 關閉 LIFF 視窗，回到聊天室</span></span></div>
+      <div class="cl"><span class="ln">57</span><span class="lc i2">} <span class="kw">else</span> {</span></div>
+      <div class="cl"><span class="ln">58</span><span class="lc i3">document.<span class="fn">getElementById</span>(<span class="str">'status'</span>).textContent = <span class="str">`綁定失敗：${data.error}`</span></span></div>
+      <div class="cl"><span class="ln">59</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">60</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">61</span><span class="lc i2">document.<span class="fn">getElementById</span>(<span class="str">'status'</span>).textContent = <span class="str">'網路錯誤，請稍後再試。'</span></span></div>
+      <div class="cl"><span class="ln">62</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">63</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">64</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">65</span><span class="lc"><span class="fn">init</span>()</span></div>
+      <div class="cl"><span class="ln">66</span><span class="lc">&lt;/script&gt;</span></div>
+      <div class="cl"><span class="ln">67</span><span class="lc">&lt;/body&gt;</span></div>
+      <div class="cl"><span class="ln">68</span><span class="lc">&lt;/html&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-label">liff.sendMessages() 的限制</span>
+    <code>liff.sendMessages()</code> 只能在 LINE 內部開啟的 LIFF 中使用（context type 為 utou / room / group）。
+    從外部瀏覽器開啟的 LIFF（type 為 external）呼叫此方法會拋出例外。
+    使用前務必先檢查 <code>liff.isInClient()</code>，或在 console 設定時要求從 LINE 內開啟。
+  </div>
+</article>
+
+<!-- ── LESSON 7-5 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l7-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 7–5</span>
+    <h2 class="lesson-title">進階 LIFF API 與本地開發設定</h2>
+  </div>
+
+  <p class="body-text">
+    LIFF SDK 除了身份識別，還提供多個實用的 API，
+    可以讓網頁存取 LINE 的裝置整合能力。
+    本課節整理最常用的進階功能，
+    並說明如何在本地開發時繞過 HTTPS 限制進行調試。
+  </p>
+
+  <div class="sub-heading">常用進階 API</div>
+
+  <div class="code-figure">
+    <div class="code-caption">常用 LIFF API 速覽</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// ── 傳送訊息（僅限 LINE 內部 context）──────────────────────</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">await</span> liff.<span class="fn">sendMessages</span>([</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">{ type: <span class="str">'text'</span>, text: <span class="str">'從 LIFF 傳出的訊息'</span> },</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">{</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2">type: <span class="str">'flex'</span>, altText: <span class="str">'訂單確認'</span>,</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2">contents: { type: <span class="str">'bubble'</span>, body: { type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>, contents: [] } },</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">])</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="cmt">// ── 掃描 QR Code（需使用者授權）────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="kw">if</span> (liff.<span class="fn">scanCodeV2</span>) {</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="kw">const</span> { value } = <span class="kw">await</span> liff.<span class="fn">scanCodeV2</span>()</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1">console.<span class="fn">log</span>(<span class="str">'QR Code 內容：'</span>, value)  <span class="cmt">// 通常是 URL 或識別碼</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"><span class="cmt">// ── 分享訊息給好友（打開好友選擇器）────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="kw">const</span> res = <span class="kw">await</span> liff.<span class="fn">shareTargetPicker</span>([</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1">{ type: <span class="str">'text'</span>, text: <span class="str">'我推薦這個給你！'</span> },</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc">])</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"><span class="kw">if</span> (res) console.<span class="fn">log</span>(<span class="str">'分享成功'</span>)</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"><span class="cmt">// ── 永久連結：取得可在外部分享的 LIFF 連結 ──────────────────</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"><span class="kw">const</span> permanentLink = <span class="kw">await</span> liff.<span class="fn">permanentLink</span>.<span class="fn">createUrlBy</span>(window.location.href)</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc">console.<span class="fn">log</span>(permanentLink)  <span class="cmt">// https://liff.line.me/{liffId}/your-path?params=…</span></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"><span class="cmt">// ── 取得作業系統資訊 ──────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc"><span class="kw">const</span> os = liff.<span class="fn">getOS</span>()   <span class="cmt">// 'ios' | 'android' | 'web'</span></span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc"><span class="kw">const</span> ver = liff.<span class="fn">getVersion</span>()  <span class="cmt">// LIFF SDK 版本，如 '2.22.3'</span></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc"><span class="cmt">// ── 關閉 LIFF 視窗 ───────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc">liff.<span class="fn">closeWindow</span>()  <span class="cmt">// 在 LINE 內部有效；外部瀏覽器無效</span></span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">本地開發設定：Mock LIFF 與 ngrok</div>
+  <p class="body-text">
+    本地開發 LIFF 有兩個主要挑戰：
+    第一，LIFF 必須透過 HTTPS 存取，本地的 <code>localhost:3000</code> 不符合；
+    第二，若不在 LINE 客戶端內執行，<code>liff.init()</code> 無法取得真實的 LINE 身份。
+    以下兩種解法分別對應不同的開發需求：
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">方案 A — 用 ngrok 暴露本地 HTTPS（最接近真實環境）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 安裝 ngrok 並啟動本地伺服器</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">npm install -g ngrok</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">node index.js &amp;</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc">ngrok http 3000</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt"># ngrok 輸出類似：</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt"># Forwarding  https://a1b2-c3d4.ngrok-free.app  →  localhost:3000</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="cmt"># 將 ngrok HTTPS URL 填入 LINE Developers Console → LIFF → Endpoint URL</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="cmt"># 每次重啟 ngrok URL 會改變，需更新 Console 設定（付費版可固定 URL）</span></span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">方案 B — Mock liff 物件（適合純 UI 開發，不需真實 LINE 身份）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// liff-mock.js — 在非 LINE 環境替換 liff 物件</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> MOCK_LIFF = {</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1"><span class="fn">init</span>:        () => Promise.<span class="fn">resolve</span>(),</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="fn">isInClient</span>:  () => <span class="kw">false</span>,</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="fn">isLoggedIn</span>:  () => <span class="kw">true</span>,</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="fn">getIDToken</span>:  () => <span class="str">'mock-id-token-for-dev'</span>,</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="fn">getProfile</span>:  () => Promise.<span class="fn">resolve</span>({</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">userId:      <span class="str">'Udev1234567890abcdef'</span>,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">displayName: <span class="str">'開發測試用戶'</span>,</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">pictureUrl:  <span class="str">'https://via.placeholder.com/150'</span>,</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1">}),</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="fn">getContext</span>:    () => ({ type: <span class="str">'utou'</span> }),</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="fn">sendMessages</span>:  (msgs) => { console.<span class="fn">log</span>(<span class="str">'[Mock] sendMessages:'</span>, msgs); <span class="kw">return</span> Promise.<span class="fn">resolve</span>() },</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="fn">closeWindow</span>:   () => console.<span class="fn">log</span>(<span class="str">'[Mock] closeWindow called'</span>),</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1"><span class="fn">login</span>:         () => console.<span class="fn">log</span>(<span class="str">'[Mock] login called'</span>),</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="cmt">// 使用方式：在初始化時選擇使用真實 SDK 或 Mock</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"><span class="kw">import</span> realLiff <span class="kw">from</span> <span class="str">'@line/liff'</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"><span class="kw">const</span> liff = import.meta.env.MODE === <span class="str">'development'</span> ? MOCK_LIFF : realLiff</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"><span class="kw">export default</span> liff</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">開發完整的 React LIFF 頁面結構</div>
+
+  <div class="code-figure">
+    <div class="code-caption">liff-app/src/App.jsx — React 版本骨架</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">import</span> liff <span class="kw">from</span> <span class="str">'./liff'</span>  <span class="cmt">// 封裝過的 liff，含 mock 切換</span></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">export default function</span> <span class="fn">App</span>() {</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="kw">const</span> [status,  setStatus]  = <span class="fn">useState</span>(<span class="str">'loading'</span>)  <span class="cmt">// loading | ready | error | success</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="kw">const</span> [profile, setProfile] = <span class="fn">useState</span>(<span class="kw">null</span>)</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="kw">const</span> [error,   setError]   = <span class="fn">useState</span>(<span class="str">''</span>)</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="fn">useEffect</span>(() => {</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2"><span class="kw">async function</span> <span class="fn">initialize</span>() {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i3"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i4"><span class="kw">await</span> liff.<span class="fn">init</span>({ liffId: import.meta.env.VITE_LIFF_ID })</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i4"><span class="kw">if</span> (!liff.<span class="fn">isLoggedIn</span>()) { liff.<span class="fn">login</span>(); <span class="kw">return</span> }</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i4"><span class="kw">const</span> p = <span class="kw">await</span> liff.<span class="fn">getProfile</span>()</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i4"><span class="fn">setProfile</span>(p)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i4"><span class="fn">setStatus</span>(<span class="str">'ready'</span>)</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i3">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i4"><span class="fn">setError</span>(err.message)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i4"><span class="fn">setStatus</span>(<span class="str">'error'</span>)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i3">}</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i2">}</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2"><span class="fn">initialize</span>()</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1">}, [])</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">if</span> (status === <span class="str">'loading'</span>) <span class="kw">return</span> &lt;div&gt;初始化中…&lt;/div&gt;</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1"><span class="kw">if</span> (status === <span class="str">'error'</span>)   <span class="kw">return</span> &lt;div&gt;錯誤：{error}&lt;/div&gt;</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1"><span class="kw">return</span> (</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2">&lt;main&gt;</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i3">&lt;p&gt;您好，{profile?.displayName}&lt;/p&gt;</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i3">&lt;BindForm liff={liff} /&gt;</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2">&lt;/main&gt;</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1">)</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">LIFF ID 的環境變數管理</span>
+    LIFF ID 應透過環境變數注入，不要硬編碼在程式碼中。
+    Vite 專案使用 <code>VITE_LIFF_ID</code>（前綴 <code>VITE_</code> 的變數才會暴露給前端），
+    Create React App 使用 <code>REACT_APP_LIFF_ID</code>。
+    開發和生產各自有獨立的 <code>.env</code> 檔，
+    對應到不同的 LIFF App（建議分開建立，避免混用）。
+  </div>
+</article>
+
+</main>
+
+<!-- ══ SIDEBAR ════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l7-1" class="toc-link">7–1 執行環境與架構概念</a></li>
+      <li class="toc-item"><a href="#l7-2" class="toc-link">7–2 建立 LIFF App 與初始化</a></li>
+      <li class="toc-item"><a href="#l7-3" class="toc-link">7–3 ID Token 驗證</a></li>
+      <li class="toc-item"><a href="#l7-4" class="toc-link">7–4 帳號綁定完整實作</a></li>
+      <li class="toc-item"><a href="#l7-5" class="toc-link">7–5 進階 API 與本地開發</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">核心術語</div>
+    <div class="term-row">
+      <div class="term-name">LIFF</div>
+      <div class="term-def">LINE Front-end Framework，在 LINE WebView 中執行的網頁應用程式框架。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">LIFF ID</div>
+      <div class="term-def">每個 LIFF App 的唯一識別碼，格式為 <code>xxxxxxxxxx-yyyyyyyy</code>。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">ID Token</div>
+      <div class="term-def">LINE 簽發的 JWT，包含用戶身份宣告。必須在後端驗證才能信任。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">liff.getContext()</div>
+      <div class="term-def">回傳 LIFF 的執行環境資訊，包含 context type（utou / group / external …）。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">liff.sendMessages()</div>
+      <div class="term-def">從 LIFF 頁面傳送訊息到當前聊天室，僅限 LINE 內部 context 可用。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Scope</div>
+      <div class="term-def">LIFF 要求存取的用戶資料範圍：profile / openid / email。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">帳號綁定</div>
+      <div class="term-def">將 LINE userId 與業務系統的會員身份永久關聯，透過 ID Token 驗證安全完成。</div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item"><strong>LIFF v2 API 參考</strong>所有 LIFF SDK 方法的完整文件。developers.line.biz/liff</li>
+      <li class="res-item"><strong>LINE Login v2.1 驗證 ID Token</strong>後端驗證端點的請求格式與回應欄位說明。developers.line.biz</li>
+      <li class="res-item"><strong>LIFF Starter 範本</strong>LINE 官方提供的 LIFF + Vite + React 起始專案。github.com/line/liff-starter</li>
+      <li class="res-item"><strong>@line/liff-mock</strong>LINE 官方的 LIFF Mock 函式庫，比自製 mock 更完整。npm</li>
+      <li class="res-item"><strong>Vite 環境變數文件</strong>如何在 Vite 專案中管理 LIFF ID 等前端環境變數。vitejs.dev/guide/env-and-mode</li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="quiz-wrap">
+      <div class="quiz-q">為何帳號綁定時不能直接信任前端傳來的 userId，而必須使用 ID Token 驗證？</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>A.</span>ID Token 的傳輸速度比 userId 更快</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, true)"><span>B.</span>前端的 userId 可被偽造，ID Token 由 LINE 簽名，後端能驗證真偽</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>C.</span>liff.getProfile() 在外部瀏覽器無法使用，只有 ID Token 可用</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>D.</span>LINE 平台強制要求必須使用 ID Token，不使用會導致 API 請求失敗</div>
+      <div class="quiz-feedback" id="qf">
+        正確。任何人都可以在 HTTP 請求中偽造一個 userId 字串。
+        ID Token 是由 LINE 以私鑰簽名的 JWT，後端向 LINE 驗證端點送出後，
+        LINE 會確認簽名有效且 client_id 符合你的 Channel，
+        才回傳可信任的 sub（userId）。這個驗證步驟是整個安全模型的基礎，不能省略。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div>
+
+</div><!-- end page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter6.html" class="nav-btn">← CH.06 資料庫整合</a>
+    <div class="nav-loc">CH.07 / 10 &nbsp;—&nbsp; LIFF 應用程式開發</div>
+    <a href="chapter8.html" class="nav-btn fwd">CH.08 整合 OpenAI →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement
+  const pct = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100
+  document.getElementById('rp').style.width = Math.min(pct, 100) + '%'
+})
+
+const lessons  = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const match = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+lessons.forEach(l => io.observe(l))
+
+function answerQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt')
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default' })
+  el.classList.add(correct ? 'correct' : 'wrong')
+  if (!correct) opts[1].classList.add('correct')
+  document.getElementById('qf').style.display = 'block'
+}
+</script>
+</body>
+</html>

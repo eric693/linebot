@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.01 — LINE Bot 生態系與開發環境建置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+/* ─── READING PROGRESS ───────────────────────────────────────── */
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ─── MASTHEAD ───────────────────────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left {
+  display: flex; align-items: center; gap: 1.25rem;
+}
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); font-size: 0.8rem; }
+.masthead-chapter {
+  font-family: var(--mono); font-size: 0.65rem;
+  color: var(--ink-4); letter-spacing: 0.08em;
+}
+.masthead-right {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--ink-4); letter-spacing: 0.06em;
+}
+
+/* ─── LAYOUT WRAPPER ─────────────────────────────────────────── */
+.page { padding-top: 48px; }
+
+/* ─── CHAPTER HEADER ─────────────────────────────────────────── */
+.ch-header {
+  max-width: var(--wide-w);
+  margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid;
+  grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem;
+  align-items: start;
+}
+.ch-meta {
+  padding-top: 0.4rem;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+  font-family: var(--serif);
+}
+.ch-meta-of {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--ink-4); margin-top: 0.5rem; letter-spacing: 0.05em;
+}
+.ch-meta-stats {
+  margin-top: 2rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before {
+  content: ''; display: block;
+  width: 12px; height: 1px; background: var(--ink-3);
+}
+.ch-divider {
+  width: 2px; background: var(--ink);
+  align-self: stretch; min-height: 180px;
+}
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900; line-height: 1.15;
+  letter-spacing: -0.025em; color: var(--ink);
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem;
+  font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9;
+  max-width: 55ch;
+  border-left: 3px solid var(--red);
+  padding-left: 1.25rem;
+}
+
+/* ─── HORIZONTAL RULE ────────────────────────────────────────── */
+.h-rule {
+  max-width: var(--wide-w); margin: 3.5rem auto 0;
+  padding: 0 2rem;
+}
+.h-rule hr {
+  border: none; border-top: 1px solid var(--paper-3);
+}
+.h-rule-heavy {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 0 2rem;
+}
+.h-rule-heavy hr { border: none; border-top: 2px solid var(--ink); }
+
+/* ─── OBJECTIVES STRIP ───────────────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem;
+  border-bottom: 1px solid var(--paper-3);
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem;
+  list-style: none;
+}
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: '';
+  position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px;
+  border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ─── MAIN CONTENT AREA ──────────────────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem;
+  align-items: start;
+}
+
+/* ─── LESSON SECTIONS ────────────────────────────────────────── */
+.lesson {
+  padding: 4rem 0;
+  border-bottom: 1px solid var(--paper-3);
+}
+.lesson:last-child { border-bottom: none; }
+
+.lesson-header {
+  display: flex; align-items: baseline; gap: 1rem;
+  margin-bottom: 2.25rem;
+}
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--red);
+  flex-shrink: 0;
+}
+.lesson-title {
+  font-size: 1.45rem; font-weight: 700;
+  line-height: 1.25; letter-spacing: -0.01em; color: var(--ink);
+}
+
+.body-text {
+  font-size: 0.96rem; color: var(--ink-2); line-height: 1.95;
+  margin-bottom: 1.4rem;
+}
+.body-text:last-child { margin-bottom: 0; }
+
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em;
+  color: var(--ink-2);
+}
+.body-text a {
+  color: var(--red); text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+.body-text a:hover { opacity: 0.75; }
+
+/* Definition list for concepts */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 160px 1fr;
+  gap: 0; border-top: 1px solid var(--paper-3);
+  padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.03em;
+  padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.75;
+}
+
+/* ─── CODE BLOCKS ────────────────────────────────────────────── */
+.code-figure {
+  margin: 2rem 0;
+}
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after {
+  content: ''; flex: 1; height: 1px; background: var(--paper-3);
+}
+.code-block {
+  background: var(--ink-2);
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.75;
+  padding: 1.5rem 1.75rem;
+  overflow-x: auto;
+  border-left: 3px solid var(--red);
+  tab-size: 2;
+}
+.code-block .ln {
+  display: inline-block; width: 2em;
+  color: #4A4440; user-select: none; font-size: 0.68rem;
+  margin-right: 0.5rem;
+}
+.c-cmt  { color: #7A6F6A; font-style: italic; }
+.c-kw   { color: #C47A6A; }
+.c-str  { color: #8BAF7A; }
+.c-fn   { color: #7AABCF; }
+.c-num  { color: #C49A5A; }
+.c-cls  { color: #C4B570; }
+.c-pun  { color: #9A9090; }
+.c-def  { color: #E8E0D8; }
+
+/* ─── CALLOUT BOXES ──────────────────────────────────────────── */
+.callout {
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2);
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn {
+  border-left-color: var(--red);
+  background: var(--red-faint);
+}
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+
+/* ─── STEP LIST ──────────────────────────────────────────────── */
+.step-list { margin: 1.5rem 0; counter-reset: step; }
+.step-item {
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 0 1rem; margin-bottom: 1.25rem; align-items: start;
+  counter-increment: step;
+}
+.step-num {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--paper); background: var(--ink);
+  width: 28px; height: 28px; display: flex;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 0.15rem;
+}
+.step-num::after { content: counter(step, decimal-leading-zero); }
+.step-body { font-size: 0.9rem; color: var(--ink-2); line-height: 1.8; }
+.step-body strong { color: var(--ink); font-weight: 600; }
+.step-body code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em;
+}
+
+/* ─── FLOW DIAGRAM (Pure CSS) ────────────────────────────────── */
+.flow-diagram {
+  margin: 2rem 0;
+  display: flex; align-items: center; gap: 0;
+  font-family: var(--mono); font-size: 0.7rem;
+  overflow-x: auto; padding-bottom: 0.5rem;
+}
+.flow-node {
+  flex-shrink: 0;
+  border: 1px solid var(--ink);
+  padding: 0.6rem 0.9rem;
+  text-align: center; line-height: 1.4;
+  background: var(--paper-2);
+  color: var(--ink); font-weight: 500;
+}
+.flow-node.highlight {
+  background: var(--ink); color: var(--paper);
+  border-color: var(--ink);
+}
+.flow-node.accent {
+  background: var(--red-faint); border-color: var(--red); color: var(--red);
+}
+.flow-arrow {
+  flex-shrink: 0;
+  font-size: 0.8rem; color: var(--ink-4);
+  padding: 0 0.3rem;
+}
+.flow-label {
+  font-size: 0.58rem; color: var(--ink-4);
+  display: block; margin-top: 0.2rem; letter-spacing: 0.05em;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────────── */
+.data-table {
+  width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+  font-size: 0.85rem;
+}
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper);
+  padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2);
+  border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+.data-table .tag-red {
+  font-family: var(--mono); font-size: 0.62em;
+  border: 1px solid var(--red); color: var(--red);
+  padding: 0.1em 0.4em; letter-spacing: 0.06em;
+}
+
+/* ─── SIDEBAR (sticky) ───────────────────────────────────────── */
+.sidebar {
+  padding-top: 4rem;
+  position: sticky; top: 68px;
+  align-self: start;
+}
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-4); padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+
+/* TOC */
+.toc-list { list-style: none; }
+.toc-item {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--paper-3);
+}
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--ink-3); text-decoration: none;
+  letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block;
+  width: 0; height: 1px; background: var(--red);
+  transition: width 0.2s;
+  flex-shrink: 0;
+}
+.toc-link:hover { color: var(--red); }
+.toc-link:hover::before { width: 12px; }
+.toc-link.active { color: var(--red); }
+.toc-link.active::before { width: 12px; }
+
+/* Resource list */
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong {
+  display: block; font-family: var(--mono); font-size: 0.68rem;
+  color: var(--ink); letter-spacing: 0.03em; margin-bottom: 0.15rem;
+}
+
+/* Quiz */
+.quiz-wrap {
+  background: var(--ink-2); padding: 1.25rem;
+}
+.quiz-q {
+  font-size: 0.82rem; color: var(--paper); line-height: 1.7;
+  margin-bottom: 1rem; font-weight: 500;
+}
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: #9A9090; padding: 0.4rem 0;
+  border-bottom: 1px solid #2E2820; cursor: pointer;
+  transition: color 0.15s; display: flex; gap: 0.5rem;
+  letter-spacing: 0.02em;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem;
+  border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* Key terms */
+.term-list { }
+.term-row {
+  padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3);
+}
+.term-name {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.04em;
+}
+.term-def {
+  font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem;
+}
+
+/* ─── CHAPTER NAV ────────────────────────────────────────────── */
+.chapter-nav {
+  border-top: 2px solid var(--ink); background: var(--paper-2);
+}
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3);
+  color: var(--ink-3); padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block;
+  transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd {
+  background: var(--ink); color: var(--paper); border-color: var(--ink);
+}
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4);
+  letter-spacing: 0.05em; text-align: center;
+}
+
+/* ─── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ch-header   { animation: fadeUp 0.7s ease both; }
+.ch-standfirst { animation: fadeUp 0.7s ease 0.15s both; }
+.objectives-strip { animation: fadeUp 0.7s ease 0.25s both; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 120px 1fr; }
+  .flow-diagram { font-size: 0.6rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<!-- ═══ MASTHEAD ═══════════════════════════════════════════════ -->
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.01 — 生態系與開發環境</span>
+  </div>
+  <div class="masthead-right">第 1 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ CHAPTER HEADER ═════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">01</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">3 小時</div>
+      <div class="ch-stat">入門</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含實作練習</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title">LINE Bot <span>生態系</span>與<br>開發環境建置</h1>
+    <p class="ch-standfirst">
+      理解 LINE 平台的整體架構，從申請開發者帳號到讓第一個 Bot 在本地回覆訊息，
+      本章建立所有後續章節的技術基礎。我們不只是執行教學步驟，
+      更要理解每一個指令背後的原理，才能在問題出現時有能力診斷與修復。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<!-- ═══ OBJECTIVES ═════════════════════════════════════════════ -->
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>理解 LINE Bot 的整體架構與 Webhook 工作原理</li>
+    <li>完成 LINE Developers Console 設定與 Channel 建立</li>
+    <li>初始化 Node.js 專案並安裝 LINE Bot SDK</li>
+    <li>在本地端用 Ngrok 暴露服務並接收真實事件</li>
+    <li>成功部署第一個能回覆 Echo 的 Bot</li>
+    <li>理解 Signature 驗證的用途與運作方式</li>
+  </ul>
+</div>
+
+<!-- ═══ MAIN CONTENT ════════════════════════════════════════════ -->
+<div class="content-wrap">
+
+  <!-- Main column -->
+  <main>
+
+    <!-- ── LESSON 1-1 ──────────────────────────────────────── -->
+    <article class="lesson" id="l1-1">
+      <div class="lesson-header">
+        <span class="lesson-num">Lesson 1–1</span>
+        <h2 class="lesson-title">LINE 平台架構全覽</h2>
+      </div>
+
+      <p class="body-text">
+        在寫任何一行程式碼之前，必須先建立清晰的心智模型（mental model）：
+        當使用者在 LINE 傳一則訊息給你的 Bot，這個訊息是如何從手機抵達你的伺服器，
+        又是如何原路返回成為回覆？整個流程涉及三個主要角色。
+      </p>
+
+      <div class="flow-diagram">
+        <div class="flow-node highlight">LINE 使用者<div class="flow-label">手機 App</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">LINE Platform<div class="flow-label">雲端伺服器</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node accent">你的 Webhook<div class="flow-label">POST /webhook</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Reply API<div class="flow-label">HTTPS 回呼</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight">LINE 使用者<div class="flow-label">收到回覆</div></div>
+      </div>
+
+      <p class="body-text">
+        LINE Platform 扮演的是中介者角色：它接收使用者的訊息，將其包裝成 JSON 格式的事件（event），
+        以 HTTP POST 請求推送到你事先登記的 <strong>Webhook URL</strong>。
+        你的伺服器收到事件後處理邏輯，再呼叫 LINE 的 <strong>Reply API</strong> 傳回回覆。
+        整個過程是單向推送，不是你去輪詢（polling）LINE 有沒有新訊息。
+      </p>
+
+      <p class="body-text">
+        這個 Webhook 架構有幾個重要含義。第一，你的伺服器必須對外可訪問，
+        本地開發時 <code>localhost</code> 並不符合這個條件，這就是為什麼稍後需要 Ngrok。
+        第二，你必須盡快回應 Webhook 請求（在 <strong>5 秒內</strong>回傳 HTTP 200），
+        否則 LINE 會判定失敗並重試。若你的業務邏輯耗時較長（例如呼叫 AI API），
+        應先回 200，再異步處理回覆。第三，LINE 會對每個 Webhook 請求附上數位簽名，
+        你必須驗證它的合法性。
+      </p>
+
+      <div class="callout">
+        <span class="callout-label">架構補充</span>
+        LINE 提供兩種主要的 Bot 產品類型：<strong>Messaging API</strong>（本課程重點）
+        與 <strong>LINE Login</strong>。Messaging API 用於建立自動化互動機器人；
+        LINE Login 用於讓第三方網站以 LINE 身份登入，兩者可以搭配使用，
+        但服務目的不同，不應混淆。
+      </div>
+
+      <p class="body-text">
+        了解這三個角色之後，我們再細看 LINE Platform 向你的 Webhook 發送的事件結構。
+        每個事件都包含以下核心欄位：
+      </p>
+
+      <div class="def-list">
+        <div class="def-item">
+          <div class="def-term">destination</div>
+          <div class="def-desc">接收事件的 Bot Channel ID，用於確認事件是發給你的 Bot。</div>
+        </div>
+        <div class="def-item">
+          <div class="def-term">events[ ]</div>
+          <div class="def-desc">事件陣列。LINE 可能在單一請求中批次傳送多個事件，你需要迭代處理每一個。</div>
+        </div>
+        <div class="def-item">
+          <div class="def-term">event.type</div>
+          <div class="def-desc">事件型別，如 <code>message</code>、<code>follow</code>、<code>postback</code> 等，決定後續處理邏輯。</div>
+        </div>
+        <div class="def-item">
+          <div class="def-term">event.source</div>
+          <div class="def-desc">事件來源，包含 <code>type</code>（user / group / room）與對應的 ID，讓你知道是誰觸發了事件。</div>
+        </div>
+        <div class="def-item">
+          <div class="def-term">event.replyToken</div>
+          <div class="def-desc">回覆用的一次性 token，每個 token 只能使用一次且於 <strong>30 秒</strong>內有效。僅部分事件型別含有此欄位。</div>
+        </div>
+        <div class="def-item">
+          <div class="def-term">event.timestamp</div>
+          <div class="def-desc">事件發生的 Unix 時間戳（毫秒），用於記錄或時序判斷。</div>
+        </div>
+      </div>
+
+      <div class="code-figure">
+        <div class="code-caption">Webhook payload 範例結構</div>
+        <div class="code-block"><span class="c-def"><span class="ln">1</span>{</span>
+<span class="c-def"><span class="ln">2</span>  <span class="c-str">"destination"</span><span class="c-pun">:</span> <span class="c-str">"U4af4980629..."</span>,</span>
+<span class="c-def"><span class="ln">3</span>  <span class="c-str">"events"</span><span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">4</span>    {</span>
+<span class="c-def"><span class="ln">5</span>      <span class="c-str">"type"</span><span class="c-pun">:</span> <span class="c-str">"message"</span>,</span>
+<span class="c-def"><span class="ln">6</span>      <span class="c-str">"replyToken"</span><span class="c-pun">:</span> <span class="c-str">"nHuyWiB7yP5Zw52FIkcQobQuGDXCTA"</span>,</span>
+<span class="c-def"><span class="ln">7</span>      <span class="c-str">"source"</span><span class="c-pun">:</span> {</span>
+<span class="c-def"><span class="ln">8</span>        <span class="c-str">"type"</span><span class="c-pun">:</span>   <span class="c-str">"user"</span>,</span>
+<span class="c-def"><span class="ln">9</span>        <span class="c-str">"userId"</span><span class="c-pun">:</span> <span class="c-str">"U4af4980629..."</span></span>
+<span class="c-def"><span class="ln">10</span>      },</span>
+<span class="c-def"><span class="ln">11</span>      <span class="c-str">"timestamp"</span><span class="c-pun">:</span> <span class="c-num">1625665242211</span>,</span>
+<span class="c-def"><span class="ln">12</span>      <span class="c-str">"message"</span><span class="c-pun">:</span> {</span>
+<span class="c-def"><span class="ln">13</span>        <span class="c-str">"id"</span><span class="c-pun">:</span>   <span class="c-str">"444573844083572737"</span>,</span>
+<span class="c-def"><span class="ln">14</span>        <span class="c-str">"type"</span><span class="c-pun">:</span> <span class="c-str">"text"</span>,</span>
+<span class="c-def"><span class="ln">15</span>        <span class="c-str">"text"</span><span class="c-pun">:</span> <span class="c-str">"你好！"</span></span>
+<span class="c-def"><span class="ln">16</span>      }</span>
+<span class="c-def"><span class="ln">17</span>    }</span>
+<span class="c-def"><span class="ln">18</span>  ]</span>
+<span class="c-def"><span class="ln">19</span>}</span></div>
+      </div>
+
+    </article>
+
+    <!-- ── LESSON 1-2 ──────────────────────────────────────── -->
+    <article class="lesson" id="l1-2">
+      <div class="lesson-header">
+        <span class="lesson-num">Lesson 1–2</span>
+        <h2 class="lesson-title">LINE Developers Console 設定</h2>
+      </div>
+
+      <p class="body-text">
+        LINE Bot 的身份由兩個層次組成：<strong>Provider</strong>（供應商，代表你或你的組織）
+        與 <strong>Channel</strong>（具體的服務，每個 Bot 對應一個 Messaging API Channel）。
+        一個 Provider 可以建立多個 Channel。
+      </p>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            前往 <strong>developers.line.biz</strong>，以你的 LINE 帳號登入。
+            若是公司用途，建議使用 LINE Business 帳號而非個人帳號，
+            避免日後帳號管理問題。
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            點選 <strong>Create a new provider</strong>，填入 Provider 名稱。
+            這個名稱會顯示在使用者的好友資訊頁，請填入正式的組織或品牌名稱。
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            在 Provider 下建立新 Channel，類型選 <strong>Messaging API</strong>。
+            填寫 Channel name（Bot 顯示名稱）、Channel description 與分類，
+            上傳 Bot 頭像圖片（建議 640×640px JPEG 或 PNG）。
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            Channel 建立後，進入 <strong>Basic settings</strong> 頁籤，
+            找到並複製 <code>Channel secret</code>（32位元十六進位字串）。
+            再進入 <strong>Messaging API</strong> 頁籤，
+            點選 <strong>Issue</strong> 產生 <code>Channel access token (long-lived)</code>。
+            兩組憑證都要妥善保存。
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            在 Messaging API 頁籤找到 <strong>Webhook settings</strong>，
+            啟用 <strong>Use webhook</strong> 選項，
+            Webhook URL 欄位暫時留空，待後面步驟取得 Ngrok URL 後再填入。
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <div class="step-body">
+            建議在同一頁籤關閉 <strong>Auto-reply messages</strong> 和
+            <strong>Greeting messages</strong>，避免 LINE 自動回覆干擾你的
+            Webhook 測試。
+          </div>
+        </div>
+      </div>
+
+      <p class="body-text">
+        完成設定後，你應該持有兩組關鍵字串：<code>Channel secret</code> 和
+        <code>Channel access token</code>。前者用於驗證 Webhook 請求合法性（接收端），
+        後者用於呼叫 LINE API 傳送訊息（傳送端）。兩者性質不同，請勿混淆。
+      </p>
+
+      <div class="callout warn">
+        <span class="callout-label">安全警告</span>
+        這兩組憑證等同於你 Bot 的帳號密碼。絕對不能出現在 Git 提交記錄中，
+        不能寫死在程式碼裡，不能出現在截圖中發佈到公開討論區。
+        正確做法是存入 <code>.env</code> 檔案，並在 <code>.gitignore</code> 中排除此檔案。
+        一旦憑證外洩，應立即在 Console 重新產生（Reissue）。
+      </div>
+
+    </article>
+
+    <!-- ── LESSON 1-3 ──────────────────────────────────────── -->
+    <article class="lesson" id="l1-3">
+      <div class="lesson-header">
+        <span class="lesson-num">Lesson 1–3</span>
+        <h2 class="lesson-title">Node.js 專案初始化與 SDK 安裝</h2>
+      </div>
+
+      <p class="body-text">
+        LINE 官方提供的 <code>@line/bot-sdk</code> 套件封裝了大量重複工作：
+        Signature 驗證、型別定義、各種 Message Builder，以及 API 呼叫的錯誤處理。
+        雖然你也可以直接呼叫原始的 HTTP API，但使用 SDK 能減少出錯機會，
+        也讓程式碼更易讀。
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">建立專案目錄並安裝依賴</div>
+        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 建立並進入專案目錄</span>
+<span class="c-def"><span class="ln">2</span>mkdir my-linebot <span class="c-pun">&&</span> cd my-linebot</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span># 初始化 npm 專案（-y 跳過互動式提問）</span>
+<span class="c-def"><span class="ln">5</span>npm init -y</span>
+<span class="c-def"><span class="ln">6</span></span>
+<span class="c-cmt"><span class="ln">7</span># 安裝生產依賴</span>
+<span class="c-def"><span class="ln">8</span>npm install @line/bot-sdk express dotenv</span>
+<span class="c-def"><span class="ln">9</span></span>
+<span class="c-cmt"><span class="ln">10</span># 安裝開發工具（自動重啟）</span>
+<span class="c-def"><span class="ln">11</span>npm install --save-dev nodemon</span></div>
+      </div>
+
+      <p class="body-text">
+        接著建立 <code>.env</code> 檔案，存放所有敏感設定值。
+        這個檔案不應提交到版本控制，請同步建立 <code>.gitignore</code>。
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">.env — 環境變數設定</div>
+        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 從 LINE Developers Console 取得</span>
+<span class="c-def"><span class="ln">2</span>CHANNEL_SECRET<span class="c-pun">=</span>你的_channel_secret_32位</span>
+<span class="c-def"><span class="ln">3</span>CHANNEL_ACCESS_TOKEN<span class="c-pun">=</span>你的_long_lived_token</span>
+<span class="c-def"><span class="ln">4</span></span>
+<span class="c-cmt"><span class="ln">5</span># 伺服器設定</span>
+<span class="c-def"><span class="ln">6</span>PORT<span class="c-pun">=</span>3000</span>
+<span class="c-def"><span class="ln">7</span>NODE_ENV<span class="c-pun">=</span>development</span></div>
+      </div>
+
+      <div class="code-figure">
+        <div class="code-caption">.gitignore — 排除敏感檔案</div>
+        <div class="code-block"><span class="c-def"><span class="ln">1</span>node_modules/</span>
+<span class="c-def"><span class="ln">2</span>.env</span>
+<span class="c-def"><span class="ln">3</span>.env.local</span>
+<span class="c-def"><span class="ln">4</span>.DS_Store</span>
+<span class="c-def"><span class="ln">5</span>*.log</span></div>
+      </div>
+
+      <p class="body-text">
+        在 <code>package.json</code> 的 <code>scripts</code> 欄位加入開發用指令，
+        讓你每次修改程式碼後不需手動重啟伺服器：
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">package.json — scripts 欄位</div>
+        <div class="code-block"><span class="c-def"><span class="ln">1</span><span class="c-str">"scripts"</span><span class="c-pun">:</span> {</span>
+<span class="c-def"><span class="ln">2</span>  <span class="c-str">"start"</span><span class="c-pun">:</span>  <span class="c-str">"node index.js"</span>,</span>
+<span class="c-def"><span class="ln">3</span>  <span class="c-str">"dev"</span><span class="c-pun">:</span>    <span class="c-str">"nodemon index.js"</span>,</span>
+<span class="c-def"><span class="ln">4</span>  <span class="c-str">"lint"</span><span class="c-pun">:</span>   <span class="c-str">"eslint ."</span></span>
+<span class="c-def"><span class="ln">5</span>}</span></div>
+      </div>
+
+      <p class="body-text">
+        最終你的專案根目錄應有如下結構。保持根目錄乾淨，
+        業務邏輯隨後會拆分到 <code>handlers/</code> 與 <code>services/</code> 等子目錄：
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">初始專案目錄結構</div>
+        <div class="code-block"><span class="c-def"><span class="ln">1</span>my-linebot/</span>
+<span class="c-def"><span class="ln">2</span>├── index.js          <span class="c-cmt"># 主程式入口</span></span>
+<span class="c-def"><span class="ln">3</span>├── .env              <span class="c-cmt"># 環境變數（不提交 Git）</span></span>
+<span class="c-def"><span class="ln">4</span>├── .gitignore</span>
+<span class="c-def"><span class="ln">5</span>├── package.json</span>
+<span class="c-def"><span class="ln">6</span>└── package-lock.json</span></div>
+      </div>
+
+    </article>
+
+    <!-- ── LESSON 1-4 ──────────────────────────────────────── -->
+    <article class="lesson" id="l1-4">
+      <div class="lesson-header">
+        <span class="lesson-num">Lesson 1–4</span>
+        <h2 class="lesson-title">Echo Bot 完整實作</h2>
+      </div>
+
+      <p class="body-text">
+        Echo Bot 是最小可運行的 LINE Bot：用戶說什麼，Bot 就回什麼。
+        這個看似簡單的實作包含了 Bot 開發的所有核心概念：
+        Express 伺服器、Middleware 驗證、事件解析、Reply API 呼叫。
+        先把這個框架搞清楚，後面的章節只是在它之上堆疊功能。
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">index.js — 完整 Echo Bot 實作</div>
+        <div class="code-block"><span class="c-kw"><span class="ln">1</span>require</span><span class="c-pun">(</span><span class="c-str">'dotenv'</span><span class="c-pun">).</span><span class="c-fn">config</span><span class="c-pun">()</span>
+<span class="c-kw"><span class="ln">2</span>const</span> line    <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'@line/bot-sdk'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">3</span>const</span> express <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'express'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">4</span></span>
+<span class="c-cmt"><span class="ln">5</span>// 1. 設定物件：SDK 與 Client 都需要它</span>
+<span class="c-kw"><span class="ln">6</span>const</span> config <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">7</span>  channelSecret:      process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_SECRET</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">8</span>  channelAccessToken: process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_ACCESS_TOKEN</span></span>
+<span class="c-def"><span class="ln">9</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">10</span></span>
+<span class="c-cmt"><span class="ln">11</span>// 2. LINE Client：用於呼叫 LINE API（傳送訊息等）</span>
+<span class="c-kw"><span class="ln">12</span>const</span> client <span class="c-pun">=</span> <span class="c-kw">new</span> <span class="c-cls">line</span><span class="c-pun">.</span><span class="c-cls">Client</span><span class="c-pun">(</span>config<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">13</span></span>
+<span class="c-cmt"><span class="ln">14</span>// 3. Express App</span>
+<span class="c-kw"><span class="ln">15</span>const</span> app <span class="c-pun">=</span> <span class="c-fn">express</span><span class="c-pun">()</span>
+<span class="c-def"><span class="ln">16</span></span>
+<span class="c-cmt"><span class="ln">17</span>// 4. Webhook 端點：line.middleware 負責驗證簽名並解析 body</span>
+<span class="c-def"><span class="ln">18</span>app<span class="c-pun">.</span><span class="c-fn">post</span><span class="c-pun">(</span><span class="c-str">'/webhook'</span><span class="c-pun">,</span> line<span class="c-pun">.</span><span class="c-fn">middleware</span><span class="c-pun">(</span>config<span class="c-pun">),</span> <span class="c-pun">(</span>req<span class="c-pun">,</span> res<span class="c-pun">)</span> <span class="c-kw">=></span> <span class="c-pun">{</span></span>
+<span class="c-def"><span class="ln">19</span>  Promise</span>
+<span class="c-def"><span class="ln">20</span>    <span class="c-pun">.</span><span class="c-fn">all</span><span class="c-pun">(</span>req<span class="c-pun">.</span>body<span class="c-pun">.</span>events<span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span>handleEvent<span class="c-pun">))</span></span>
+<span class="c-def"><span class="ln">21</span>    <span class="c-pun">.</span><span class="c-fn">then</span><span class="c-pun">(</span>result <span class="c-kw">=></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">(</span>result<span class="c-pun">))</span></span>
+<span class="c-def"><span class="ln">22</span>    <span class="c-pun">.</span><span class="c-fn">catch</span><span class="c-pun">(</span>err <span class="c-kw">=></span> <span class="c-pun">{</span></span>
+<span class="c-def"><span class="ln">23</span>      console<span class="c-pun">.</span><span class="c-fn">error</span><span class="c-pun">(</span>err<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">24</span>      res<span class="c-pun">.</span><span class="c-fn">status</span><span class="c-pun">(</span><span class="c-num">500</span><span class="c-pun">).</span><span class="c-fn">end</span><span class="c-pun">()</span></span>
+<span class="c-def"><span class="ln">25</span>    <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">26</span><span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">27</span></span>
+<span class="c-cmt"><span class="ln">28</span>// 5. 事件處理函式：處理單一 event 物件</span>
+<span class="c-kw"><span class="ln">29</span>async function</span> <span class="c-fn">handleEvent</span><span class="c-pun">(</span>event<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">30</span>  // 只處理文字訊息，其他事件型別一律回傳 null</span>
+<span class="c-kw"><span class="ln">31</span>  if</span> <span class="c-pun">(</span>event<span class="c-pun">.</span>type <span class="c-pun">!==</span> <span class="c-str">'message'</span> <span class="c-pun">||</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>type <span class="c-pun">!==</span> <span class="c-str">'text'</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">32</span>    return</span> <span class="c-kw">null</span>
+<span class="c-def"><span class="ln">33</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">34</span></span>
+<span class="c-cmt"><span class="ln">35</span>  // 取得使用者傳送的文字</span>
+<span class="c-kw"><span class="ln">36</span>  const</span> userText <span class="c-pun">=</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>text
+<span class="c-def"><span class="ln">37</span></span>
+<span class="c-cmt"><span class="ln">38</span>  // 呼叫 Reply API，以 replyToken 回覆</span>
+<span class="c-kw"><span class="ln">39</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">40</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">41</span>    text<span class="c-pun">:</span> <span class="c-str">`你說：${userText}`</span></span>
+<span class="c-def"><span class="ln">42</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">43</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">44</span></span>
+<span class="c-cmt"><span class="ln">45</span>// 6. 健康檢查端點（部署監控用）</span>
+<span class="c-def"><span class="ln">46</span>app<span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'/health'</span><span class="c-pun">,</span> <span class="c-pun">(</span>_req<span class="c-pun">,</span> res<span class="c-pun">)</span> <span class="c-kw">=></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">({</span> status<span class="c-pun">:</span> <span class="c-str">'ok'</span> <span class="c-pun">}))</span></span>
+<span class="c-def"><span class="ln">47</span></span>
+<span class="c-cmt"><span class="ln">48</span>// 7. 啟動伺服器</span>
+<span class="c-kw"><span class="ln">49</span>const</span> PORT <span class="c-pun">=</span> process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">PORT</span> <span class="c-pun">||</span> <span class="c-num">3000</span>
+<span class="c-def"><span class="ln">50</span>app<span class="c-pun">.</span><span class="c-fn">listen</span><span class="c-pun">(</span>PORT<span class="c-pun">,</span> <span class="c-pun">()</span> <span class="c-kw">=></span> console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`Bot running on port ${PORT}`</span><span class="c-pun">))</span></span></div>
+      </div>
+
+      <p class="body-text">
+        程式碼第 18 行的 <code>line.middleware(config)</code> 是這個架構的關鍵。
+        它是一個 Express middleware，在你的處理邏輯執行之前先做兩件事：
+        一是從請求的 <code>x-line-signature</code> 標頭取出簽名，
+        以 HMAC-SHA256 演算法搭配你的 Channel Secret 重新計算，
+        比對兩者是否一致，不一致直接回傳 403；
+        二是解析 JSON body，填入 <code>req.body</code>。
+        這兩件事由 SDK 處理，你不需要手動實作。
+      </p>
+
+      <p class="body-text">
+        第 20 行使用 <code>Promise.all()</code> 是因為 LINE 可能在一次請求中批次傳送多個事件，
+        必須對 <code>events</code> 陣列的每一個元素分別呼叫 <code>handleEvent</code>，
+        並等待全部完成。第 32 行對非文字訊息回傳 <code>null</code>，
+        這是正確做法——告訴 <code>Promise.all</code> 這個事件不需要處理，
+        不應對其呼叫 replyMessage（因為 sticker、image 等事件也可能沒有 replyToken）。
+      </p>
+
+      <div class="callout">
+        <span class="callout-label">常見錯誤</span>
+        如果你在 <code>handleEvent</code> 中忘記對不需要回覆的事件 <code>return null</code>，
+        而是讓函式自然結束（回傳 <code>undefined</code>），在某些情況下 <code>Promise.all</code>
+        會拋出例外，導致 500 錯誤。養成明確 <code>return null</code> 的習慣。
+      </div>
+
+    </article>
+
+    <!-- ── LESSON 1-5 ──────────────────────────────────────── -->
+    <article class="lesson" id="l1-5">
+      <div class="lesson-header">
+        <span class="lesson-num">Lesson 1–5</span>
+        <h2 class="lesson-title">Ngrok 本地測試與 Webhook 驗證</h2>
+      </div>
+
+      <p class="body-text">
+        你的伺服器跑在 <code>localhost:3000</code>，LINE 的雲端伺服器無法直接存取它。
+        Ngrok 的作用是在你的本地端建立一條安全隧道（tunnel），
+        並提供一個公開的 HTTPS URL 指向你的本地服務。
+        這個 URL 的流量會透過 Ngrok 的伺服器轉發到你的電腦。
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">安裝並啟動 Ngrok</div>
+        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 方式一：全域安裝（需先在 ngrok.com 建立免費帳號）</span>
+<span class="c-def"><span class="ln">2</span>npm install -g ngrok</span>
+<span class="c-def"><span class="ln">3</span>ngrok config add-authtoken 你的_authtoken</span>
+<span class="c-def"><span class="ln">4</span></span>
+<span class="c-cmt"><span class="ln">5</span># 方式二：直接從 ngrok.com 下載執行檔（免安裝）</span>
+<span class="c-def"><span class="ln">6</span></span>
+<span class="c-cmt"><span class="ln">7</span># 啟動隧道，對外暴露 3000 port</span>
+<span class="c-def"><span class="ln">8</span>ngrok http 3000</span></div>
+      </div>
+
+      <p class="body-text">
+        啟動後，終端機會顯示類似下方的輸出。記下 <code>Forwarding</code> 那一行的 HTTPS URL：
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">Ngrok 啟動輸出</div>
+        <div class="code-block"><span class="c-def"><span class="ln">1</span>Session Status     online</span>
+<span class="c-def"><span class="ln">2</span>Account            your@email.com (Plan: Free)</span>
+<span class="c-def"><span class="ln">3</span>Version            3.x.x</span>
+<span class="c-def"><span class="ln">4</span>Region             Asia Pacific (ap)</span>
+<span class="c-def"><span class="ln">5</span>Forwarding         <span class="c-str">https://a1b2c3d4e5f6.ngrok-free.app</span> -> http://localhost:3000</span>
+<span class="c-def"><span class="ln">6</span></span>
+<span class="c-cmt"><span class="ln">7</span>Connections        ttl=0  opn=0  rt1=0.00  rt5=0.00  p50=0.00  p90=0.00</span></span></div>
+      </div>
+
+      <p class="body-text">
+        將這個 HTTPS URL 加上 <code>/webhook</code>，填入 LINE Developers Console 的 Webhook URL 欄位。
+        例如：<code>https://a1b2c3d4e5f6.ngrok-free.app/webhook</code>。
+        填入後點選 <strong>Verify</strong> 按鈕，LINE 會發送一個測試請求到你的 URL，
+        若返回 200 則表示設定正確。
+      </p>
+
+      <div class="callout warn">
+        <span class="callout-label">重要限制</span>
+        Ngrok 免費方案的 URL 在每次重啟後都會更換。
+        每次重啟 Ngrok 後，必須回到 LINE Console 更新 Webhook URL。
+        這在開發階段是正常工作流程，不影響最終部署（正式部署時使用固定域名）。
+        Ngrok 也提供付費方案可綁定固定子域名，有需要可以考慮。
+      </div>
+
+      <p class="body-text">
+        完成後，在另一個終端機視窗啟動你的 Bot 伺服器：
+      </p>
+
+      <div class="code-figure">
+        <div class="code-caption">啟動本地開發伺服器</div>
+        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 開發模式（檔案變更自動重啟）</span>
+<span class="c-def"><span class="ln">2</span>npm run dev</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span># 終端機應顯示：</span>
+<span class="c-def"><span class="ln">5</span>Bot running on port <span class="c-num">3000</span></span></div>
+      </div>
+
+      <p class="body-text">
+        現在用你的個人 LINE 帳號掃描 Developers Console 中的 Bot QR Code，
+        加好友後傳一則訊息，應該能看到 Bot 回覆「你說：XXXXX」。
+        Ngrok 的終端機介面也會即時顯示每個 HTTP 請求的狀態碼，
+        方便調試。
+      </p>
+
+      <p class="body-text">
+        至此，你已完成第一章的所有目標。下表整理了本章涉及的所有技術術語，
+        確認你對每一個都有清晰的理解後再進入第二章。
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>術語</th>
+            <th>說明</th>
+            <th>類別</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Webhook</code></td>
+            <td>LINE 伺服器主動推送事件到你的 URL，是整個架構的驅動機制。</td>
+            <td><span class="tag-red">核心概念</span></td>
+          </tr>
+          <tr>
+            <td><code>Channel Secret</code></td>
+            <td>32位元字串，用於計算 HMAC-SHA256 簽名以驗證請求來源合法性。</td>
+            <td><span class="tag-red">安全</span></td>
+          </tr>
+          <tr>
+            <td><code>Channel Access Token</code></td>
+            <td>呼叫 LINE API 時放入 Authorization header 的憑證，代表你的 Bot 身份。</td>
+            <td><span class="tag-red">安全</span></td>
+          </tr>
+          <tr>
+            <td><code>replyToken</code></td>
+            <td>每個事件附帶的一次性回覆 token，有效期 30 秒，只能使用一次。</td>
+            <td><span class="tag-red">核心概念</span></td>
+          </tr>
+          <tr>
+            <td><code>line.middleware</code></td>
+            <td>SDK 提供的 Express middleware，自動處理簽名驗證與 body 解析。</td>
+            <td>SDK</td>
+          </tr>
+          <tr>
+            <td><code>line.Client</code></td>
+            <td>SDK 提供的 API 客戶端，封裝所有對 LINE API 的 HTTP 呼叫。</td>
+            <td>SDK</td>
+          </tr>
+          <tr>
+            <td><code>Ngrok</code></td>
+            <td>本地開發工具，建立隧道讓外部可訪問 localhost，測試用途。</td>
+            <td>工具</td>
+          </tr>
+          <tr>
+            <td><code>Provider</code></td>
+            <td>LINE Developers 平台上的組織單位，一個 Provider 下可建立多個 Channel。</td>
+            <td>平台</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </article>
+
+  </main>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">本章目錄</div>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#l1-1" class="toc-link">1–1 LINE 平台架構全覽</a></li>
+        <li class="toc-item"><a href="#l1-2" class="toc-link">1–2 Developers Console 設定</a></li>
+        <li class="toc-item"><a href="#l1-3" class="toc-link">1–3 專案初始化與 SDK</a></li>
+        <li class="toc-item"><a href="#l1-4" class="toc-link">1–4 Echo Bot 完整實作</a></li>
+        <li class="toc-item"><a href="#l1-5" class="toc-link">1–5 Ngrok 與 Webhook 驗證</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">關鍵術語</div>
+      <div class="term-list">
+        <div class="term-row">
+          <div class="term-name">Webhook</div>
+          <div class="term-def">事件驅動的 HTTP 推送機制，取代輪詢。</div>
+        </div>
+        <div class="term-row">
+          <div class="term-name">replyToken</div>
+          <div class="term-def">一次性回覆憑證，30 秒有效。</div>
+        </div>
+        <div class="term-row">
+          <div class="term-name">Channel Secret</div>
+          <div class="term-def">用於驗證 Webhook 簽名的私鑰。</div>
+        </div>
+        <div class="term-row">
+          <div class="term-name">Access Token</div>
+          <div class="term-def">呼叫 LINE API 的 Bearer token。</div>
+        </div>
+        <div class="term-row">
+          <div class="term-name">line.middleware</div>
+          <div class="term-def">SDK 提供的簽名驗證 middleware。</div>
+        </div>
+        <div class="term-row">
+          <div class="term-name">Ngrok</div>
+          <div class="term-def">本地開發的 HTTPS 隧道工具。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">參考資源</div>
+      <ul class="res-list">
+        <li class="res-item">
+          <strong>LINE Developers Console</strong>
+          developers.line.biz — 官方開發者後台
+        </li>
+        <li class="res-item">
+          <strong>@line/bot-sdk</strong>
+          GitHub: line/line-bot-sdk-nodejs — SDK 原始碼與文件
+        </li>
+        <li class="res-item">
+          <strong>Messaging API 文件</strong>
+          developers.line.biz/en/docs/messaging-api
+        </li>
+        <li class="res-item">
+          <strong>Ngrok</strong>
+          ngrok.com — 免費帳號最大 1 個隧道，無需信用卡
+        </li>
+        <li class="res-item">
+          <strong>dotenv</strong>
+          npmjs.com/package/dotenv — 環境變數管理
+        </li>
+        <li class="res-item">
+          <strong>Webhook 事件型別</strong>
+          developers.line.biz/en/reference/messaging-api/#webhook-event-objects
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">章節測驗</div>
+      <div class="quiz-wrap" id="quiz">
+        <div class="quiz-q">當 LINE Bot 需要主動在 30 分鐘後推送通知給用戶（非回覆），應使用哪種方式？</div>
+        <div class="quiz-opt" onclick="answerQuiz(0)">A. 保存 replyToken 延後使用</div>
+        <div class="quiz-opt" onclick="answerQuiz(1)">B. 呼叫 Push API，傳入 userId</div>
+        <div class="quiz-opt" onclick="answerQuiz(2)">C. 重新觸發一個 Webhook 事件</div>
+        <div class="quiz-opt" onclick="answerQuiz(3)">D. 使用 Reply API 搭配 setTimeout</div>
+        <div class="quiz-feedback" id="qfeed">
+          正確。replyToken 有效期僅 30 秒，且為一次性，不可延後使用。
+          主動推送必須使用 Push API，傳入預先儲存的 userId，
+          這也是為什麼在 follow 事件時要將 userId 存入資料庫。
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div><!-- .content-wrap -->
+
+</div><!-- .page -->
+
+<!-- ═══ CHAPTER NAV ══════════════════════════════════════════ -->
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="index.html" class="nav-btn">← 課程目錄</a>
+    <div class="nav-loc">
+      <div>CH.01 — LINE Bot 生態系與開發環境建置</div>
+      <div style="margin-top:0.25rem;font-size:0.58rem;color:var(--ink-4)">第 1 章，共 10 章</div>
+    </div>
+    <a href="chapter2.html" class="nav-btn fwd">CH.02 Webhook 事件處理 →</a>
+  </div>
+</nav>
+
+<script>
+/* Reading progress */
+window.addEventListener('scroll', () => {
+  const d = document.documentElement
+  const pct = d.scrollTop / (d.scrollHeight - d.clientHeight) * 100
+  document.getElementById('rp').style.width = pct + '%'
+})
+
+/* Active TOC */
+const sections = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const active = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (active) active.classList.add('active')
+    }
+  })
+}, { threshold: 0.3, rootMargin: '-60px 0px -60% 0px' })
+sections.forEach(s => observer.observe(s))
+
+/* Quiz */
+function answerQuiz(idx) {
+  const opts = document.querySelectorAll('.quiz-opt')
+  opts.forEach((el, i) => {
+    el.classList.remove('correct', 'wrong')
+    if (i === 1) el.classList.add('correct')
+    else if (i === idx && idx !== 1) el.classList.add('wrong')
+  })
+  document.getElementById('qfeed').style.display = 'block'
+}
+</script>
+
+</body>
+</html>

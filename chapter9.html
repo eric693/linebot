@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.09 — 雲端部署、監控與安全性</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ── MASTHEAD ───────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ── PAGE ───────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900;
+  line-height: 1.15; letter-spacing: -0.025em;
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ── OBJECTIVES ─────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ── CONTENT LAYOUT ─────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ── LESSON ─────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ── CODE BLOCKS ────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+
+.code-block {
+  background: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  padding: 1.5rem 0;
+  overflow-x: auto;
+  border-left: 3px solid var(--red);
+}
+.cl { display: flex; padding: 0 1.75rem 0 0; min-height: 1.85em; }
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block; width: 3rem;
+  padding-left: 1.25rem; padding-right: 1.25rem;
+  color: #4A4440; user-select: none; font-size: 0.68rem;
+  flex-shrink: 0; text-align: right; padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+.i1 { padding-left: 2ch; }
+.i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; }
+.i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; }
+.i6 { padding-left: 12ch; }
+.kw  { color: #C47A6A; }
+.str { color: #8BAF7A; }
+.fn  { color: #7AABCF; }
+.num { color: #C49A5A; }
+.cls { color: #C4B570; }
+.cmt { color: #7A6F6A; font-style: italic; }
+
+/* ── CALLOUTS ───────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem;
+  color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.08); padding: 0.1em 0.4em;
+}
+
+/* ── DEF LIST ───────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── TABLE ──────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2);
+  border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── PIPELINE DIAGRAM ───────────────────────── */
+.pipeline {
+  margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2);
+}
+.pipeline-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.pipeline-body { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.pipeline-step {
+  display: flex; align-items: stretch; gap: 0;
+}
+.step-num {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
+  color: var(--paper); background: var(--ink); padding: 0.5rem 0.6rem;
+  flex-shrink: 0; display: flex; align-items: center; min-width: 2rem; justify-content: center;
+}
+.step-num.accent { background: var(--red); }
+.step-body {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2);
+  border: 1px solid var(--paper-4); border-left: none; background: var(--paper);
+  padding: 0.5rem 0.75rem; flex: 1; line-height: 1.5;
+}
+.step-body strong { color: var(--ink); font-weight: 700; display: block; }
+.step-body span { color: var(--ink-4); font-size: 0.6rem; }
+.pipeline-connector {
+  width: 2rem; height: 0.8rem; display: flex; align-items: center;
+  justify-content: center; font-size: 0.7rem; color: var(--ink-4);
+  align-self: center; margin-left: 1rem;
+}
+
+/* ── ARCH GRID ──────────────────────────────── */
+.arch-wrap {
+  margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2);
+}
+.arch-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.arch-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.arch-row  { display: flex; gap: 0.5rem; align-items: stretch; }
+.arch-box {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--ink-2);
+  border: 1px solid var(--paper-4); background: var(--paper);
+  padding: 0.5rem 0.75rem; line-height: 1.5; flex: 1; text-align: center;
+}
+.arch-box strong { display: block; color: var(--ink); font-weight: 700; margin-bottom: 0.15rem; }
+.arch-box.dark { background: var(--ink); color: #9A9090; }
+.arch-box.dark strong { color: var(--paper); }
+.arch-box.accent { border-color: var(--red); background: var(--red-faint); }
+.arch-box.accent strong { color: var(--red); }
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-4);
+  padding: 0 0.2rem; flex-shrink: 0;
+}
+.arch-label {
+  font-family: var(--mono); font-size: 0.58rem; color: var(--ink-4);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center; padding: 0.25rem 0;
+}
+
+/* ── SIDEBAR ────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820;
+  cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ── NAV ────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.09 — 雲端部署、監控與安全性</span>
+  </div>
+  <div class="masthead-right">第 9 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ══════════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">09</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">4 小時</div>
+      <div class="ch-stat">中至高級</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含 CI/CD 完整設定</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title">雲端部署、<span>監控</span><br>與安全性</h1>
+    <p class="ch-standfirst">
+      程式寫好只是第一步，讓它在生產環境中穩定運行是截然不同的課題。
+      本章涵蓋從本地開發到正式上線的完整路徑：
+      選擇合適的部署平台、建立 CI/CD 流水線讓每次推送自動部署、
+      用結構化日誌與錯誤追蹤系統即時掌握 Bot 狀態，
+      以及以簽名驗證和環境隔離保護你的 Webhook 端點不被濫用。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>比較各部署平台的適用場景與限制</li>
+    <li>用 Docker 容器化 Bot 應用程式</li>
+    <li>設定 GitHub Actions 實現自動部署</li>
+    <li>建立結構化日誌與集中化錯誤追蹤</li>
+    <li>以健康檢查與告警系統監控服務狀態</li>
+    <li>實作 Webhook 簽名驗證與安全加固</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 9-1 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l9-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 9–1</span>
+    <h2 class="lesson-title">部署平台選型與 Docker 容器化</h2>
+  </div>
+
+  <p class="body-text">
+    LINE Bot 必須部署在能接收外部 HTTPS 請求的公開主機上——
+    本地的 <code>localhost</code> 只適合開發期間搭配 ngrok 使用。
+    正式環境的平台選擇影響可用性、擴展能力和運維複雜度，
+    沒有絕對最佳答案，只有最適合當下規模的選擇。
+  </p>
+
+  <div class="sub-heading">主要部署平台比較</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>平台</th><th>定價模式</th><th>適用規模</th><th>主要限制</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Railway</td>
+        <td>用量計費，有免費額度</td>
+        <td>個人專案、小型商用</td>
+        <td>免費方案每月有休眠機制</td>
+      </tr>
+      <tr>
+        <td>Render</td>
+        <td>免費方案 + 付費</td>
+        <td>小至中型</td>
+        <td>免費方案 15 分鐘無流量自動休眠，首次請求延遲高</td>
+      </tr>
+      <tr>
+        <td>Fly.io</td>
+        <td>用量計費，有免費額度</td>
+        <td>中型，需要多地區</td>
+        <td>設定相對複雜，需 flyctl CLI</td>
+      </tr>
+      <tr>
+        <td>Google Cloud Run</td>
+        <td>按請求計費，冷啟動</td>
+        <td>流量不穩定的場景</td>
+        <td>冷啟動延遲可能影響 Webhook 回應時間</td>
+      </tr>
+      <tr>
+        <td>AWS EC2 / GCP VM</td>
+        <td>固定月費</td>
+        <td>大型，需完整控制</td>
+        <td>需自行管理作業系統、安全更新</td>
+      </tr>
+      <tr>
+        <td>Heroku</td>
+        <td>付費方案起</td>
+        <td>小至中型</td>
+        <td>已無免費方案，成本較高</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <span class="callout-label">LINE Webhook 的回應時間限制</span>
+    LINE 平台要求 Webhook 端點必須在 <strong>1 秒內回應 HTTP 200</strong>，
+    否則視為失敗並重試。若使用會冷啟動的平台（Cloud Run、Render 免費方案），
+    冷啟動時間可能達 3–10 秒，導致 LINE 誤判失敗。
+    解法：使用最小實例數設定（min instances = 1）保持容器常駐，
+    或先回應 200 再非同步處理業務邏輯。
+  </div>
+
+  <div class="sub-heading">先回應、後處理的模式</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/router.js — 立即回應 200，非同步處理事件</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> line    = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> router  = express.<span class="fn">Router</span>()</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">const</span> lineConfig = {</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">channelAccessToken: process.env.<span class="cls">LINE_CHANNEL_ACCESS_TOKEN</span>,</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">channelSecret:      process.env.<span class="cls">LINE_CHANNEL_SECRET</span>,</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.<span class="cls">Client</span>(lineConfig)</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">router.<span class="fn">post</span>(<span class="str">'/webhook'</span>,</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">line.<span class="fn">middleware</span>(lineConfig),  <span class="cmt">// 簽名驗證（自動，見 9-5）</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1">(<span class="kw">req</span>, <span class="kw">res</span>) => {</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2"><span class="cmt">// 立即回應 200 — 必須在 1 秒內完成</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2">res.<span class="fn">sendStatus</span>(<span class="num">200</span>)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="cmt">// 非同步處理事件 — 不等待，不影響回應時間</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">req.body.events</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">.<span class="fn">filter</span>(e => e.type !== <span class="str">'delivery'</span>)  <span class="cmt">// 過濾不需要處理的事件類型</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i3">.<span class="fn">forEach</span>(e => <span class="fn">handleEvent</span>(e, client).<span class="fn">catch</span>(err => {</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i4">console.<span class="fn">error</span>({ err, eventType: e.type, userId: e.source?.userId })</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i3">}))</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc">)</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Dockerfile：容器化 Node.js Bot</div>
+
+  <div class="code-figure">
+    <div class="code-caption">Dockerfile — 多階段建置，最小化映像大小</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># ── 第一階段：安裝依賴 ───────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">FROM</span> node:<span class="num">20</span>-alpine <span class="kw">AS</span> deps</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">WORKDIR</span> /app</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt"># 先複製 package 檔案，利用 Docker layer cache</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt"># 只有 package*.json 變動時才重新 npm install</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="kw">COPY</span> package*.json ./</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"><span class="kw">RUN</span> npm ci --omit=dev  <span class="cmt"># 只裝 production 依賴</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="cmt"># ── 第二階段：最終映像 ──────────────────────────────────────</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="kw">FROM</span> node:<span class="num">20</span>-alpine <span class="kw">AS</span> runner</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"><span class="kw">WORKDIR</span> /app</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"><span class="cmt"># 建立非 root 用戶（安全最佳實踐）</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"><span class="kw">RUN</span> addgroup -S appgroup && adduser -S appuser -G appgroup</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="cmt"># 從第一階段複製已安裝的 node_modules</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="kw">COPY</span> --from=deps /app/node_modules ./node_modules</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"><span class="kw">COPY</span> . .</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"><span class="cmt"># 切換到非 root 用戶</span></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"><span class="kw">USER</span> appuser</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"><span class="kw">ENV</span> NODE_ENV=production</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"><span class="kw">EXPOSE</span> <span class="num">3000</span></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc"><span class="cmt"># 健康檢查：每 30 秒確認服務可用</span></span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc"><span class="kw">HEALTHCHECK</span> --interval=<span class="num">30</span>s --timeout=<span class="num">5</span>s --retries=<span class="num">3</span> \</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i1"><span class="kw">CMD</span> wget -qO- http://localhost:<span class="num">3000</span>/health || exit <span class="num">1</span></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc"><span class="kw">CMD</span> [<span class="str">"node"</span>, <span class="str">"index.js"</span>]</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">.dockerignore — 排除不必要的檔案</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">node_modules</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">.env</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">.env.*</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc">.git</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">*.log</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc">coverage/</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">db/*.sqlite  <span class="cmt"># 開發用的本地資料庫不進容器</span></span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 9-2 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l9-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 9–2</span>
+    <h2 class="lesson-title">環境變數管理與 GitHub Actions CI/CD</h2>
+  </div>
+
+  <p class="body-text">
+    生產環境的密鑰（API Key、資料庫密碼、Channel Secret）絕對不能放進 Git 倉庫。
+    正確做法是透過平台的環境變數設定介面注入，
+    本地開發則用 <code>.env</code> 檔案搭配 <code>dotenv</code> 載入，
+    並確保 <code>.env</code> 列在 <code>.gitignore</code> 中。
+    CI/CD 流水線則使用 GitHub Secrets 存放這些敏感值，
+    在 Actions workflow 執行時動態注入。
+  </p>
+
+  <div class="sub-heading">環境變數的完整清單</div>
+
+  <div class="code-figure">
+    <div class="code-caption">.env.example — 提交到 Git 的範例檔案（值為空或假值）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># LINE Messaging API</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="cls">LINE_CHANNEL_ACCESS_TOKEN</span>=</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="cls">LINE_CHANNEL_SECRET</span>=</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cls">LINE_CHANNEL_ID</span>=</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt"># LIFF</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="cls">LIFF_ID</span>=</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="cmt"># OpenAI</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="cls">OPENAI_API_KEY</span>=</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"><span class="cmt"># 資料庫</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"><span class="cls">DATABASE_URL</span>=postgresql://user:pass@host:5432/dbname</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"><span class="cmt"># Redis</span></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"><span class="cls">REDIS_URL</span>=redis://localhost:6379</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"><span class="cmt"># Rich Menu IDs（由部署腳本填入）</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"><span class="cls">RICH_MENU_GUEST</span>=</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"><span class="cls">RICH_MENU_MEMBER</span>=</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"><span class="cls">RICH_MENU_VIP</span>=</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"><span class="cmt"># 應用程式設定</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"><span class="cls">PORT</span>=<span class="num">3000</span></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"><span class="cls">NODE_ENV</span>=development</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"><span class="cls">BRAND_NAME</span>=本公司</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc"><span class="cls">SUPPORT_PHONE</span>=02-1234-5678</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">GitHub Actions 自動部署到 Railway</div>
+
+  <div class="code-figure">
+    <div class="code-caption">.github/workflows/deploy.yml</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">name: Deploy to Railway</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">on:</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">push:</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2">branches: [main]   <span class="cmt"># 只在 main 分支的推送觸發部署</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">jobs:</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">test-and-deploy:</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">runs-on: ubuntu-latest</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">steps:</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i3">- name: Checkout code</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i4">uses: actions/checkout@v4</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i3">- name: Setup Node.js</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i4">uses: actions/setup-node@v4</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i4">with:</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i5">node-version: <span class="str">'20'</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i5">cache: <span class="str">'npm'</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i3">- name: Install dependencies</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i4">run: npm ci</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i3">- name: Run tests</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i4">run: npm test</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i4">env:</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i5">NODE_ENV: test</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i5"><span class="cmt"># 測試時用假值，不連真實服務</span></span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i5">LINE_CHANNEL_SECRET: test-secret</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i5">DATABASE_URL: sqlite:///:memory:</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i3">- name: Deploy to Railway</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i4">uses: railwayapp/railway-github-action@v2</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i4">with:</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i5">railway_token: ${{ secrets.RAILWAY_TOKEN }}</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i3">- name: Notify on failure</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i4">if: failure()</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i4">run: |</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i5">curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i6">-H 'Content-Type: application/json' \</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i6">-d '{"text":"Bot 部署失敗，請檢查 GitHub Actions 日誌"}'</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">部署 Pipeline 的四個階段</div>
+
+  <div class="pipeline">
+    <div class="pipeline-head">CI/CD 流水線</div>
+    <div class="pipeline-body">
+      <div class="pipeline-step">
+        <div class="step-num">1</div>
+        <div class="step-body"><strong>git push → 觸發 Actions</strong><span>推送到 main 分支自動啟動 workflow</span></div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-step">
+        <div class="step-num">2</div>
+        <div class="step-body"><strong>安裝依賴 + 執行測試</strong><span>npm ci → npm test，失敗即停止，不部署</span></div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-step">
+        <div class="step-num accent">3</div>
+        <div class="step-body"><strong>建置 Docker 映像並推送</strong><span>docker build → push to registry（或直接 Railway 部署）</span></div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-step">
+        <div class="step-num">4</div>
+        <div class="step-body"><strong>部署完成 + 健康檢查</strong><span>新版本上線，執行 /health 確認服務正常，異常時回滾</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-label">資料庫 Migration 的時序問題</span>
+    若應用程式啟動時自動執行 migration（<code>knex migrate:latest</code>），
+    在多實例部署時可能多個實例同時執行 migration，造成衝突。
+    正確做法是將 migration 作為 CI/CD 的獨立步驟，
+    在新版本容器啟動<strong>之前</strong>執行，確保只跑一次。
+  </div>
+</article>
+
+<!-- ── LESSON 9-3 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l9-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 9–3</span>
+    <h2 class="lesson-title">結構化日誌與集中化錯誤追蹤</h2>
+  </div>
+
+  <p class="body-text">
+    <code>console.log('用戶傳了訊息')</code> 在開發時夠用，
+    但在生產環境中幾乎沒有診斷價值。
+    當 Bot 在凌晨三點出現問題，你需要的是能快速篩選、搜尋、
+    告警的結構化日誌系統——每條日誌都是 JSON，
+    包含時間戳、嚴重程度、userId、事件類型等可查詢的欄位。
+  </p>
+
+  <div class="sub-heading">pino：生產級的 Node.js 日誌函式庫</div>
+
+  <div class="code-figure">
+    <div class="code-caption">安裝 pino</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">npm install pino pino-pretty</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="cmt"># pino-pretty 僅供開發時美化輸出，生產環境輸出純 JSON</span></span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/logger.js — 統一的日誌設定</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> pino = <span class="fn">require</span>(<span class="str">'pino'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> logger = <span class="fn">pino</span>({</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">level: process.env.<span class="cls">LOG_LEVEL</span> || <span class="str">'info'</span>,</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="cmt">// 開發環境：美化輸出；生產環境：純 JSON</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">transport: process.env.<span class="cls">NODE_ENV</span> !== <span class="str">'production'</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">? { target: <span class="str">'pino-pretty'</span>, options: { colorize: <span class="kw">true</span>, translateTime: <span class="kw">true</span> } }</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">: <span class="kw">undefined</span>,</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="cmt">// 序列化設定：敏感欄位自動遮蔽</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">redact: {</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2">paths: [<span class="str">'req.headers.authorization'</span>, <span class="str">'*.token'</span>, <span class="str">'*.apiKey'</span>],</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">censor: <span class="str">'[REDACTED]'</span>,</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="cmt">// 基礎欄位：每條日誌都包含這些</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1">base: {</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">env:     process.env.<span class="cls">NODE_ENV</span>,</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">version: process.env.<span class="cls">npm_package_version</span>,</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc">module.exports = logger</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">在 Webhook handler 中使用結構化日誌</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> logger = <span class="fn">require</span>(<span class="str">'../logger'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">async function</span> <span class="fn">handleEvent</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="kw">const</span> startTime = <span class="cls">Date</span>.<span class="fn">now</span>()</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1"><span class="kw">const</span> ctx = {</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2">eventType: event.type,</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2">userId:    event.source?.userId,</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">eventId:   event.webhookEventId,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1">logger.<span class="fn">info</span>({ ...ctx }, <span class="str">'event received'</span>)</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2"><span class="kw">await</span> <span class="fn">routeEvent</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">logger.<span class="fn">info</span>({</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i3">...ctx,</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3">durationMs: <span class="cls">Date</span>.<span class="fn">now</span>() - startTime,</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">}, <span class="str">'event handled'</span>)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2">logger.<span class="fn">error</span>({</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i3">...ctx,</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i3">err: {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i4">message: err.message,</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i4">stack:   err.stack,</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i4">code:    err.code,</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2">}, <span class="str">'event handling failed'</span>)</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Sentry：集中化的錯誤追蹤</div>
+  <p class="body-text">
+    pino 把日誌寫到標準輸出，適合收進 Datadog、Logtail 等日誌平台。
+    對於<strong>未預期的錯誤</strong>，Sentry 提供更好的體驗：
+    自動捕捉未處理的例外、附帶完整的 stack trace、
+    計算錯誤發生頻率、提供影響用戶數統計，並支援告警通知。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Sentry 整合（index.js 最頂端載入）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">npm install @sentry/node</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/instrument.js — Sentry 初始化（必須最先載入）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> Sentry = <span class="fn">require</span>(<span class="str">'@sentry/node'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">Sentry.<span class="fn">init</span>({</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">dsn:         process.env.<span class="cls">SENTRY_DSN</span>,</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">environment: process.env.<span class="cls">NODE_ENV</span>,</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1"><span class="cmt">// 效能監控取樣率：生產環境取 10% 的請求做效能追蹤</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">tracesSampleRate: process.env.<span class="cls">NODE_ENV</span> === <span class="str">'production'</span> ? <span class="num">0.1</span> : <span class="num">1.0</span>,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1"><span class="cmt">// 過濾掉不需要追蹤的錯誤（例如用戶輸入驗證錯誤）</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1">ignoreErrors: [<span class="str">'ValidationError'</span>, <span class="str">'RateLimitExceeded'</span>],</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"><span class="cmt">// 手動捕捉並附加 userId 上下文</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"><span class="kw">function</span> <span class="fn">captureException</span>(err, context = {}) {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1">Sentry.<span class="fn">withScope</span>(scope => {</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="kw">if</span> (context.userId) scope.<span class="fn">setUser</span>({ id: context.userId })</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2"><span class="kw">if</span> (context.eventType) scope.<span class="fn">setTag</span>(<span class="str">'event.type'</span>, context.eventType)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">scope.<span class="fn">setExtras</span>(context)</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">Sentry.<span class="fn">captureException</span>(err)</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc">module.exports = { captureException }</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 9-4 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l9-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 9–4</span>
+    <h2 class="lesson-title">健康檢查、指標收集與告警</h2>
+  </div>
+
+  <p class="body-text">
+    知道服務「壞了」通常比知道服務「快要壞了」晚了很久。
+    健康檢查端點讓部署平台和監控系統能定期確認服務狀態；
+    指標收集讓你看到 Bot 的處理量、回應時間趨勢；
+    告警讓問題在影響用戶之前就通知到你。
+  </p>
+
+  <div class="sub-heading">健康檢查端點：分層回應</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/routes/health.js — 分層健康檢查</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> db      = <span class="fn">require</span>(<span class="str">'../db/knex'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> redis   = <span class="fn">require</span>(<span class="str">'../session/redis'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">const</span> router  = express.<span class="fn">Router</span>()</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt">// 淺層健康檢查：只確認程序在跑（給負載平衡器用）</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">router.<span class="fn">get</span>(<span class="str">'/health'</span>, (_req, res) => {</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">res.<span class="fn">json</span>({ status: <span class="str">'ok'</span>, uptime: process.<span class="fn">uptime</span>() })</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="cmt">// 深層健康檢查：確認資料庫、Redis 都可連線（給監控系統用）</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc">router.<span class="fn">get</span>(<span class="str">'/health/deep'</span>, <span class="kw">async</span> (_req, res) => {</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">const</span> checks = {}</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1"><span class="cmt">// 檢查資料庫連線</span></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="kw">await</span> db.<span class="fn">raw</span>(<span class="str">'SELECT 1'</span>)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">checks.database = { status: <span class="str">'ok'</span> }</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">checks.database = { status: <span class="str">'error'</span>, message: err.message }</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1"><span class="cmt">// 檢查 Redis 連線</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="kw">try</span> {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i2"><span class="kw">await</span> redis.<span class="fn">ping</span>()</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">checks.redis = { status: <span class="str">'ok'</span> }</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1">} <span class="kw">catch</span> (err) {</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2">checks.redis = { status: <span class="str">'error'</span>, message: err.message }</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="kw">const</span> allOk = <span class="cls">Object</span>.<span class="fn">values</span>(checks).<span class="fn">every</span>(c => c.status === <span class="str">'ok'</span>)</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1">res.<span class="fn">status</span>(allOk ? <span class="num">200</span> : <span class="num">503</span>).<span class="fn">json</span>({</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2">status:  allOk ? <span class="str">'ok'</span> : <span class="str">'degraded'</span>,</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2">checks,</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2">uptime:  process.<span class="fn">uptime</span>(),</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2">memory:  process.<span class="fn">memoryUsage</span>(),</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc">})</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc">module.exports = router</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">使用 Betteruptime 做外部監控</div>
+  <p class="body-text">
+    內部健康檢查解決不了「整個伺服器掛掉」的場景——
+    伺服器都不跑了，自然也無法檢查自己。
+    外部監控服務（Betteruptime、UptimeRobot、Pingdom）從外部定期打你的 <code>/health</code> 端點，
+    服務無回應超過設定閾值時立刻發送告警（Email、SMS、LINE Notify、PagerDuty）。
+    每隔 1 分鐘打一次的免費方案對大多數 Bot 場景已足夠。
+  </p>
+
+  <div class="sub-heading">應用程式指標：計數器與計時器</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/metrics.js — 輕量級指標收集（不依賴外部服務）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// 簡單的記憶體指標，適合小型部署</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="cmt">// 大型部署建議改用 prom-client 輸出 Prometheus 格式</span></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> counters = {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">webhooks_received:  <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">messages_handled:   <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">ai_calls:           <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">ai_errors:          <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">rate_limit_hits:    <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc"><span class="kw">const</span> timers = {</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1">ai_latency_ms: [],  <span class="cmt">// 最近 100 次 AI 呼叫的延遲</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"><span class="kw">function</span> <span class="fn">inc</span>(counter) { counters[counter]++ }</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"><span class="kw">function</span> <span class="fn">recordLatency</span>(timerKey, ms) {</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1">timers[timerKey].<span class="fn">push</span>(ms)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1"><span class="kw">if</span> (timers[timerKey].length > <span class="num">100</span>) timers[timerKey].<span class="fn">shift</span>()</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"><span class="kw">function</span> <span class="fn">getMetrics</span>() {</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1"><span class="kw">const</span> latencies = timers.ai_latency_ms</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="kw">const</span> sorted    = [...latencies].<span class="fn">sort</span>((a, b) => a - b)</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">...counters,</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">ai_latency: {</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i3">p50: sorted[<span class="cls">Math</span>.<span class="fn">floor</span>(sorted.length * <span class="num">0.5</span>)] ?? <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i3">p95: sorted[<span class="cls">Math</span>.<span class="fn">floor</span>(sorted.length * <span class="num">0.95</span>)] ?? <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i3">p99: sorted[<span class="cls">Math</span>.<span class="fn">floor</span>(sorted.length * <span class="num">0.99</span>)] ?? <span class="num">0</span>,</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc">module.exports = { inc, recordLatency, getMetrics }</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 9-5 ──────────────────────────────────────────────────── -->
+<article class="lesson" id="l9-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 9–5</span>
+    <h2 class="lesson-title">Webhook 安全性與生產加固清單</h2>
+  </div>
+
+  <p class="body-text">
+    公開在網際網路上的 Webhook 端點，
+    任何人都能對它發送 POST 請求。
+    沒有驗證機制的端點等於讓任何人都能觸發你的 Bot 邏輯、
+    消耗你的 OpenAI 配額、甚至偽造事件操縱業務資料。
+    LINE SDK 的 middleware 提供簽名驗證；
+    除此之外還有一系列加固措施共同構成防禦縱深。
+  </p>
+
+  <div class="sub-heading">LINE Webhook 簽名驗證原理</div>
+  <p class="body-text">
+    LINE 平台在每次請求的 <code>X-Line-Signature</code> 標頭中，
+    附上以 <strong>Channel Secret 作為 HMAC-SHA256 密鑰</strong>對請求 body 計算的簽名。
+    後端以相同方式計算並對比，若不符則拒絕請求。
+    攻擊者不知道你的 Channel Secret，無法偽造合法的簽名。
+    <code>@line/bot-sdk</code> 的 middleware 自動完成這個驗證，但有一個關鍵前提：
+    body 必須是<strong>原始位元組（raw buffer）</strong>，不能是已解析的 JSON 物件。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">index.js — 正確的 body parser 設定順序（關鍵）</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> line    = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> app     = <span class="fn">express</span>()</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt">// LINE Webhook 路由：必須在 express.json() 之前</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="cmt">// line.middleware 會保留 raw body 用於簽名驗證</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">app.<span class="fn">post</span>(</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="str">'/webhook'</span>,</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1">line.<span class="fn">middleware</span>({ channelSecret: process.env.<span class="cls">LINE_CHANNEL_SECRET</span> }),</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">webhookRouter</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">)</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"><span class="cmt">// 其他 API 路由：使用標準 JSON body parser</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">app.<span class="fn">use</span>(express.<span class="fn">json</span>())</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">app.<span class="fn">use</span>(<span class="str">'/api'</span>, apiRouter)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc">app.<span class="fn">use</span>(<span class="str">'/health'</span>, healthRouter)</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">手動驗證 LINE 簽名（不使用 SDK middleware 時）</div>
+
+  <div class="code-figure">
+    <div class="code-caption">手動 HMAC-SHA256 簽名驗證</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> crypto = <span class="fn">require</span>(<span class="str">'crypto'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">function</span> <span class="fn">verifyLineSignature</span>(rawBody, signature, channelSecret) {</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1"><span class="kw">const</span> expected = crypto</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2">.<span class="fn">createHmac</span>(<span class="str">'sha256'</span>, channelSecret)</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2">.<span class="fn">update</span>(rawBody)       <span class="cmt">// rawBody 必須是 Buffer 或原始字串</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2">.<span class="fn">digest</span>(<span class="str">'base64'</span>)</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="cmt">// timingSafeEqual 防止時序攻擊（timing attack）</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1"><span class="kw">return</span> crypto.<span class="fn">timingSafeEqual</span>(</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2"><span class="cls">Buffer</span>.<span class="fn">from</span>(expected),</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i2"><span class="cls">Buffer</span>.<span class="fn">from</span>(signature),</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1">)</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">}</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">生產環境加固清單</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>項目</th><th>做法</th><th>優先級</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Webhook 簽名驗證</td>
+        <td>使用 <code>line.middleware()</code>，確保 raw body 未被預先解析</td>
+        <td>必須</td>
+      </tr>
+      <tr>
+        <td>HTTPS 強制</td>
+        <td>不接受 HTTP 請求，所有端點僅走 HTTPS</td>
+        <td>必須</td>
+      </tr>
+      <tr>
+        <td>環境變數隔離</td>
+        <td>開發 / 測試 / 生產各自的 Channel 和 API Key，互不共用</td>
+        <td>必須</td>
+      </tr>
+      <tr>
+        <td>Helmet.js 安全標頭</td>
+        <td><code>app.use(helmet())</code> 設定 CSP、HSTS 等 HTTP 安全標頭</td>
+        <td>強烈建議</td>
+      </tr>
+      <tr>
+        <td>全局請求速率限制</td>
+        <td><code>express-rate-limit</code> 限制每個 IP 的請求數，防止 DDoS</td>
+        <td>強烈建議</td>
+      </tr>
+      <tr>
+        <td>非 root 容器執行</td>
+        <td>Dockerfile 中以非 root 用戶執行（見 9-1）</td>
+        <td>強烈建議</td>
+      </tr>
+      <tr>
+        <td>依賴漏洞掃描</td>
+        <td>CI 中執行 <code>npm audit --audit-level=high</code>，高危漏洞阻止部署</td>
+        <td>建議</td>
+      </tr>
+      <tr>
+        <td>定期金鑰輪換</td>
+        <td>每 3–6 個月輪換 Channel Access Token 和 OpenAI API Key</td>
+        <td>建議</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="code-figure">
+    <div class="code-caption">全局安全中介軟體設定</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">npm install helmet express-rate-limit</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">index.js — 完整的安全中介軟體堆疊</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> helmet    = <span class="fn">require</span>(<span class="str">'helmet'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> rateLimit = <span class="fn">require</span>(<span class="str">'express-rate-limit'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt">// 安全標頭（XSS、Clickjacking、MIME sniffing 防護等）</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">app.<span class="fn">use</span>(<span class="fn">helmet</span>())</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt">// 全局 IP 速率限制：每 15 分鐘最多 200 次請求</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">app.<span class="fn">use</span>(<span class="fn">rateLimit</span>({</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1">windowMs: <span class="num">15</span> * <span class="num">60</span> * <span class="num">1000</span>,</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">max:      <span class="num">200</span>,</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1">message:  <span class="str">'Too many requests'</span>,</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="cmt">// 信任反向代理的 X-Forwarded-For 標頭（Railway、Render 等平台需要）</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1">trustProxy: <span class="kw">true</span>,</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">}))</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"><span class="cmt">// Webhook 路由（rate limit 之後，json parser 之前）</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc">app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, line.<span class="fn">middleware</span>(lineConfig), webhookRouter)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"><span class="cmt">// 錯誤處理中介軟體（四個參數）</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc">app.<span class="fn">use</span>((err, req, res, next) => {</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="kw">if</span> (err <span class="kw">instanceof</span> <span class="cls">line</span>.<span class="cls">SignatureValidationFailed</span>) {</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2">logger.<span class="fn">warn</span>({ ip: req.ip }, <span class="str">'invalid webhook signature'</span>)</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2"><span class="kw">return</span> res.<span class="fn">sendStatus</span>(<span class="num">400</span>)</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1">logger.<span class="fn">error</span>({ err }, <span class="str">'unhandled error'</span>)</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1"><span class="fn">captureException</span>(err)</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1">res.<span class="fn">sendStatus</span>(<span class="num">500</span>)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc">})</span></div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-label">開發環境與生產環境的 Channel 隔離</span>
+    開發期間應使用<strong>獨立的測試用 LINE Channel</strong>，與生產 Channel 完全分開。
+    這樣做有兩個好處：一，開發時的測試訊息不會影響真實用戶；
+    二，即使開發環境的 Channel Secret 洩露，生產環境不受影響。
+    GitHub Actions 也應設定兩組 secrets：<code>PROD_*</code> 和 <code>STAGING_*</code>，
+    不同分支使用不同環境的密鑰部署。
+  </div>
+</article>
+
+</main>
+
+<!-- ══ SIDEBAR ════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l9-1" class="toc-link">9–1 部署平台與 Docker</a></li>
+      <li class="toc-item"><a href="#l9-2" class="toc-link">9–2 環境變數與 CI/CD</a></li>
+      <li class="toc-item"><a href="#l9-3" class="toc-link">9–3 結構化日誌與錯誤追蹤</a></li>
+      <li class="toc-item"><a href="#l9-4" class="toc-link">9–4 健康檢查與指標</a></li>
+      <li class="toc-item"><a href="#l9-5" class="toc-link">9–5 安全性加固清單</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">核心術語</div>
+    <div class="term-row">
+      <div class="term-name">CI/CD</div>
+      <div class="term-def">持續整合 / 持續部署。每次程式碼推送自動執行測試並部署到伺服器。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Docker</div>
+      <div class="term-def">容器化技術，將應用程式與依賴打包成可跨環境一致運行的映像。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">HMAC-SHA256</div>
+      <div class="term-def">LINE 用來簽署 Webhook 請求的訊息驗證碼算法，以 Channel Secret 為密鑰。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">結構化日誌</div>
+      <div class="term-def">以 JSON 格式輸出的日誌，每個欄位有固定名稱，便於機器篩選和告警規則設定。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">健康檢查</div>
+      <div class="term-def">定期探測服務狀態的機制。淺層確認程序存活，深層確認所有依賴可用。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">冷啟動</div>
+      <div class="term-def">Serverless / 休眠容器在接到第一個請求時的初始化延遲，可能導致 Webhook 逾時。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Helmet.js</div>
+      <div class="term-def">Express 中介軟體，自動設定多種 HTTP 安全標頭防範常見 Web 攻擊。</div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item"><strong>Railway 部署文件</strong>從 GitHub 倉庫一鍵部署的官方指南，含環境變數設定。railway.app/docs</li>
+      <li class="res-item"><strong>GitHub Actions 文件</strong>Workflow 語法完整參考，含 secrets 使用說明。docs.github.com/actions</li>
+      <li class="res-item"><strong>pino 文件</strong>Node.js 最快的 JSON 日誌函式庫，含 transport 設定。getpino.io</li>
+      <li class="res-item"><strong>Sentry Node.js SDK</strong>Express 整合指南，含 Performance Monitoring 設定。docs.sentry.io/platforms/node</li>
+      <li class="res-item"><strong>Betteruptime</strong>外部監控服務，支援 LINE Notify 告警。betteruptime.com</li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="quiz-wrap">
+      <div class="quiz-q">LINE Webhook 簽名驗證為何要求 body 必須是 raw buffer，而不能是已解析的 JSON？</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>A.</span>JSON 格式的 body 無法轉換為 base64，所以無法計算 HMAC</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, true)"><span>B.</span>HMAC 對位元組序列計算，JSON.parse 再 stringify 可能改變欄位順序或空白，導致簽名不符</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>C.</span>LINE 的 SDK 有 bug，只有 raw buffer 才不會崩潰</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>D.</span>已解析的 JSON 物件佔用記憶體過多，驗證時會出現 out-of-memory 錯誤</div>
+      <div class="quiz-feedback" id="qf">
+        正確。HMAC-SHA256 是對原始位元組序列計算的。LINE 傳送的簽名是針對
+        原始 HTTP body 字串計算的。若你先用 express.json() 解析，
+        再用 JSON.stringify() 轉回字串，可能因為 key 排序差異、多餘空白、
+        或 Unicode 正規化等因素，產生與原始 body 不完全相同的字串，導致簽名驗證失敗。
+        正確做法是在 Webhook 路由上讓 line.middleware() 攔截原始 body，
+        其餘路由再使用 express.json()。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div>
+
+</div><!-- end page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter8.html" class="nav-btn">← CH.08 整合 OpenAI</a>
+    <div class="nav-loc">CH.09 / 10 &nbsp;—&nbsp; 雲端部署、監控與安全性</div>
+    <a href="chapter10.html" class="nav-btn fwd">CH.10 綜合實戰 →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement
+  const pct = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100
+  document.getElementById('rp').style.width = Math.min(pct, 100) + '%'
+})
+
+const lessons  = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const match = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+lessons.forEach(l => io.observe(l))
+
+function answerQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt')
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default' })
+  el.classList.add(correct ? 'correct' : 'wrong')
+  if (!correct) opts[1].classList.add('correct')
+  document.getElementById('qf').style.display = 'block'
+}
+</script>
+</body>
+</html>

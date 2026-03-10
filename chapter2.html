@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.02 — Webhook 事件處理與訊息型別</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+/* ─── READING PROGRESS ───────────────────────────────────────── */
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ─── MASTHEAD ───────────────────────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); font-size: 0.8rem; }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); letter-spacing: 0.06em; }
+
+/* ─── PAGE ───────────────────────────────────────────────────── */
+.page { padding-top: 48px; }
+
+/* ─── CHAPTER HEADER ─────────────────────────────────────────── */
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900; line-height: 1.15; letter-spacing: -0.025em; color: var(--ink);
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+/* ─── RULES ──────────────────────────────────────────────────── */
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ─── OBJECTIVES ─────────────────────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red); transform: rotate(45deg);
+}
+
+/* ─── CONTENT LAYOUT ─────────────────────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ─── LESSONS ────────────────────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+.body-text a { color: var(--red); text-decoration: none; border-bottom: 1px solid currentColor; }
+
+/* ─── SUB-HEADING ────────────────────────────────────────────── */
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+/* ─── CODE BLOCKS ────────────────────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+.code-block {
+  background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
+  line-height: 1.75; padding: 1.5rem 1.75rem; overflow-x: auto;
+  border-left: 3px solid var(--red); tab-size: 2;
+}
+.code-block .ln {
+  display: inline-block; width: 2em; color: #4A4440;
+  user-select: none; font-size: 0.68rem; margin-right: 0.5rem;
+}
+.c-cmt { color: #7A6F6A; font-style: italic; }
+.c-kw  { color: #C47A6A; }
+.c-str { color: #8BAF7A; }
+.c-fn  { color: #7AABCF; }
+.c-num { color: #C49A5A; }
+.c-cls { color: #C4B570; }
+.c-pun { color: #9A9090; }
+.c-def { color: #E8E0D8; }
+.c-hl  { background: rgba(184,48,37,0.25); display: inline; }
+
+/* ─── CALLOUTS ───────────────────────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem; color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+
+/* ─── DEFINITION LIST ────────────────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 180px 1fr;
+  gap: 0; border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); letter-spacing: 0.03em; padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+
+/* ─── EVENT TYPE TABLE ───────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2); border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+.tag {
+  font-family: var(--mono); font-size: 0.6em; font-weight: 600;
+  letter-spacing: 0.06em; padding: 0.15em 0.45em;
+  border: 1px solid; display: inline-block; line-height: 1.4;
+}
+.tag-red   { border-color: var(--red);   color: var(--red); }
+.tag-ink   { border-color: var(--ink-3); color: var(--ink-3); }
+.tag-green { border-color: #5A8A5A; color: #5A8A5A; }
+
+/* ─── STEP LIST ──────────────────────────────────────────────── */
+.step-list { margin: 1.5rem 0; counter-reset: step; }
+.step-item {
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 0 1rem; margin-bottom: 1.25rem; align-items: start;
+  counter-increment: step;
+}
+.step-num {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--paper); background: var(--ink);
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; margin-top: 0.15rem;
+}
+.step-num::after { content: counter(step, decimal-leading-zero); }
+.step-body { font-size: 0.9rem; color: var(--ink-2); line-height: 1.8; }
+.step-body strong { color: var(--ink); font-weight: 600; }
+.step-body code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em;
+}
+
+/* ─── FLOW DIAGRAM ───────────────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; }
+.flow-diagram {
+  display: inline-flex; align-items: stretch;
+  font-family: var(--mono); font-size: 0.68rem;
+  min-width: max-content;
+}
+.flow-col { display: flex; flex-direction: column; gap: 4px; }
+.flow-node {
+  border: 1px solid var(--ink); padding: 0.5rem 0.75rem;
+  text-align: center; line-height: 1.4; background: var(--paper-2);
+  color: var(--ink); font-weight: 500; white-space: nowrap;
+  min-width: 110px;
+}
+.flow-node.dark  { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.flow-node.red   { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.flow-node.ghost { border-color: var(--paper-3); color: var(--ink-4); background: transparent; }
+.flow-sub { font-size: 0.58rem; color: var(--ink-4); display: block; margin-top: 0.15rem; }
+.flow-node.dark .flow-sub { color: #8C8070; }
+.flow-node.red  .flow-sub { color: var(--red); opacity: 0.7; }
+.flow-arrow-h {
+  display: flex; align-items: center; padding: 0 0.35rem;
+  color: var(--ink-4); font-size: 0.9rem; align-self: center;
+}
+.flow-arrow-v {
+  text-align: center; color: var(--ink-4); font-size: 0.75rem;
+  line-height: 1; padding: 1px 0;
+}
+
+/* ─── COMPARISON GRID ────────────────────────────────────────── */
+.compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; margin: 1.5rem 0; border: 1px solid var(--paper-3);
+}
+.compare-col { padding: 1.25rem; }
+.compare-col:first-child { border-right: 1px solid var(--paper-3); }
+.compare-head {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--paper-3);
+}
+.compare-head.red { color: var(--red); border-color: var(--red); }
+.compare-list { list-style: none; }
+.compare-list li {
+  font-size: 0.85rem; color: var(--ink-2); line-height: 1.7;
+  padding: 0.35rem 0; border-bottom: 1px solid var(--paper-3);
+}
+.compare-list li:last-child { border-bottom: none; }
+.compare-list code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+
+/* ─── INLINE NOTE ────────────────────────────────────────────── */
+.note-inline {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--ink-4);
+  border-top: 1px solid var(--paper-3); margin-top: 1.5rem;
+  padding-top: 0.75rem; line-height: 1.7;
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.toc-link.active { color: var(--red); }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong {
+  display: block; font-family: var(--mono); font-size: 0.68rem;
+  color: var(--ink); letter-spacing: 0.03em; margin-bottom: 0.15rem;
+}
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820; cursor: pointer;
+  transition: color 0.15s; display: flex; gap: 0.5rem; letter-spacing: 0.02em;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+.term-list {}
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+
+/* ─── CHAPTER NAV ────────────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3);
+  color: var(--ink-3); padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+/* ─── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 120px 1fr; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .compare-col:first-child { border-right: none; border-bottom: 1px solid var(--paper-3); }
+}
+
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<!-- ═══ MASTHEAD ═══════════════════════════════════════════════ -->
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.02 — Webhook 事件處理與訊息型別</span>
+  </div>
+  <div class="masthead-right">第 2 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ CHAPTER HEADER ═════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">02</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">4 小時</div>
+      <div class="ch-stat">基礎</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含架構實作</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title">Webhook <span>事件處理</span><br>與訊息型別</h1>
+    <p class="ch-standfirst">
+      第一章的 Echo Bot 只處理了最簡單的文字訊息。真實世界的 Bot
+      必須因應數十種事件類型——追蹤、取消追蹤、加入群組、圖片、
+      位置資訊、按鈕點擊——並為每種情境提供正確的回應。
+      本章建立一套可擴展的事件路由架構，讓你的程式碼在功能增長後仍然易於維護。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<!-- ═══ OBJECTIVES ═════════════════════════════════════════════ -->
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>掌握所有 LINE Webhook 事件型別與其資料結構</li>
+    <li>建立模組化的 EventRouter 分離各類事件邏輯</li>
+    <li>實作 follow 歡迎訊息並取得使用者 Profile</li>
+    <li>正確處理 unfollow 等無 replyToken 的事件</li>
+    <li>下載並儲存圖片、影片等媒體型訊息</li>
+    <li>理解 source 來源欄位在群組情境的差異</li>
+  </ul>
+</div>
+
+<!-- ═══ MAIN CONTENT ════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 2-1 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l2-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 2–1</span>
+    <h2 class="lesson-title">Webhook 事件型別完整分類</h2>
+  </div>
+
+  <p class="body-text">
+    LINE 的 Webhook 事件不只有訊息。每當使用者與你的 Bot 或群組發生任何互動——
+    無論是加入好友、傳送貼圖、點選按鈕、分享位置，還是機器人被踢出群組——
+    LINE 都會向你的 Webhook URL 發送一個對應的事件物件。
+    理解這些事件的結構與差異，是建立任何實用 Bot 的前提。
+  </p>
+
+  <p class="body-text">
+    所有事件都封裝在同一個 Webhook payload 結構中，差別只在 <code>event.type</code>
+    欄位的值，以及該型別額外攜帶的資料欄位。以下是完整的事件分類表：
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>event.type</th>
+        <th>觸發時機</th>
+        <th>含 replyToken</th>
+        <th>主要用途</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>message</code></td>
+        <td>使用者傳送任何類型的訊息</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>核心互動，處理文字、圖片、貼圖等</td>
+      </tr>
+      <tr>
+        <td><code>follow</code></td>
+        <td>使用者加入好友或解除封鎖</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>發送歡迎訊息、記錄新用戶</td>
+      </tr>
+      <tr>
+        <td><code>unfollow</code></td>
+        <td>使用者封鎖 Bot</td>
+        <td><span class="tag tag-ink">無</span></td>
+        <td>記錄用戶流失、清理資料</td>
+      </tr>
+      <tr>
+        <td><code>join</code></td>
+        <td>Bot 被加入群組或多人聊天室</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>傳送群組歡迎訊息、說明指令</td>
+      </tr>
+      <tr>
+        <td><code>leave</code></td>
+        <td>Bot 被移除出群組</td>
+        <td><span class="tag tag-ink">無</span></td>
+        <td>記錄群組離開事件</td>
+      </tr>
+      <tr>
+        <td><code>postback</code></td>
+        <td>使用者點選含 postback action 的按鈕</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>處理選單選項、多步驟流程</td>
+      </tr>
+      <tr>
+        <td><code>memberJoined</code></td>
+        <td>新成員加入 Bot 所在的群組</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>歡迎新群組成員</td>
+      </tr>
+      <tr>
+        <td><code>memberLeft</code></td>
+        <td>成員離開 Bot 所在的群組</td>
+        <td><span class="tag tag-ink">無</span></td>
+        <td>記錄群組成員變動</td>
+      </tr>
+      <tr>
+        <td><code>beacon</code></td>
+        <td>使用者進入 LINE Beacon 裝置範圍</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>實體場域的到場觸發</td>
+      </tr>
+      <tr>
+        <td><code>accountLink</code></td>
+        <td>用戶完成帳號連結流程</td>
+        <td><span class="tag tag-green">有</span></td>
+        <td>LINE Login 帳號綁定確認</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="body-text">
+    注意 <code>unfollow</code>、<code>leave</code>、<code>memberLeft</code>
+    三個事件都沒有 <code>replyToken</code>——因為這些事件代表使用者主動脫離關係，
+    在這個時間點你已無法向他們傳送任何訊息。唯一能做的事是記錄到資料庫。
+    若你錯誤地對這些事件呼叫 <code>replyMessage()</code>，
+    LINE API 會回傳 400 錯誤，導致 Bot 拋出未捕捉的 Promise 例外。
+  </p>
+
+  <div class="sub-heading">事件來源（source）欄位</div>
+  <p class="body-text">
+    每個事件的 <code>source</code> 欄位描述了事件的發生情境，共有三種型別：
+  </p>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">source.type: "user"</div>
+      <div class="def-desc">
+        一對一私訊聊天。<code>source.userId</code> 即為使用者的唯一識別碼，
+        此 ID 在同一個 Provider 下的所有 Channel 中保持一致，
+        可跨 Channel 識別同一個用戶。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">source.type: "group"</div>
+      <div class="def-desc">
+        Bot 所在的群組。同時提供 <code>source.groupId</code> 與 <code>source.userId</code>，
+        但注意：<code>userId</code> 不一定存在（部分群組隱私設定下不提供），
+        取用前必須先檢查。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">source.type: "room"</div>
+      <div class="def-desc">
+        多人聊天室（非正式群組）。提供 <code>source.roomId</code>，
+        但 <code>userId</code> 同樣不一定存在。
+        現行 LINE 版本較少使用 room，主流為 group。
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">實作要點</span>
+    取用 <code>source.userId</code> 之前，必須先確認 <code>source.type === 'user'</code>
+    或使用可選鏈寫法 <code>event.source?.userId</code>，並加上存在性檢查。
+    在群組情境下直接存取 <code>source.userId</code> 可能得到 <code>undefined</code>，
+    若你將其用作資料庫的 key，會產生難以追蹤的 bug。
+  </div>
+
+</article>
+
+<!-- ── LESSON 2-2 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l2-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 2–2</span>
+    <h2 class="lesson-title">訊息子型別：message event 的內部結構</h2>
+  </div>
+
+  <p class="body-text">
+    <code>event.type === 'message'</code> 只是最外層的分類，
+    內部還有 <code>event.message.type</code> 這第二層型別，
+    決定訊息的實際內容。LINE 支援的訊息子型別共有七種：
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>message.type</th>
+        <th>關鍵欄位</th>
+        <th>說明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>text</code></td>
+        <td><code>message.text</code></td>
+        <td>純文字。若訊息包含 LINE emoji，會以 Unicode 字元夾帶，可直接讀取。</td>
+      </tr>
+      <tr>
+        <td><code>image</code></td>
+        <td><code>message.id</code></td>
+        <td>圖片。不含圖片資料，需用 <code>getMessageContent(id)</code> 另行下載二進位流。</td>
+      </tr>
+      <tr>
+        <td><code>video</code></td>
+        <td><code>message.id</code>, <code>message.duration</code></td>
+        <td>影片。同樣需另行下載，<code>duration</code> 為毫秒。</td>
+      </tr>
+      <tr>
+        <td><code>audio</code></td>
+        <td><code>message.id</code>, <code>message.duration</code></td>
+        <td>語音訊息。格式為 M4A，可導入語音識別（STT）API。</td>
+      </tr>
+      <tr>
+        <td><code>file</code></td>
+        <td><code>message.fileName</code>, <code>message.fileSize</code></td>
+        <td>檔案傳送。同樣需另行下載，注意 LINE 有檔案大小上限。</td>
+      </tr>
+      <tr>
+        <td><code>location</code></td>
+        <td><code>message.latitude</code>, <code>message.longitude</code>, <code>message.address</code></td>
+        <td>位置資訊。直接包含座標與地址，無需另行請求。</td>
+      </tr>
+      <tr>
+        <td><code>sticker</code></td>
+        <td><code>message.packageId</code>, <code>message.stickerId</code></td>
+        <td>LINE 貼圖。可根據 packageId 判斷貼圖包，進行趣味互動回應。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="body-text">
+    <code>image</code>、<code>video</code>、<code>audio</code>、<code>file</code>
+    這四種型別的訊息事件本身都只攜帶 <code>message.id</code>，
+    不包含實際的二進位內容。你需要在取得事件後，
+    另外呼叫 <code>client.getMessageContent(messageId)</code>
+    取得一個可讀的 Node.js <code>Readable</code> stream，再將其寫入磁碟或傳入處理流程。
+    這個下載動作有時間限制，LINE 不會無限期保存用戶上傳的媒體檔案。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">message event 完整結構對照</div>
+    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>// 文字訊息</span>
+<span class="c-def"><span class="ln">2</span>{ type: <span class="c-str">'message'</span>, replyToken: <span class="c-str">'...'</span>,</span>
+<span class="c-def"><span class="ln">3</span>  message: { id: <span class="c-str">'12345'</span>, type: <span class="c-str">'text'</span>, text: <span class="c-str">'你好'</span> } }</span>
+<span class="c-def"><span class="ln">4</span></span>
+<span class="c-cmt"><span class="ln">5</span>// 圖片訊息（無圖片資料，需另行下載）</span>
+<span class="c-def"><span class="ln">6</span>{ type: <span class="c-str">'message'</span>, replyToken: <span class="c-str">'...'</span>,</span>
+<span class="c-def"><span class="ln">7</span>  message: { id: <span class="c-str">'12346'</span>, type: <span class="c-str">'image'</span>,</span>
+<span class="c-def"><span class="ln">8</span>    contentProvider: { type: <span class="c-str">'line'</span> } } }</span>
+<span class="c-def"><span class="ln">9</span></span>
+<span class="c-cmt"><span class="ln">10</span>// 位置訊息（直接包含座標，無需下載）</span>
+<span class="c-def"><span class="ln">11</span>{ type: <span class="c-str">'message'</span>, replyToken: <span class="c-str">'...'</span>,</span>
+<span class="c-def"><span class="ln">12</span>  message: { id: <span class="c-str">'12347'</span>, type: <span class="c-str">'location'</span>,</span>
+<span class="c-def"><span class="ln">13</span>    title: <span class="c-str">'台北 101'</span>, address: <span class="c-str">'台北市信義區信義路五段7號'</span>,</span>
+<span class="c-def"><span class="ln">14</span>    latitude: <span class="c-num">25.033964</span>, longitude: <span class="c-num">121.564468</span> } }</span>
+<span class="c-def"><span class="ln">15</span></span>
+<span class="c-cmt"><span class="ln">16</span>// 貼圖訊息</span>
+<span class="c-def"><span class="ln">17</span>{ type: <span class="c-str">'message'</span>, replyToken: <span class="c-str">'...'</span>,</span>
+<span class="c-def"><span class="ln">18</span>  message: { id: <span class="c-str">'12348'</span>, type: <span class="c-str">'sticker'</span>,</span>
+<span class="c-def"><span class="ln">19</span>    packageId: <span class="c-str">'789'</span>, stickerId: <span class="c-str">'10855'</span> } }</span></div>
+  </div>
+
+</article>
+
+<!-- ── LESSON 2-3 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l2-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 2–3</span>
+    <h2 class="lesson-title">建立可擴展的 EventRouter 架構</h2>
+  </div>
+
+  <p class="body-text">
+    第一章的 <code>index.js</code> 把所有邏輯塞在一個 <code>handleEvent</code> 函式中，
+    當事件型別增加到五個、十個時，這個函式會變得難以閱讀和測試。
+    正確的做法是建立一個路由層，讓每種事件有各自專屬的處理模組。
+    這個架構與 Express 的 Router 概念如出一轍。
+  </p>
+
+  <div class="sub-heading">檔案結構規劃</div>
+
+  <div class="code-figure">
+    <div class="code-caption">建議的模組化目錄結構</div>
+    <div class="code-block"><span class="c-def"><span class="ln">1</span>src/</span>
+<span class="c-def"><span class="ln">2</span>├── router.js                <span class="c-cmt">// 主路由，依 event.type 分派</span></span>
+<span class="c-def"><span class="ln">3</span>├── handlers/</span>
+<span class="c-def"><span class="ln">4</span>│   ├── messageHandler.js    <span class="c-cmt">// 處理所有 message 事件</span></span>
+<span class="c-def"><span class="ln">5</span>│   ├── followHandler.js     <span class="c-cmt">// 處理 follow / unfollow</span></span>
+<span class="c-def"><span class="ln">6</span>│   ├── postbackHandler.js   <span class="c-cmt">// 處理 postback 按鈕事件</span></span>
+<span class="c-def"><span class="ln">7</span>│   └── groupHandler.js      <span class="c-cmt">// 處理 join / leave / member 事件</span></span>
+<span class="c-def"><span class="ln">8</span>└── services/</span>
+<span class="c-def"><span class="ln">9</span>    └── userService.js       <span class="c-cmt">// 使用者資料存取（下一章加入）</span></span></div>
+  </div>
+
+  <div class="sub-heading">主路由：router.js</div>
+  <p class="body-text">
+    路由層的職責只有一個：根據 <code>event.type</code> 將事件交給正確的 handler，
+    自身不包含任何業務邏輯。使用物件 dispatch table（而非 <code>switch</code>）
+    的好處是可以在執行期動態注入或替換 handler，更便於單元測試。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/router.js — 主事件路由</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> messageHandler  <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'./handlers/messageHandler'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">2</span>const</span> followHandler   <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'./handlers/followHandler'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">3</span>const</span> postbackHandler <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'./handlers/postbackHandler'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">4</span>const</span> groupHandler    <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'./handlers/groupHandler'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">5</span></span>
+<span class="c-cmt"><span class="ln">6</span>// 事件型別 → 處理函式的對照表</span>
+<span class="c-kw"><span class="ln">7</span>const</span> HANDLERS <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">8</span>  message:      messageHandler</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">9</span>  follow:       followHandler<span class="c-pun">.</span>onFollow</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">10</span>  unfollow:     followHandler<span class="c-pun">.</span>onUnfollow</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">11</span>  postback:     postbackHandler</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">12</span>  join:         groupHandler<span class="c-pun">.</span>onJoin</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">13</span>  leave:        groupHandler<span class="c-pun">.</span>onLeave</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">14</span>  memberJoined: groupHandler<span class="c-pun">.</span>onMemberJoined</span>
+<span class="c-def"><span class="ln">15</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">16</span></span>
+<span class="c-cmt"><span class="ln">17</span>/**</span>
+<span class="c-cmt"><span class="ln">18</span> * 主路由函式，由 index.js 的 Webhook handler 呼叫</span>
+<span class="c-cmt"><span class="ln">19</span> * @param {Object} event  LINE Webhook 事件物件</span>
+<span class="c-cmt"><span class="ln">20</span> * @param {Object} client LINE SDK Client 實例</span>
+<span class="c-cmt"><span class="ln">21</span> */</span>
+<span class="c-kw"><span class="ln">22</span>async function</span> <span class="c-fn">router</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">23</span>  const</span> handler <span class="c-pun">=</span> HANDLERS<span class="c-pun">[</span>event<span class="c-pun">.</span>type<span class="c-pun">]</span>
+<span class="c-def"><span class="ln">24</span></span>
+<span class="c-cmt"><span class="ln">25</span>  // 沒有對應 handler 的事件型別：靜默忽略，回傳 null</span>
+<span class="c-kw"><span class="ln">26</span>  if</span> <span class="c-pun">(!</span>handler<span class="c-pun">) {</span>
+<span class="c-def"><span class="ln">27</span>    console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`[Router] Unhandled event type: ${event.type}`</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">28</span>    return</span> <span class="c-kw">null</span>
+<span class="c-def"><span class="ln">29</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">30</span></span>
+<span class="c-kw"><span class="ln">31</span>  try</span> <span class="c-pun">{</span>
+<span class="c-kw"><span class="ln">32</span>    return await</span> <span class="c-fn">handler</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">33</span>  <span class="c-pun">}</span> <span class="c-kw">catch</span> <span class="c-pun">(</span>err<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">34</span>    // 單一事件的錯誤不應讓整個批次失敗</span>
+<span class="c-def"><span class="ln">35</span>    console<span class="c-pun">.</span><span class="c-fn">error</span><span class="c-pun">(</span><span class="c-str">`[Router] Handler error for ${event.type}:`</span><span class="c-pun">,</span> err<span class="c-pun">)</span></span>
+<span class="c-kw"><span class="ln">36</span>    return</span> <span class="c-kw">null</span>
+<span class="c-def"><span class="ln">37</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">38</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">39</span></span>
+<span class="c-def"><span class="ln">40</span>module<span class="c-pun">.</span>exports <span class="c-pun">=</span> router</span></div>
+  </div>
+
+  <p class="body-text">
+    第 31–37 行的 <code>try/catch</code> 非常重要。當一個 Webhook 請求包含多個事件時，
+    <code>index.js</code> 的 <code>Promise.all(events.map(router))</code> 中，
+    若某一個事件的處理函式拋出例外，整個 <code>Promise.all</code> 會立即 reject，
+    導致其餘事件都得不到處理，且 Webhook 回傳 500 讓 LINE 誤以為請求失敗而重試。
+    在 router 層統一捕捉並記錄錯誤、回傳 <code>null</code>，可以將單一事件的失敗
+    隔離在自身範圍，不影響批次中的其他事件。
+  </p>
+
+  <div class="sub-heading">更新 index.js 使用 router</div>
+
+  <div class="code-figure">
+    <div class="code-caption">index.js — 整合 router 模組</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>require</span><span class="c-pun">(</span><span class="c-str">'dotenv'</span><span class="c-pun">).</span><span class="c-fn">config</span><span class="c-pun">()</span>
+<span class="c-kw"><span class="ln">2</span>const</span> line   <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'@line/bot-sdk'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">3</span>const</span> express <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'express'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">4</span>const</span> router  <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'./src/router'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">5</span></span>
+<span class="c-kw"><span class="ln">6</span>const</span> config <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">7</span>  channelSecret:      process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_SECRET</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">8</span>  channelAccessToken: process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_ACCESS_TOKEN</span></span>
+<span class="c-def"><span class="ln">9</span><span class="c-pun">}</span></span>
+<span class="c-kw"><span class="ln">10</span>const</span> client <span class="c-pun">=</span> <span class="c-kw">new</span> <span class="c-cls">line</span><span class="c-pun">.</span><span class="c-cls">Client</span><span class="c-pun">(</span>config<span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">11</span>const</span> app    <span class="c-pun">=</span> <span class="c-fn">express</span><span class="c-pun">()</span>
+<span class="c-def"><span class="ln">12</span></span>
+<span class="c-def"><span class="ln">13</span>app<span class="c-pun">.</span><span class="c-fn">post</span><span class="c-pun">(</span><span class="c-str">'/webhook'</span><span class="c-pun">,</span> line<span class="c-pun">.</span><span class="c-fn">middleware</span><span class="c-pun">(</span>config<span class="c-pun">),</span> <span class="c-pun">(</span>req<span class="c-pun">,</span> res<span class="c-pun">) =></span> <span class="c-pun">{</span></span>
+<span class="c-def"><span class="ln">14</span>  Promise</span>
+<span class="c-def"><span class="ln">15</span>    <span class="c-pun">.</span><span class="c-fn">all</span><span class="c-pun">(</span>req<span class="c-pun">.</span>body<span class="c-pun">.</span>events<span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span>event <span class="c-kw">=></span> <span class="c-fn">router</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">)))</span></span>
+<span class="c-def"><span class="ln">16</span>    <span class="c-pun">.</span><span class="c-fn">then</span><span class="c-pun">(</span>result <span class="c-kw">=></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">(</span>result<span class="c-pun">))</span></span>
+<span class="c-def"><span class="ln">17</span>    <span class="c-pun">.</span><span class="c-fn">catch</span><span class="c-pun">(</span>err <span class="c-kw">=></span> <span class="c-pun">{</span> console<span class="c-pun">.</span><span class="c-fn">error</span><span class="c-pun">(</span>err<span class="c-pun">)</span><span class="c-pun">;</span> res<span class="c-pun">.</span><span class="c-fn">status</span><span class="c-pun">(</span><span class="c-num">500</span><span class="c-pun">).</span><span class="c-fn">end</span><span class="c-pun">() })</span></span>
+<span class="c-def"><span class="ln">18</span><span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">19</span></span>
+<span class="c-def"><span class="ln">20</span>app<span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'/health'</span><span class="c-pun">,</span> <span class="c-pun">(</span>_<span class="c-pun">,</span> res<span class="c-pun">) =></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">({</span> status<span class="c-pun">:</span> <span class="c-str">'ok'</span> <span class="c-pun">}))</span></span>
+<span class="c-def"><span class="ln">21</span>app<span class="c-pun">.</span><span class="c-fn">listen</span><span class="c-pun">(</span>process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">PORT</span> <span class="c-pun">||</span> <span class="c-num">3000</span><span class="c-pun">)</span></span></div>
+  </div>
+
+  <div class="sub-heading">訊息型別的二級路由：messageHandler.js</div>
+  <p class="body-text">
+    <code>message</code> 事件需要再依 <code>event.message.type</code>
+    進行第二層分派。這個二級路由的邏輯與主路由相同，只是維度不同。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/messageHandler.js — 訊息型別路由</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> fs   <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'fs'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">2</span>const</span> path <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'path'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span>// 各訊息子型別的處理函式</span>
+<span class="c-kw"><span class="ln">5</span>async function</span> <span class="c-fn">handleText</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">6</span>  const</span> text <span class="c-pun">=</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>text<span class="c-pun">.</span><span class="c-fn">trim</span><span class="c-pun">()</span>
+<span class="c-cmt"><span class="ln">7</span>  // 在此加入關鍵字比對、AI 呼叫等業務邏輯</span>
+<span class="c-kw"><span class="ln">8</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">9</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`你說：${text}`</span></span>
+<span class="c-def"><span class="ln">10</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">11</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">12</span></span>
+<span class="c-kw"><span class="ln">13</span>async function</span> <span class="c-fn">handleImage</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">14</span>  // 先回覆，再異步處理（避免超過 5 秒 timeout）</span>
+<span class="c-kw"><span class="ln">15</span>  await</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">16</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'收到圖片，正在處理...'</span></span>
+<span class="c-def"><span class="ln">17</span>  <span class="c-pun">})</span></span>
+<span class="c-cmt"><span class="ln">18</span>  // 異步下載圖片（不 await，不阻塞 reply）</span>
+<span class="c-fn"><span class="ln">19</span>  downloadMedia</span><span class="c-pun">(</span>event<span class="c-pun">.</span>message<span class="c-pun">.</span>id<span class="c-pun">,</span> <span class="c-str">'jpg'</span><span class="c-pun">,</span> client<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">20</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">21</span></span>
+<span class="c-kw"><span class="ln">22</span>async function</span> <span class="c-fn">handleSticker</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">23</span>  // 回傳一張 LINE 官方貼圖作為互動回應</span>
+<span class="c-kw"><span class="ln">24</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">25</span>    type<span class="c-pun">:</span> <span class="c-str">'sticker'</span><span class="c-pun">,</span> packageId<span class="c-pun">:</span> <span class="c-str">'11537'</span><span class="c-pun">,</span> stickerId<span class="c-pun">:</span> <span class="c-str">'52002734'</span></span>
+<span class="c-def"><span class="ln">26</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">27</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">28</span></span>
+<span class="c-kw"><span class="ln">29</span>async function</span> <span class="c-fn">handleLocation</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">30</span>  const</span> <span class="c-pun">{</span> latitude<span class="c-pun">,</span> longitude<span class="c-pun">,</span> address <span class="c-pun">} =</span> event<span class="c-pun">.</span>message</span>
+<span class="c-kw"><span class="ln">31</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">32</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">33</span>    text<span class="c-pun">:</span> <span class="c-str">`收到位置：${address}\n緯度 ${latitude}，經度 ${longitude}`</span></span>
+<span class="c-def"><span class="ln">34</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">35</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">36</span></span>
+<span class="c-cmt"><span class="ln">37</span>// 訊息型別的二級路由</span>
+<span class="c-kw"><span class="ln">38</span>const</span> MESSAGE_HANDLERS <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">39</span>  text:     handleText</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">40</span>  image:    handleImage</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">41</span>  sticker:  handleSticker</span><span class="c-pun">,</span>
+<span class="c-def"><span class="ln">42</span>  location: handleLocation</span>
+<span class="c-def"><span class="ln">43</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">44</span></span>
+<span class="c-kw"><span class="ln">45</span>async function</span> <span class="c-fn">messageHandler</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">46</span>  const</span> handler <span class="c-pun">=</span> MESSAGE_HANDLERS<span class="c-pun">[</span>event<span class="c-pun">.</span>message<span class="c-pun">.</span>type<span class="c-pun">]</span>
+<span class="c-kw"><span class="ln">47</span>  if</span> <span class="c-pun">(!</span>handler<span class="c-pun">)</span> <span class="c-kw">return</span> <span class="c-kw">null</span>
+<span class="c-kw"><span class="ln">48</span>  return</span> <span class="c-fn">handler</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">49</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">50</span></span>
+<span class="c-def"><span class="ln">51</span>module<span class="c-pun">.</span>exports <span class="c-pun">=</span> messageHandler</span></div>
+  </div>
+
+</article>
+
+<!-- ── LESSON 2-4 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l2-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 2–4</span>
+    <h2 class="lesson-title">Follow 事件：歡迎訊息與使用者 Profile 取得</h2>
+  </div>
+
+  <p class="body-text">
+    <code>follow</code> 事件是你與新用戶建立關係的第一個時機。
+    大多數正式 Bot 都會在此時發送歡迎訊息、說明功能，
+    並將使用者資料儲存到資料庫，為後續的個人化互動做準備。
+    你可以在這個時間點呼叫 <code>client.getProfile(userId)</code>，
+    取得使用者的顯示名稱、頭像 URL 和狀態訊息。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/followHandler.js — follow / unfollow 處理</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>async function</span> <span class="c-fn">onFollow</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">2</span>  const</span> userId <span class="c-pun">=</span> event<span class="c-pun">.</span>source<span class="c-pun">.</span>userId</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span>  // 取得使用者個人資料</span>
+<span class="c-kw"><span class="ln">5</span>  let</span> profile
+<span class="c-kw"><span class="ln">6</span>  try</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">7</span>    profile <span class="c-pun">=</span> <span class="c-kw">await</span> client<span class="c-pun">.</span><span class="c-fn">getProfile</span><span class="c-pun">(</span>userId<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">8</span>  <span class="c-pun">}</span> <span class="c-kw">catch</span> <span class="c-pun">(</span>err<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">9</span>    // getProfile 可能因隱私設定失敗，此時使用預設值</span>
+<span class="c-def"><span class="ln">10</span>    console<span class="c-pun">.</span><span class="c-fn">warn</span><span class="c-pun">(</span><span class="c-str">'getProfile failed:'</span><span class="c-pun">,</span> err<span class="c-pun">.</span>message<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">11</span>    profile <span class="c-pun">= {</span> displayName<span class="c-pun">:</span> <span class="c-str">'使用者'</span><span class="c-pun">,</span> pictureUrl<span class="c-pun">:</span> <span class="c-kw">null</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">12</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">13</span></span>
+<span class="c-cmt"><span class="ln">14</span>  // 將使用者資料儲存到資料庫（此處以 console.log 示意）</span>
+<span class="c-def"><span class="ln">15</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`[Follow] New user: ${profile.displayName} (${userId})`</span><span class="c-pun">)</span></span>
+<span class="c-cmt"><span class="ln">16</span>  // await UserService.upsert(userId, { displayName: profile.displayName, ... })</span>
+<span class="c-def"><span class="ln">17</span></span>
+<span class="c-cmt"><span class="ln">18</span>  // 傳送歡迎訊息（最多可一次傳 5 則）</span>
+<span class="c-kw"><span class="ln">19</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, [</span>
+<span class="c-def"><span class="ln">20</span>    {</span>
+<span class="c-def"><span class="ln">21</span>      type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">22</span>      text<span class="c-pun">:</span> <span class="c-str">`${profile.displayName} 你好，歡迎加入！`</span></span>
+<span class="c-def"><span class="ln">23</span>    <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">24</span>    {</span>
+<span class="c-def"><span class="ln">25</span>      type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">26</span>      text<span class="c-pun">:</span> <span class="c-str">'輸入「說明」可查看所有指令，輸入「服務」可開啟選單。'</span></span>
+<span class="c-def"><span class="ln">27</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">28</span>  <span class="c-pun">])</span></span>
+<span class="c-def"><span class="ln">29</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">30</span></span>
+<span class="c-kw"><span class="ln">31</span>async function</span> <span class="c-fn">onUnfollow</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">32</span>  // unfollow 沒有 replyToken，不可呼叫 replyMessage</span>
+<span class="c-cmt"><span class="ln">33</span>  // 此時 client 參數僅作備用，通常不使用</span>
+<span class="c-kw"><span class="ln">34</span>  const</span> userId <span class="c-pun">=</span> event<span class="c-pun">.</span>source<span class="c-pun">.</span>userId</span>
+<span class="c-def"><span class="ln">35</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`[Unfollow] User left: ${userId}`</span><span class="c-pun">)</span></span>
+<span class="c-cmt"><span class="ln">36</span>  // await UserService.update(userId, { isActive: false, unfollowedAt: new Date() })</span>
+<span class="c-kw"><span class="ln">37</span>  return</span> <span class="c-kw">null</span>
+<span class="c-def"><span class="ln">38</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">39</span></span>
+<span class="c-def"><span class="ln">40</span>module<span class="c-pun">.</span>exports <span class="c-pun">= {</span> onFollow<span class="c-pun">,</span> onUnfollow <span class="c-pun">}</span></span></div>
+  </div>
+
+  <p class="body-text">
+    <code>getProfile</code> 的回傳物件包含以下欄位：<code>userId</code>、
+    <code>displayName</code>（顯示名稱）、<code>pictureUrl</code>（頭像 URL）、
+    <code>statusMessage</code>（狀態訊息）。<code>pictureUrl</code> 可能為空，
+    <code>statusMessage</code> 使用者可能留白，都需要做防禦性判斷。
+  </p>
+
+  <div class="callout warn">
+    <span class="callout-label">安全提醒</span>
+    <code>getProfile</code> 只能在一對一聊天情境（<code>source.type === 'user'</code>）
+    可靠地呼叫。在群組情境下，若該用戶的隱私設定不允許，API 會回傳 403 錯誤。
+    因此呼叫 <code>getProfile</code> 時一定要包裹在 <code>try/catch</code> 中，
+    如範例第 6–12 行所示。
+  </div>
+
+  <div class="sub-heading">profile 物件的完整結構</div>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">userId</div>
+      <div class="def-desc">使用者的唯一識別碼，以 <code>U</code> 開頭的 33 個字元字串，在同一 Provider 下固定不變。這是儲存到資料庫時的主鍵。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">displayName</div>
+      <div class="def-desc">使用者的 LINE 顯示名稱，使用者可隨時更改，不應作為唯一識別依據。顯示用途時請即時取得最新值。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">pictureUrl</div>
+      <div class="def-desc">頭像圖片的 HTTPS URL，可能為 <code>null</code>（未設定頭像時）。直接使用此 URL 展示，不需下載。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">statusMessage</div>
+      <div class="def-desc">使用者的狀態訊息，可能為空字串。娛樂性或個人化互動時可以讀取，但業務邏輯不應依賴此欄位。</div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">language</div>
+      <div class="def-desc">使用者的 LINE 語言設定，如 <code>zh-Hant</code>、<code>ja</code>，可用於多語系 Bot 的語言偵測。</div>
+    </div>
+  </div>
+
+</article>
+
+<!-- ── LESSON 2-5 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l2-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 2–5</span>
+    <h2 class="lesson-title">媒體訊息下載與非同步處理策略</h2>
+  </div>
+
+  <p class="body-text">
+    處理圖片、影片、音訊和檔案訊息時，面對的核心挑戰是
+    <strong>5 秒 Webhook 回應時限</strong>與<strong>媒體下載耗時</strong>之間的衝突。
+    下載一個 10MB 的影片可能需要數秒，若在回覆前等待下載完成，
+    LINE 可能已認定 Webhook 逾時而重試請求，造成重複處理。
+    正確的模式是：先立即回覆一則「處理中」訊息消耗掉 replyToken，
+    再異步執行下載與後續處理，最後以 Push API 通知結果。
+  </p>
+
+  <div class="flow-wrap">
+    <div class="flow-diagram">
+      <div class="flow-col">
+        <div class="flow-node dark">收到 image event<div class="flow-sub">replyToken 開始計時</div></div>
+      </div>
+      <div class="flow-arrow-h">→</div>
+      <div class="flow-col">
+        <div class="flow-node">立即 replyMessage<div class="flow-sub">「收到圖片，處理中」</div></div>
+      </div>
+      <div class="flow-arrow-h">→</div>
+      <div class="flow-col">
+        <div class="flow-node">回傳 HTTP 200<div class="flow-sub">replyToken 已消耗</div></div>
+      </div>
+      <div class="flow-arrow-h">→</div>
+      <div class="flow-col">
+        <div class="flow-node red">異步下載媒體<div class="flow-sub">getMessageContent()</div></div>
+      </div>
+      <div class="flow-arrow-h">→</div>
+      <div class="flow-col">
+        <div class="flow-node">Push API 通知<div class="flow-sub">處理結果推送</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">媒體下載的完整實作</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> fs   <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'fs'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">2</span>const</span> path <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'path'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span>/**</span>
+<span class="c-cmt"><span class="ln">5</span> * 下載媒體訊息並儲存到本地磁碟</span>
+<span class="c-cmt"><span class="ln">6</span> * @param {string} messageId  LINE 訊息 ID</span>
+<span class="c-cmt"><span class="ln">7</span> * @param {string} ext        副檔名，如 'jpg', 'mp4', 'm4a'</span>
+<span class="c-cmt"><span class="ln">8</span> * @param {Object} client     LINE SDK Client</span>
+<span class="c-cmt"><span class="ln">9</span> * @returns {string}          儲存完成的檔案路徑</span>
+<span class="c-cmt"><span class="ln">10</span> */</span>
+<span class="c-kw"><span class="ln">11</span>async function</span> <span class="c-fn">downloadMedia</span><span class="c-pun">(</span>messageId<span class="c-pun">,</span> ext<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">12</span>  // 確保 uploads 目錄存在</span>
+<span class="c-kw"><span class="ln">13</span>  const</span> uploadDir <span class="c-pun">=</span> path<span class="c-pun">.</span><span class="c-fn">join</span><span class="c-pun">(</span>__dirname<span class="c-pun">,</span> <span class="c-str">'../../uploads'</span><span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">14</span>  fs<span class="c-pun">.</span><span class="c-fn">mkdirSync</span><span class="c-pun">(</span>uploadDir<span class="c-pun">,</span> <span class="c-pun">{</span> recursive<span class="c-pun">:</span> <span class="c-kw">true</span> <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">15</span></span>
+<span class="c-kw"><span class="ln">16</span>  const</span> filePath <span class="c-pun">=</span> path<span class="c-pun">.</span><span class="c-fn">join</span><span class="c-pun">(</span>uploadDir<span class="c-pun">,</span> <span class="c-str">`${messageId}.${ext}`</span><span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">17</span></span>
+<span class="c-cmt"><span class="ln">18</span>  // 從 LINE 取得媒體串流</span>
+<span class="c-kw"><span class="ln">19</span>  const</span> stream <span class="c-pun">=</span> <span class="c-kw">await</span> client<span class="c-pun">.</span><span class="c-fn">getMessageContent</span><span class="c-pun">(</span>messageId<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">20</span></span>
+<span class="c-cmt"><span class="ln">21</span>  // 將串流寫入檔案（用 Promise 包裹回調式 API）</span>
+<span class="c-kw"><span class="ln">22</span>  await new</span> <span class="c-cls">Promise</span><span class="c-pun">((</span>resolve<span class="c-pun">,</span> reject<span class="c-pun">) =></span> <span class="c-pun">{</span></span>
+<span class="c-kw"><span class="ln">23</span>    const</span> writer <span class="c-pun">=</span> fs<span class="c-pun">.</span><span class="c-fn">createWriteStream</span><span class="c-pun">(</span>filePath<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">24</span>    stream<span class="c-pun">.</span><span class="c-fn">pipe</span><span class="c-pun">(</span>writer<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">25</span>    writer<span class="c-pun">.</span><span class="c-fn">on</span><span class="c-pun">(</span><span class="c-str">'finish'</span><span class="c-pun">,</span> resolve<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">26</span>    writer<span class="c-pun">.</span><span class="c-fn">on</span><span class="c-pun">(</span><span class="c-str">'error'</span><span class="c-pun">,</span> reject<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">27</span>    stream<span class="c-pun">.</span><span class="c-fn">on</span><span class="c-pun">(</span><span class="c-str">'error'</span><span class="c-pun">,</span> reject<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">28</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">29</span></span>
+<span class="c-def"><span class="ln">30</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`[Download] Saved: ${filePath}`</span><span class="c-pun">)</span></span>
+<span class="c-kw"><span class="ln">31</span>  return</span> filePath
+<span class="c-def"><span class="ln">32</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">33</span></span>
+<span class="c-cmt"><span class="ln">34</span>// handleImage 的完整版本（先回覆、再異步下載）</span>
+<span class="c-kw"><span class="ln">35</span>async function</span> <span class="c-fn">handleImage</span><span class="c-pun">(</span>event<span class="c-pun">,</span> client<span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">36</span>  const</span> userId    <span class="c-pun">=</span> event<span class="c-pun">.</span>source<span class="c-pun">.</span>userId</span>
+<span class="c-kw"><span class="ln">37</span>  const</span> messageId <span class="c-pun">=</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>id</span>
+<span class="c-def"><span class="ln">38</span></span>
+<span class="c-cmt"><span class="ln">39</span>  // Step 1：立即消耗 replyToken，確保在 5 秒內回應</span>
+<span class="c-kw"><span class="ln">40</span>  await</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">41</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'已收到圖片，正在處理中，完成後將通知你。'</span></span>
+<span class="c-def"><span class="ln">42</span>  <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">43</span></span>
+<span class="c-cmt"><span class="ln">44</span>  // Step 2：異步處理（不 await，讓函式立即返回）</span>
+<span class="c-def"><span class="ln">45</span>  <span class="c-pun">(</span><span class="c-kw">async</span> <span class="c-pun">() =></span> <span class="c-pun">{</span></span>
+<span class="c-kw"><span class="ln">46</span>    try</span> <span class="c-pun">{</span></span>
+<span class="c-kw"><span class="ln">47</span>      const</span> filePath <span class="c-pun">=</span> <span class="c-kw">await</span> <span class="c-fn">downloadMedia</span><span class="c-pun">(</span>messageId<span class="c-pun">,</span> <span class="c-str">'jpg'</span><span class="c-pun">,</span> client<span class="c-pun">)</span></span>
+<span class="c-cmt"><span class="ln">48</span>      // 在此可呼叫 OCR、圖片分析等 API</span>
+<span class="c-cmt"><span class="ln">49</span>      // 完成後以 Push API 推送結果</span>
+<span class="c-def"><span class="ln">50</span>      <span class="c-kw">if</span> <span class="c-pun">(</span>userId<span class="c-pun">) {</span></span>
+<span class="c-kw"><span class="ln">51</span>        await</span> client<span class="c-pun">.</span><span class="c-fn">pushMessage</span><span class="c-pun">(</span>userId<span class="c-pun">, {</span>
+<span class="c-def"><span class="ln">52</span>          type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'圖片已儲存完成！'</span></span>
+<span class="c-def"><span class="ln">53</span>        <span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">54</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">55</span>    <span class="c-pun">}</span> <span class="c-kw">catch</span> <span class="c-pun">(</span>err<span class="c-pun">) {</span></span>
+<span class="c-def"><span class="ln">56</span>      console<span class="c-pun">.</span><span class="c-fn">error</span><span class="c-pun">(</span><span class="c-str">'[handleImage] Download error:'</span><span class="c-pun">,</span> err<span class="c-pun">)</span></span>
+<span class="c-def"><span class="ln">57</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">58</span>  <span class="c-pun">)()</span></span>
+<span class="c-def"><span class="ln">59</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <p class="body-text">
+    第 45–58 行使用了一個立即執行的非同步箭頭函式（IIFE），
+    這讓 <code>handleImage</code> 本身在 <code>replyMessage</code> 完成後立刻返回，
+    而下載工作在背景繼續執行。注意第 57 行的 catch：
+    背景任務的錯誤不能讓它靜默失敗，必須記錄到日誌，
+    否則下載失敗時你完全不會知道。
+  </p>
+
+  <div class="sub-heading">各媒體型別的副檔名對照</div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>message.type</th>
+        <th>MIME Type</th>
+        <th>副檔名</th>
+        <th>典型大小上限</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>image</code></td>
+        <td><code>image/jpeg</code></td>
+        <td>.jpg</td>
+        <td>10 MB</td>
+      </tr>
+      <tr>
+        <td><code>video</code></td>
+        <td><code>video/mp4</code></td>
+        <td>.mp4</td>
+        <td>200 MB</td>
+      </tr>
+      <tr>
+        <td><code>audio</code></td>
+        <td><code>audio/x-m4a</code></td>
+        <td>.m4a</td>
+        <td>200 MB</td>
+      </tr>
+      <tr>
+        <td><code>file</code></td>
+        <td>依副檔名而定</td>
+        <td>參照 <code>message.fileName</code></td>
+        <td>300 MB</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <span class="callout-label">生產環境建議</span>
+    在本地開發時將媒體存到磁碟是可以的，但在雲端部署環境（如 Render、Railway）中，
+    容器的本地磁碟在重啟後會清空，且空間有限。生產環境應將媒體直接上傳到
+    物件儲存服務，例如 Google Cloud Storage、AWS S3 或 Firebase Storage，
+    讓 <code>getMessageContent</code> 的串流直接 pipe 到雲端，而不落地到磁碟。
+  </div>
+
+  <div class="sub-heading">本章架構回顧</div>
+  <p class="body-text">
+    完成本章後，你的專案結構應如下所示，已具備清晰的分層架構，
+    準備好迎接後續章節的功能擴展：
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">本章完成後的專案結構</div>
+    <div class="code-block"><span class="c-def"><span class="ln">1</span>my-linebot/</span>
+<span class="c-def"><span class="ln">2</span>├── index.js                  <span class="c-cmt">// 入口：Express + Webhook</span></span>
+<span class="c-def"><span class="ln">3</span>├── src/</span>
+<span class="c-def"><span class="ln">4</span>│   ├── router.js             <span class="c-cmt">// 主事件路由</span></span>
+<span class="c-def"><span class="ln">5</span>│   └── handlers/</span>
+<span class="c-def"><span class="ln">6</span>│       ├── messageHandler.js <span class="c-cmt">// 訊息子型別路由與處理</span></span>
+<span class="c-def"><span class="ln">7</span>│       ├── followHandler.js  <span class="c-cmt">// follow / unfollow</span></span>
+<span class="c-def"><span class="ln">8</span>│       ├── postbackHandler.js<span class="c-cmt">// postback（下章實作）</span></span>
+<span class="c-def"><span class="ln">9</span>│       └── groupHandler.js   <span class="c-cmt">// join / leave / member</span></span>
+<span class="c-def"><span class="ln">10</span>├── uploads/                  <span class="c-cmt">// 媒體暫存（本地開發）</span></span>
+<span class="c-def"><span class="ln">11</span>├── .env</span>
+<span class="c-def"><span class="ln">12</span>└── package.json</span></div>
+  </div>
+
+  <div class="note-inline">
+    本章程式碼可在課程附帶的 GitHub Repository 的 <code>ch02</code> 分支中找到，
+    包含完整的 groupHandler.js 與 postbackHandler.js 骨架供參考。
+  </div>
+
+</article>
+
+</main>
+
+<!-- ─── SIDEBAR ───────────────────────────────────────────────── -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l2-1" class="toc-link">2–1 事件型別完整分類</a></li>
+      <li class="toc-item"><a href="#l2-2" class="toc-link">2–2 訊息子型別結構</a></li>
+      <li class="toc-item"><a href="#l2-3" class="toc-link">2–3 EventRouter 架構</a></li>
+      <li class="toc-item"><a href="#l2-4" class="toc-link">2–4 Follow 事件與 Profile</a></li>
+      <li class="toc-item"><a href="#l2-5" class="toc-link">2–5 媒體下載與非同步處理</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">關鍵術語</div>
+    <div class="term-list">
+      <div class="term-row">
+        <div class="term-name">event.type</div>
+        <div class="term-def">Webhook 事件的主要分類，決定處理邏輯分支。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">message.type</div>
+        <div class="term-def">訊息事件的子型別，如 text、image、sticker。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">source.userId</div>
+        <div class="term-def">用戶唯一識別碼，群組情境下可能為 undefined。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">getProfile()</div>
+        <div class="term-def">取得用戶顯示名稱、頭像等個人資訊。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">getMessageContent()</div>
+        <div class="term-def">下載媒體訊息的二進位串流。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">EventRouter</div>
+        <div class="term-def">依事件型別分派到對應 handler 的路由層。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">dispatch table</div>
+        <div class="term-def">用物件映射取代 switch，便於擴展與測試。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">設計原則</div>
+    <div style="font-size:0.82rem;color:var(--ink-2);line-height:1.8;">
+      <p style="margin-bottom:0.75rem;">
+        <strong style="font-family:var(--mono);font-size:0.7rem;color:var(--ink);">單一職責</strong><br>
+        每個 handler 只負責一種事件，router 只負責分派，不混入業務邏輯。
+      </p>
+      <p style="margin-bottom:0.75rem;">
+        <strong style="font-family:var(--mono);font-size:0.7rem;color:var(--ink);">防禦性取值</strong><br>
+        所有從 event 物件取值的操作都應考慮 undefined 情況，尤其是 source.userId。
+      </p>
+      <p>
+        <strong style="font-family:var(--mono);font-size:0.7rem;color:var(--ink);">錯誤隔離</strong><br>
+        每個事件的 try/catch 相互獨立，單一事件失敗不影響批次中的其他事件。
+      </p>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item">
+        <strong>Webhook 事件物件文件</strong>
+        developers.line.biz/en/reference/messaging-api/#webhook-event-objects
+      </li>
+      <li class="res-item">
+        <strong>getProfile API</strong>
+        developers.line.biz/en/reference/messaging-api/#get-profile
+      </li>
+      <li class="res-item">
+        <strong>getMessageContent API</strong>
+        developers.line.biz/en/reference/messaging-api/#get-content
+      </li>
+      <li class="res-item">
+        <strong>LINE 官方貼圖列表</strong>
+        developers.line.biz/en/docs/messaging-api/sticker-list
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">章節測驗</div>
+    <div class="quiz-wrap" id="quiz">
+      <div class="quiz-q">在群組中，某個成員傳訊息給 Bot。以下關於 source 欄位的描述，哪項正確？</div>
+      <div class="quiz-opt" onclick="answerQuiz(0)">A. source.type 為 "user"，source.userId 一定存在</div>
+      <div class="quiz-opt" onclick="answerQuiz(1)">B. source.type 為 "group"，source.userId 可能不存在</div>
+      <div class="quiz-opt" onclick="answerQuiz(2)">C. source.type 為 "group"，source.userId 一定存在</div>
+      <div class="quiz-opt" onclick="answerQuiz(3)">D. source.type 為 "room"，source.groupId 存在</div>
+      <div class="quiz-feedback" id="qfeed">
+        正確。在群組（group）情境下，source.type 為 "group"，
+        同時提供 source.groupId。但 source.userId 依用戶的隱私設定而定，
+        可能不存在，取用前務必檢查。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div><!-- .content-wrap -->
+
+</div><!-- .page -->
+
+<!-- ═══ CHAPTER NAV ══════════════════════════════════════════ -->
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter1.html" class="nav-btn">← CH.01 生態系與環境建置</a>
+    <div class="nav-loc">
+      <div>CH.02 — Webhook 事件處理與訊息型別</div>
+      <div style="margin-top:0.25rem;font-size:0.58rem;color:var(--ink-4)">第 2 章，共 10 章</div>
+    </div>
+    <a href="chapter3.html" class="nav-btn fwd">CH.03 訊息型別與 Push API →</a>
+  </div>
+</nav>
+
+<script>
+/* Reading progress */
+window.addEventListener('scroll', () => {
+  const d = document.documentElement
+  const pct = d.scrollTop / (d.scrollHeight - d.clientHeight) * 100
+  document.getElementById('rp').style.width = pct + '%'
+})
+
+/* Active TOC */
+const sections = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const active = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (active) active.classList.add('active')
+    }
+  })
+}, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' })
+sections.forEach(s => observer.observe(s))
+
+/* Quiz */
+function answerQuiz(idx) {
+  const CORRECT = 1
+  const opts = document.querySelectorAll('.quiz-opt')
+  opts.forEach((el, i) => {
+    el.classList.remove('correct', 'wrong')
+    if (i === CORRECT) el.classList.add('correct')
+    else if (i === idx && idx !== CORRECT) el.classList.add('wrong')
+  })
+  document.getElementById('qfeed').style.display = 'block'
+}
+</script>
+</body>
+</html>

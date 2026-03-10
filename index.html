@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE Bot 開發速成班</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─── DESIGN TOKENS ──────────────────────────────────────── */
+  :root {
+    --paper:   #F5F0E8;
+    --paper-2: #EDE8DF;
+    --paper-3: #E4DED4;
+    --ink:     #1A1612;
+    --ink-2:   #3D3530;
+    --ink-3:   #6B5E55;
+    --red:     #C0392B;
+    --red-2:   #E74C3C;
+    --red-dim: rgba(192,57,43,0.12);
+    --serif:   'Noto Serif TC', serif;
+    --mono:    'IBM Plex Mono', monospace;
+  }
+
+  /* ─── RESET ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCROLLBAR ──────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--paper-2); }
+  ::-webkit-scrollbar-thumb { background: var(--ink-3); border-radius: 3px; }
+
+  /* ─── MASTHEAD ───────────────────────────────────────────── */
+  .masthead {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--paper);
+    border-bottom: 1px solid var(--ink-3);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 52px;
+  }
+  .masthead-logo {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .masthead-logo span { color: var(--red); }
+  .masthead-nav {
+    display: flex; gap: 0; list-style: none;
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em;
+  }
+  .masthead-nav a {
+    display: block; padding: 0 1rem; height: 52px; line-height: 52px;
+    color: var(--ink-3); text-decoration: none; text-transform: uppercase;
+    border-left: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .masthead-nav a:hover { color: var(--red); background: var(--red-dim); border-left-color: var(--red); }
+  .progress-bar {
+    position: fixed; top: 52px; left: 0; height: 2px; background: var(--red);
+    width: 0%; z-index: 100; transition: width 0.1s;
+  }
+
+  /* ─── HERO ───────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 52px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .hero-left {
+    padding: 6rem 3rem 4rem 4rem;
+    border-right: 1px solid var(--ink-3);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: block; width: 2rem; height: 1px; background: var(--red);
+  }
+  .hero-title {
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 900; line-height: 1.1;
+    letter-spacing: -0.02em; color: var(--ink);
+  }
+  .hero-title em {
+    font-style: normal; color: var(--red);
+    border-bottom: 3px solid var(--red);
+    padding-bottom: 2px;
+  }
+  .hero-subtitle {
+    margin-top: 2rem; font-size: 1.05rem; font-weight: 300;
+    color: var(--ink-2); max-width: 38ch; line-height: 2;
+  }
+  .hero-meta {
+    margin-top: 3rem;
+    display: flex; gap: 2rem;
+  }
+  .hero-meta-item {
+    font-family: var(--mono); font-size: 0.7rem; color: var(--ink-3);
+    letter-spacing: 0.05em;
+  }
+  .hero-meta-item strong {
+    display: block; font-size: 1.6rem; font-weight: 600;
+    color: var(--ink); font-family: var(--serif); letter-spacing: 0;
+    margin-bottom: 0.2rem;
+  }
+  .hero-cta {
+    margin-top: 3rem;
+    display: flex; gap: 1rem; align-items: center;
+  }
+  .btn-primary {
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--ink); color: var(--paper);
+    padding: 0.85rem 2rem; border: 1px solid var(--ink);
+    cursor: pointer; text-decoration: none; display: inline-block;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-primary:hover { background: var(--red); border-color: var(--red); }
+  .btn-secondary {
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-3); text-decoration: none;
+    border-bottom: 1px solid var(--ink-3);
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--red); border-color: var(--red); }
+
+  .hero-right {
+    background: var(--paper-2);
+    padding: 6rem 3rem 4rem 4rem;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-right::before {
+    content: 'LINE BOT';
+    position: absolute; bottom: -1rem; right: -1rem;
+    font-family: var(--mono); font-size: 8rem; font-weight: 600;
+    color: var(--paper-3); line-height: 1; pointer-events: none;
+    white-space: nowrap;
+  }
+  .code-preview {
+    background: var(--ink); color: #A8D5A2;
+    font-family: var(--mono); font-size: 0.8rem; line-height: 1.7;
+    padding: 1.5rem; border-left: 3px solid var(--red);
+    position: relative; z-index: 1;
+    animation: fadeInUp 0.8s ease both 0.3s;
+  }
+  .code-preview .cmt { color: var(--ink-3); }
+  .code-preview .kw  { color: #E06C75; }
+  .code-preview .str { color: #98C379; }
+  .code-preview .fn  { color: #61AFEF; }
+  .code-preview .num { color: #D19A66; }
+  .code-line-num {
+    display: inline-block; width: 1.8rem; color: #4A4A4A;
+    user-select: none; font-size: 0.7rem;
+  }
+  .hero-chapter-count {
+    margin-top: 2.5rem; position: relative; z-index: 1;
+  }
+  .chapter-chips {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;
+  }
+  .chapter-chip {
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.08em; padding: 0.3rem 0.6rem;
+    border: 1px solid var(--ink-3); color: var(--ink-3);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .chapter-chip:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
+  /* ─── SECTION HEADERS ────────────────────────────────────── */
+  .section-header {
+    padding: 4rem 4rem 2.5rem;
+    border-bottom: 1px solid var(--ink-3);
+    display: flex; align-items: baseline; gap: 1.5rem;
+  }
+  .section-num {
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+    color: var(--red); letter-spacing: 0.15em;
+  }
+  .section-title {
+    font-size: 1.8rem; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .section-rule {
+    flex: 1; height: 1px; background: var(--ink-3);
+  }
+
+  /* ─── CURRICULUM ─────────────────────────────────────────── */
+  #curriculum { border-bottom: 2px solid var(--ink); }
+  .curriculum-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+  }
+  .chapter-card {
+    border-right: 1px solid var(--ink-3);
+    border-bottom: 1px solid var(--ink-3);
+    padding: 2.5rem 3rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .chapter-card:nth-child(even) { border-right: none; }
+  .chapter-card:hover { background: var(--paper-2); }
+  .chapter-card::after {
+    content: '→';
+    position: absolute; bottom: 1.5rem; right: 2rem;
+    font-family: var(--mono); font-size: 1.2rem; color: var(--ink-3);
+    transition: transform 0.2s, color 0.2s;
+  }
+  .chapter-card:hover::after { transform: translateX(4px); color: var(--red); }
+  .ch-num {
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 600;
+    color: var(--red); letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .ch-title {
+    font-size: 1.2rem; font-weight: 700; line-height: 1.4;
+    margin-bottom: 0.75rem; color: var(--ink);
+  }
+  .ch-desc {
+    font-size: 0.88rem; color: var(--ink-3); line-height: 1.7;
+    margin-bottom: 1.25rem;
+  }
+  .ch-tags {
+    display: flex; flex-wrap: wrap; gap: 0.35rem;
+  }
+  .ch-tag {
+    font-family: var(--mono); font-size: 0.6rem; font-weight: 500;
+    padding: 0.25rem 0.5rem; border: 1px solid var(--ink-3);
+    color: var(--ink-3); letter-spacing: 0.05em;
+  }
+  .ch-tag.red { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+  .ch-card-link {
+    margin-top: 0.85rem;
+  }
+  .ch-card-link a {
+    font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--red); text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .ch-card-link a:hover { border-bottom-color: var(--red); }
+
+  /* ─── MODULE DETAIL ──────────────────────────────────────── */
+  #module-detail {
+    display: none;
+    border-bottom: 2px solid var(--ink);
+  }
+  #module-detail.active { display: block; }
+  .module-hero {
+    display: grid; grid-template-columns: 2fr 3fr;
+    border-bottom: 1px solid var(--ink-3);
+  }
+  .module-hero-left {
+    background: var(--ink); color: var(--paper);
+    padding: 3rem; border-right: 1px solid var(--ink-3);
+  }
+  .module-eyebrow {
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.15em; color: var(--red); margin-bottom: 1rem;
+  }
+  .module-title { font-size: 1.8rem; font-weight: 700; line-height: 1.3; }
+  .module-meta {
+    margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #333;
+    font-family: var(--mono); font-size: 0.7rem; color: #888;
+  }
+  .module-meta-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+  .module-meta-row span:last-child { color: var(--paper); }
+  .module-hero-right { padding: 3rem; background: var(--paper-2); }
+  .module-intro { font-size: 1rem; line-height: 2; color: var(--ink-2); margin-bottom: 2rem; }
+  .module-objectives h4 {
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 1rem;
+  }
+  .obj-list { list-style: none; }
+  .obj-list li {
+    padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3);
+    font-size: 0.92rem; color: var(--ink-2); display: flex; gap: 0.75rem;
+  }
+  .obj-list li::before {
+    content: '✓'; color: var(--red); font-family: var(--mono);
+    font-weight: 600; flex-shrink: 0;
+  }
+
+  .module-content {
+    display: grid; grid-template-columns: 3fr 2fr;
+  }
+  .module-main { padding: 3rem; border-right: 1px solid var(--ink-3); }
+  .module-sidebar { padding: 3rem; background: var(--paper-2); }
+
+  .lesson-block { margin-bottom: 2.5rem; }
+  .lesson-num {
+    font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+    color: var(--red); letter-spacing: 0.15em; margin-bottom: 0.4rem;
+  }
+  .lesson-title {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--ink);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .lesson-body { font-size: 0.88rem; color: var(--ink-2); line-height: 1.9; }
+  .lesson-divider {
+    border: none; border-top: 1px solid var(--paper-3); margin: 2rem 0;
+  }
+
+  .code-block {
+    background: var(--ink); color: #ABB2BF;
+    font-family: var(--mono); font-size: 0.75rem; line-height: 1.7;
+    padding: 1.25rem; margin: 1rem 0;
+    border-left: 3px solid var(--red);
+    overflow-x: auto;
+  }
+  .code-block .kw  { color: #C678DD; }
+  .code-block .str { color: #98C379; }
+  .code-block .fn  { color: #61AFEF; }
+  .code-block .cmt { color: #5C6370; font-style: italic; }
+  .code-block .num { color: #D19A66; }
+  .code-block .cls { color: #E5C07B; }
+
+  .tip-box {
+    border: 1px solid var(--red); background: var(--red-dim);
+    padding: 1rem 1.25rem; margin: 1rem 0;
+    font-size: 0.85rem; color: var(--ink-2); line-height: 1.8;
+  }
+  .tip-box strong {
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--red); display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .sidebar-widget { margin-bottom: 2.5rem; }
+  .sidebar-label {
+    font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--paper-3);
+  }
+  .resource-list { list-style: none; }
+  .resource-list li {
+    font-size: 0.85rem; padding: 0.5rem 0;
+    border-bottom: 1px solid var(--paper-3);
+    color: var(--ink-2); display: flex; gap: 0.5rem; align-items: baseline;
+  }
+  .resource-list li::before {
+    content: '›'; color: var(--red); font-weight: 700; flex-shrink: 0;
+  }
+  .quiz-block {
+    background: var(--ink); color: var(--paper);
+    padding: 1.5rem; font-size: 0.85rem; line-height: 1.7;
+  }
+  .quiz-q { font-weight: 700; margin-bottom: 1rem; }
+  .quiz-opt {
+    padding: 0.4rem 0; border-bottom: 1px solid #333;
+    cursor: pointer; transition: color 0.2s;
+    font-family: var(--mono); font-size: 0.75rem;
+  }
+  .quiz-opt:hover { color: var(--red); }
+  .quiz-opt.correct { color: #98C379; }
+  .quiz-opt.wrong   { color: #E06C75; }
+  .quiz-feedback {
+    margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--red); display: none;
+  }
+
+  /* ─── NAV BETWEEN MODULES ────────────────────────────────── */
+  .module-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 3rem; border-top: 1px solid var(--ink-3);
+    background: var(--paper-2);
+  }
+  .module-nav-btn {
+    font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: none; border: 1px solid var(--ink-3);
+    color: var(--ink-3); padding: 0.6rem 1.25rem; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .module-nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .module-nav-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .module-nav-btn.primary:hover { background: var(--red); border-color: var(--red); }
+  .module-nav-loc { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-3); }
+  .module-nav-loc a.chapter-link {
+    display: inline-block; margin-top: 0.5rem;
+    font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--paper); background: var(--red); border: 1px solid var(--red);
+    padding: 0.45rem 1rem; text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .module-nav-loc a.chapter-link:hover { background: var(--ink); border-color: var(--ink); }
+
+  /* ─── FOOTER ─────────────────────────────────────────────── */
+  footer {
+    padding: 3rem 4rem;
+    border-top: 2px solid var(--ink);
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+  .footer-brand { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .footer-copy { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-3); margin-top: 0.5rem; }
+  .footer-col-title {
+    font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 0.75rem;
+  }
+  .footer-list { list-style: none; }
+  .footer-list li { font-size: 0.85rem; color: var(--ink-3); padding: 0.25rem 0; }
+  .footer-stack {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+  }
+  .stack-badge {
+    font-family: var(--mono); font-size: 0.6rem; font-weight: 500;
+    padding: 0.2rem 0.45rem; border: 1px solid var(--ink-3);
+    color: var(--ink-3);
+  }
+
+  /* ─── ANIMATIONS ─────────────────────────────────────────── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate { opacity: 0; animation: fadeInUp 0.6s ease forwards; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .curriculum-grid { grid-template-columns: 1fr; }
+    .chapter-card { border-right: none; }
+    .module-hero { grid-template-columns: 1fr; }
+    .module-content { grid-template-columns: 1fr; }
+    .module-sidebar { border-top: 1px solid var(--ink-3); }
+    footer { grid-template-columns: 1fr; }
+    .masthead-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ MASTHEAD ═══════════════════════════════════════════════ -->
+<header class="masthead">
+  <div class="masthead-logo">LINE Bot <span>速成班</span></div>
+  <nav>
+    <ul class="masthead-nav">
+      <li><a href="#curriculum" onclick="closeMod()">課程目錄</a></li>
+      <li><a href="#module-detail" id="nav-current" style="display:none">當前章節</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ═══ HERO ════════════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-left">
+    <div class="hero-eyebrow animate">速成實戰課程</div>
+    <h1 class="hero-title animate delay-1">
+      LINE Bot<br>
+      開發<em>速成班</em>
+    </h1>
+    <p class="hero-subtitle animate delay-2">
+      從零到上線，十個章節掌握 LINE Messaging API 核心技術，
+      建構智慧聊天機器人，串接 AI 與真實商業場景。
+    </p>
+    <div class="hero-meta animate delay-3">
+      <div class="hero-meta-item">
+        <strong>10</strong>章節模組
+      </div>
+      <div class="hero-meta-item">
+        <strong>40+</strong>小時內容
+      </div>
+      <div class="hero-meta-item">
+        <strong>30+</strong>實戰範例
+      </div>
+    </div>
+    <div class="hero-cta animate delay-4">
+      <a href="#curriculum" class="btn-primary" onclick="closeMod()">開始學習</a>
+      <a href="#curriculum" class="btn-secondary" onclick="closeMod()">瀏覽課程</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="code-preview">
+<span class="cmt"><span class="code-line-num">1</span> // LINE Bot 快速起步範例</span>
+<span><span class="code-line-num">2</span> <span class="kw">const</span> line = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span>
+<span><span class="code-line-num">3</span> <span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span>
+<span><span class="code-line-num">4</span></span>
+<span><span class="code-line-num">5</span> <span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.Client({</span>
+<span><span class="code-line-num">6</span>   channelAccessToken: process.env.<span class="cls">TOKEN</span></span>
+<span><span class="code-line-num">7</span> })</span>
+<span><span class="code-line-num">8</span></span>
+<span><span class="code-line-num">9</span> app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, (req, res) => {</span>
+<span><span class="code-line-num">10</span>   <span class="kw">const</span> events = req.body.events</span>
+<span><span class="code-line-num">11</span>   events.<span class="fn">forEach</span>(event => {</span>
+<span><span class="code-line-num">12</span>     <span class="kw">if</span> (event.type === <span class="str">'message'</span>) {</span>
+<span><span class="code-line-num">13</span>       client.<span class="fn">replyMessage</span>(event.replyToken, {</span>
+<span><span class="code-line-num">14</span>         type: <span class="str">'text'</span>, text: <span class="str">'Hello, World! 👋'</span></span>
+<span><span class="code-line-num">15</span>       })</span>
+<span><span class="code-line-num">16</span>     }</span>
+<span><span class="code-line-num">17</span>   })</span>
+<span><span class="code-line-num">18</span>   res.<span class="fn">sendStatus</span>(<span class="num">200</span>)</span>
+<span><span class="code-line-num">19</span> })</span>
+    </div>
+    <div class="hero-chapter-count">
+      <div style="font-family:var(--mono);font-size:0.65rem;color:var(--ink-3);letter-spacing:0.1em;margin-bottom:0.5rem">MODULES</div>
+      <div class="chapter-chips" id="heroChips"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CURRICULUM ══════════════════════════════════════════════ -->
+<section id="curriculum">
+  <div class="section-header">
+    <span class="section-num">01 / CURRICULUM</span>
+    <h2 class="section-title">課程目錄</h2>
+    <div class="section-rule"></div>
+  </div>
+  <div class="curriculum-grid" id="curriculumGrid"></div>
+</section>
+
+<!-- ═══ MODULE DETAIL ════════════════════════════════════════════ -->
+<section id="module-detail">
+  <div id="moduleContent"></div>
+</section>
+
+<!-- ═══ FOOTER ══════════════════════════════════════════════════ -->
+<footer>
+  <div>
+    <div class="footer-brand">LINE Bot 速成班</div>
+    <div style="font-size:0.85rem;color:var(--ink-3)">十章節．完整實戰．從零到上線</div>
+    <div class="footer-copy">© 2025 LINE Bot 速成班．教育用途</div>
+  </div>
+  <div>
+    <div class="footer-col-title">技術棧</div>
+    <div class="footer-stack">
+      <span class="stack-badge">Node.js</span>
+      <span class="stack-badge">Express</span>
+      <span class="stack-badge">LINE SDK</span>
+      <span class="stack-badge">Webhook</span>
+      <span class="stack-badge">OpenAI API</span>
+      <span class="stack-badge">Firebase</span>
+      <span class="stack-badge">Render</span>
+      <span class="stack-badge">Flex Message</span>
+    </div>
+  </div>
+  <div>
+    <div class="footer-col-title">課程涵蓋</div>
+    <ul class="footer-list">
+      <li>LINE Messaging API 全功能</li>
+      <li>Webhook 架構設計</li>
+      <li>Rich Menu 與 Flex Message</li>
+      <li>AI 聊天機器人整合</li>
+      <li>雲端部署與監控</li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   COURSE DATA
+═══════════════════════════════════════════════════════════════ */
+const CHAPTERS = [
+  {
+    num: "CH.01",
+    title: "LINE Bot 生態系與開發環境建置",
+    desc: "了解 LINE 平台架構，建立開發者帳號，完成本地開發環境，讓第一個 Hello World Bot 上線。",
+    time: "3 小時",
+    level: "入門",
+    tags: ["LINE Platform", "Node.js", "Ngrok", "入門必備"],
+    intro: `LINE Bot 是目前台灣最廣泛使用的聊天機器人平台之一，LINE 月活躍用戶超過 2300 萬。本章從整體生態系出發，帶你快速建立正確的概念模型，並在實作中完成第一個能回覆訊息的 Bot。理解 Webhook 的基本運作後，你將對整個課程有扎實的基礎認知。`,
+    objectives: [
+      "理解 LINE Bot 的整體架構與 Webhook 工作原理",
+      "完成 LINE Developers Console 設定與 Channel 建立",
+      "在本地端用 Ngrok 暴露服務並接收真實事件",
+      "成功部署第一個能回覆 Hello World 的 Bot"
+    ],
+    lessons: [
+      {
+        num: "1-1",
+        title: "LINE 平台架構全覽",
+        icon: "🗺",
+        body: `LINE Bot 的運作核心是 <strong>Webhook 機制</strong>：使用者傳送訊息 → LINE 伺服器接收 → 轉發 POST request 到你的 Webhook URL → 你的伺服器處理並呼叫 Reply API 回覆。<br><br>
+        LINE 提供兩種 Bot 類型：<strong>Messaging API</strong>（適合自動化互動）與 <strong>LINE Login</strong>（適合身份驗證）。本課程專注於 Messaging API。`,
+        code: `<span class="cmt">// 事件流程示意</span>
+<span class="cmt">// User → LINE Server → Your Webhook → Reply API → User</span>
+
+<span class="kw">const</span> flow = {
+  step1: <span class="str">'用戶傳送訊息至 LINE'</span>,
+  step2: <span class="str">'LINE Server 發送 POST /webhook'</span>,
+  step3: <span class="str">'你的 Express 接收 event'</span>,
+  step4: <span class="str">'呼叫 client.replyMessage()'</span>
+}`
+      },
+      {
+        num: "1-2",
+        title: "開發者帳號與 Channel 建立",
+        icon: "⚙️",
+        body: `前往 <code>developers.line.biz</code>，使用 LINE 帳號登入後建立 Provider 與 Messaging API Channel。<br><br>
+        完成後你需要取得兩個關鍵憑證：<br>
+        • <strong>Channel Secret</strong>：用於驗證 Webhook 請求來源<br>
+        • <strong>Channel Access Token</strong>：用於呼叫 LINE API`,
+        tip: "建議將兩組憑證存入 .env 檔案，絕對不要 commit 到 Git！使用 dotenv 套件載入。"
+      },
+      {
+        num: "1-3",
+        title: "Node.js 專案初始化與 SDK 安裝",
+        icon: "📦",
+        body: `使用官方 SDK <code>@line/bot-sdk</code> 可大幅減少重複工作，它已內建 signature 驗證、型別定義與各種 Message Builder。`,
+        code: `<span class="cmt"># 建立專案並安裝依賴</span>
+mkdir my-linebot && cd my-linebot
+npm init -y
+npm install @line/bot-sdk express dotenv
+
+<span class="cmt"># 建立 .env 檔案</span>
+CHANNEL_SECRET=your_channel_secret
+CHANNEL_ACCESS_TOKEN=your_token
+PORT=3000`
+      },
+      {
+        num: "1-4",
+        title: "Hello World Bot 實作",
+        icon: "👋",
+        body: `完整的最小可運行 Bot 只需約 30 行程式碼。核心是 <code>middleware</code>（驗證請求）與 <code>handleEvent</code>（處理事件）兩個函式。`,
+        code: `<span class="kw">require</span>(<span class="str">'dotenv'</span>).config()
+<span class="kw">const</span> line = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)
+
+<span class="kw">const</span> config = {
+  channelSecret: process.env.<span class="cls">CHANNEL_SECRET</span>,
+  channelAccessToken: process.env.<span class="cls">CHANNEL_ACCESS_TOKEN</span>
+}
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.Client(config)
+<span class="kw">const</span> app = <span class="fn">express</span>()
+
+app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, line.<span class="fn">middleware</span>(config), (req, res) => {
+  Promise.<span class="fn">all</span>(req.body.events.<span class="fn">map</span>(handleEvent))
+    .<span class="fn">then</span>(result => res.<span class="fn">json</span>(result))
+    .<span class="fn">catch</span>(err => {
+      console.<span class="fn">error</span>(err)
+      res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">end</span>()
+    })
+})
+
+<span class="kw">async function</span> <span class="fn">handleEvent</span>(event) {
+  <span class="kw">if</span> (event.type !== <span class="str">'message'</span>) <span class="kw">return</span> null
+  <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {
+    type: <span class="str">'text'</span>,
+    text: <span class="str">\`你說：\${event.message.text}，我聽到了！\`</span>
+  })
+}
+
+app.<span class="fn">listen</span>(<span class="num">3000</span>)`
+      },
+      {
+        num: "1-5",
+        title: "Ngrok 本地測試",
+        icon: "🔗",
+        body: `在正式部署前，Ngrok 讓你的本地伺服器暫時對外可訪，方便即時測試 Webhook。`,
+        code: `<span class="cmt"># 安裝並啟動 Ngrok</span>
+npm install -g ngrok
+ngrok http 3000
+
+<span class="cmt"># 取得 Forwarding URL 如：</span>
+<span class="cmt"># https://abc123.ngrok.io → 貼到 LINE Console Webhook URL</span>
+<span class="cmt"># 記得加上 /webhook 路徑！</span>`
+      }
+    ],
+    resources: ["LINE Developers Console", "@line/bot-sdk npm 文件", "Ngrok 官方網站", "dotenv 設定指南"],
+    quiz: {
+      q: "LINE Bot 收到使用者訊息後，正確的回覆方式是？",
+      opts: ["直接對 LINE 伺服器 WebSocket 傳送", "使用 replyToken 呼叫 Reply API", "使用 userId 呼叫 Push API", "直接操作資料庫"],
+      ans: 1,
+      feedback: "正確！replyToken 是回覆的唯一憑證，且有效期限僅 30 秒，必須即時使用。"
+    }
+  },
+
+  {
+    num: "CH.02",
+    title: "Webhook 事件處理與訊息型別",
+    desc: "深入理解各種 Webhook 事件，從文字、圖片到貼圖，建立完整的事件路由系統。",
+    time: "4 小時",
+    level: "基礎",
+    tags: ["Events", "Message Types", "Follow/Unfollow", "Router"],
+    intro: `LINE Webhook 不只傳送文字訊息，還包含追蹤/取消追蹤、加入群組、按下按鈕等數十種事件。本章建立一個健全的事件路由架構，讓你的 Bot 能優雅地處理所有情境，並且了解如何妥善處理非預期事件以避免 500 錯誤。`,
+    objectives: [
+      "掌握所有 LINE Webhook 事件型別與資料結構",
+      "建立模組化的 EventRouter 處理各類事件",
+      "實作使用者追蹤歡迎訊息與取消追蹤記錄",
+      "正確處理圖片、影片、音訊等媒體訊息事件"
+    ],
+    lessons: [
+      {
+        num: "2-1",
+        title: "Webhook 事件型別全覽",
+        icon: "📋",
+        body: `LINE 的事件可分為四大類：<br>
+        • <strong>Message Events</strong>：text, image, video, audio, file, location, sticker<br>
+        • <strong>Follow Events</strong>：follow, unfollow<br>
+        • <strong>Join/Leave Events</strong>：join, leave（群組相關）<br>
+        • <strong>Postback Events</strong>：用戶點擊按鈕後觸發<br><br>
+        每個事件都包含 <code>source</code>（來源：user/group/room）和 <code>timestamp</code> 欄位。`,
+        code: `<span class="cmt">// 事件結構範例</span>
+{
+  type: <span class="str">'message'</span>,
+  replyToken: <span class="str">'...'</span>,
+  source: { type: <span class="str">'user'</span>, userId: <span class="str">'U123abc...'</span> },
+  timestamp: <span class="num">1609459200000</span>,
+  message: {
+    id: <span class="str">'12345678'</span>,
+    type: <span class="str">'text'</span>,
+    text: <span class="str">'你好！'</span>
+  }
+}`
+      },
+      {
+        num: "2-2",
+        title: "建立 EventRouter 架構",
+        icon: "🔀",
+        body: `將事件處理邏輯模組化，讓 <code>index.js</code> 保持乾淨，各類事件在獨立模組中處理。`,
+        code: `<span class="cmt">// handlers/messageHandler.js</span>
+<span class="kw">async function</span> <span class="fn">handleMessage</span>(event, client) {
+  <span class="kw">const</span> { type } = event.message
+  <span class="kw">const</span> handlers = {
+    text:     () => <span class="fn">handleText</span>(event, client),
+    image:    () => <span class="fn">handleImage</span>(event, client),
+    sticker:  () => <span class="fn">handleSticker</span>(event, client),
+    location: () => <span class="fn">handleLocation</span>(event, client)
+  }
+  <span class="kw">return</span> (handlers[type] || handlers.text)()
+}
+
+<span class="cmt">// 主路由 router.js</span>
+<span class="kw">async function</span> <span class="fn">router</span>(event, client) {
+  <span class="kw">switch</span> (event.type) {
+    <span class="kw">case</span> <span class="str">'message'</span>:  <span class="kw">return</span> <span class="fn">handleMessage</span>(event, client)
+    <span class="kw">case</span> <span class="str">'follow'</span>:   <span class="kw">return</span> <span class="fn">handleFollow</span>(event, client)
+    <span class="kw">case</span> <span class="str">'postback'</span>: <span class="kw">return</span> <span class="fn">handlePostback</span>(event, client)
+    <span class="kw">default</span>:        <span class="kw">return</span> null
+  }
+}`
+      },
+      {
+        num: "2-3",
+        title: "Follow/Unfollow 事件實作",
+        icon: "👥",
+        body: `使用者加入好友時發送歡迎訊息，並取得用戶 Profile 儲存到資料庫，建立個人化基礎。`,
+        code: `<span class="kw">async function</span> <span class="fn">handleFollow</span>(event, client) {
+  <span class="kw">const</span> profile = <span class="kw">await</span> client.<span class="fn">getProfile</span>(event.source.userId)
+  <span class="kw">const</span> name = profile.displayName
+
+  <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, [
+    {
+      type: <span class="str">'text'</span>,
+      text: <span class="str">\`歡迎 \${name}！🎉\n我是你的智能助理。\`</span>
+    },
+    {
+      type: <span class="str">'text'</span>,
+      text: <span class="str">'輸入「說明」查看我能做什麼！'</span>
+    }
+  ])
+}`,
+        tip: "Unfollow 事件沒有 replyToken，只能做資料庫記錄，不能回覆訊息。"
+      },
+      {
+        num: "2-4",
+        title: "媒體訊息下載與處理",
+        icon: "🖼",
+        body: `當用戶傳送圖片等媒體時，需透過 LINE API 下載，再進行後續處理（如 OCR、圖片分析）。`,
+        code: `<span class="kw">const</span> fs = <span class="fn">require</span>(<span class="str">'fs'</span>)
+<span class="kw">const</span> path = <span class="fn">require</span>(<span class="str">'path'</span>)
+
+<span class="kw">async function</span> <span class="fn">handleImage</span>(event, client) {
+  <span class="kw">const</span> messageId = event.message.id
+  <span class="kw">const</span> stream = <span class="kw">await</span> client.<span class="fn">getMessageContent</span>(messageId)
+  <span class="kw">const</span> filePath = path.<span class="fn">join</span>(<span class="str">'./uploads'</span>, <span class="str">\`\${messageId}.jpg\`</span>)
+
+  <span class="kw">await new</span> Promise((resolve, reject) => {
+    <span class="kw">const</span> writable = fs.<span class="fn">createWriteStream</span>(filePath)
+    stream.<span class="fn">pipe</span>(writable)
+    writable.<span class="fn">on</span>(<span class="str">'finish'</span>, resolve)
+    writable.<span class="fn">on</span>(<span class="str">'error'</span>, reject)
+  })
+
+  <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {
+    type: <span class="str">'text'</span>, text: <span class="str">'收到圖片！正在分析中...'</span>
+  })
+}`
+      }
+    ],
+    resources: ["LINE Webhook 事件型別文件", "getProfile API 說明", "getMessageContent API", "Node.js Stream 文件"],
+    quiz: {
+      q: "使用者取消追蹤（Unfollow）Bot 時，你能做什麼？",
+      opts: ["可以傳送告別訊息", "無法回覆，只能記錄到資料庫", "可以呼叫 Push API 再試", "什麼都做不了"],
+      ans: 1,
+      feedback: "正確！Unfollow 事件沒有 replyToken，且用戶已不在好友名單，只能記錄取消追蹤的行為到資料庫。"
+    }
+  },
+
+  {
+    num: "CH.03",
+    title: "訊息型別與 Reply / Push API",
+    desc: "掌握所有訊息格式：文字、圖片、按鈕樣板、輪播卡片，以及主動推送訊息的時機與策略。",
+    time: "4 小時",
+    level: "基礎",
+    tags: ["Reply API", "Push API", "Broadcast", "Templates"],
+    intro: `LINE Bot 能傳送的不只是文字，豐富的訊息型別讓互動體驗大幅提升。同時，理解 Reply API 與 Push API 的差異至關重要——前者免費但有時效，後者需要費用但可主動發送。本章完整覆蓋所有訊息型別，並教你制定最佳的訊息推送策略。`,
+    objectives: [
+      "熟悉全部 LINE 訊息型別的語法與使用場景",
+      "正確區分 Reply、Push、Multicast、Broadcast API",
+      "實作含按鈕的 Buttons Template 互動訊息",
+      "設計輪播卡片（Carousel Template）展示多項目"
+    ],
+    lessons: [
+      {
+        num: "3-1",
+        title: "訊息型別全家桶",
+        icon: "💬",
+        body: `LINE 支援多種訊息型別，每種都有其適合的使用場景：<br><br>
+        • <strong>Text</strong>：基本文字，支援 emoji 與換行<br>
+        • <strong>Image</strong>：圖片訊息，需提供 originalContentUrl<br>
+        • <strong>Video</strong>：影片，需同時提供預覽圖<br>
+        • <strong>Audio</strong>：音訊，需指定時長（毫秒）<br>
+        • <strong>Location</strong>：地圖位置訊息<br>
+        • <strong>Sticker</strong>：LINE 官方貼圖`,
+        code: `<span class="cmt">// 一次回覆最多 5 則訊息</span>
+<span class="kw">const</span> messages = [
+  { type: <span class="str">'text'</span>, text: <span class="str">'這是一套說明：'</span> },
+  {
+    type: <span class="str">'image'</span>,
+    originalContentUrl: <span class="str">'https://example.com/img.jpg'</span>,
+    previewImageUrl:   <span class="str">'https://example.com/preview.jpg'</span>
+  },
+  {
+    type: <span class="str">'location'</span>,
+    title: <span class="str">'台北 101'</span>, address: <span class="str">'信義路五段 7 號'</span>,
+    latitude: <span class="num">25.0339</span>, longitude: <span class="num">121.5645</span>
+  }
+]
+client.<span class="fn">replyMessage</span>(replyToken, messages)`
+      },
+      {
+        num: "3-2",
+        title: "Buttons Template 互動訊息",
+        icon: "🔘",
+        body: `Buttons Template 讓用戶點擊按鈕觸發 Postback 或開啟連結，是製作選單的基礎。`,
+        code: `{
+  type: <span class="str">'template'</span>,
+  altText: <span class="str">'請選擇服務項目'</span>,
+  template: {
+    type: <span class="str">'buttons'</span>,
+    thumbnailImageUrl: <span class="str">'https://example.com/thumb.jpg'</span>,
+    title: <span class="str">'客服選單'</span>,
+    text: <span class="str">'請選擇你需要的服務'</span>,
+    actions: [
+      { type: <span class="str">'postback'</span>, label: <span class="str">'查詢訂單'</span>, data: <span class="str">'action=order'</span> },
+      { type: <span class="str">'postback'</span>, label: <span class="str">'聯絡客服'</span>, data: <span class="str">'action=cs'</span>    },
+      { type: <span class="str">'uri'</span>,      label: <span class="str">'前往官網'</span>, uri:  <span class="str">'https://...'</span>  }
+    ]
+  }
+}`
+      },
+      {
+        num: "3-3",
+        title: "Carousel Template 輪播卡片",
+        icon: "🎠",
+        body: `輪播卡片最多可放 10 張，適合展示商品列表、選項清單等。`,
+        code: `{
+  type: <span class="str">'template'</span>,
+  altText: <span class="str">'商品目錄'</span>,
+  template: {
+    type: <span class="str">'carousel'</span>,
+    columns: [
+      {
+        thumbnailImageUrl: <span class="str">'https://example.com/p1.jpg'</span>,
+        title: <span class="str">'商品 A'</span>,
+        text: <span class="str">'NT$ 299，限時特價'</span>,
+        actions: [
+          { type: <span class="str">'postback'</span>, label: <span class="str">'加入購物車'</span>, data: <span class="str">'buy=A'</span> },
+          { type: <span class="str">'uri'</span>, label: <span class="str">'查看詳情'</span>, uri: <span class="str">'https://...'</span> }
+        ]
+      }
+      <span class="cmt">// 最多 10 個 column</span>
+    ]
+  }
+}`
+      },
+      {
+        num: "3-4",
+        title: "Push vs Reply vs Broadcast",
+        icon: "📤",
+        body: `選擇正確的 API 不僅影響成本，也影響用戶體驗：<br><br>
+        • <strong>Reply API</strong>：免費，但需要 replyToken（30秒有效）<br>
+        • <strong>Push API</strong>：需付費，可主動發送給特定用戶<br>
+        • <strong>Multicast API</strong>：一次推送給多個 userId（最多 500）<br>
+        • <strong>Broadcast API</strong>：推送給所有追蹤者`,
+        code: `<span class="cmt">// Push - 主動推送給單一用戶</span>
+<span class="kw">await</span> client.<span class="fn">pushMessage</span>(userId, {
+  type: <span class="str">'text'</span>, text: <span class="str">'你的訂單已出貨！🚚'</span>
+})
+
+<span class="cmt">// Multicast - 推送給多位用戶（最多 500）</span>
+<span class="kw">await</span> client.<span class="fn">multicast</span>([userId1, userId2, userId3], {
+  type: <span class="str">'text'</span>, text: <span class="str">'限時優惠通知 🎁'</span>
+})
+
+<span class="cmt">// Broadcast - 推送給所有追蹤者</span>
+<span class="kw">await</span> client.<span class="fn">broadcast</span>({
+  type: <span class="str">'text'</span>, text: <span class="str">'重要公告：系統維護通知'</span>
+})`,
+        tip: "Broadcast 費用依用戶數計算，使用前請確認你的 LINE Official Account 方案。"
+      }
+    ],
+    resources: ["LINE 訊息型別說明文件", "Template Messages 規格", "Messaging API 計費說明", "LINE Bot Designer 工具"],
+    quiz: {
+      q: "以下哪種情況只能使用 Push API，不能用 Reply API？",
+      opts: ["用戶傳訊息後立即回覆", "定時推送每日天氣通知", "用戶按下按鈕後回應", "歡迎新加入的追蹤者"],
+      ans: 1,
+      feedback: "正確！定時推送沒有觸發事件，也就沒有 replyToken，必須使用 Push API 主動傳送。"
+    }
+  },
+
+  {
+    num: "CH.04",
+    title: "Flex Message 打造精美互動卡片",
+    desc: "掌握 LINE 最強大的訊息格式，用 JSON 設計媲美 App 的卡片介面，提升品牌質感。",
+    time: "5 小時",
+    level: "進階",
+    tags: ["Flex Message", "Bubble", "Carousel", "UI Design"],
+    intro: `Flex Message 是 LINE Bot 的視覺武器，讓你用 CSS-like 的方式設計高度客製化的卡片介面。從簡單的訂單確認卡到複雜的商品展示頁，Flex Message 能做到幾乎所有視覺需求。本章從基本結構開始，帶你打造生產等級的卡片設計。`,
+    objectives: [
+      "理解 Flex Message 的 Container/Block/Component 三層結構",
+      "使用 Bubble 設計單一卡片訊息",
+      "使用 LINE Bot Designer 快速原型設計",
+      "實作含圖片、按鈕、分隔線的完整訂單卡片"
+    ],
+    lessons: [
+      {
+        num: "4-1",
+        title: "Flex Message 結構解析",
+        icon: "🧱",
+        body: `Flex Message 的結構分為三層：<br>
+        • <strong>Container</strong>：最外層，可以是 bubble（單張）或 carousel（多張）<br>
+        • <strong>Block</strong>：header、hero、body、footer 四個區塊<br>
+        • <strong>Component</strong>：box、button、text、image、separator 等元件`,
+        code: `{
+  type: <span class="str">'flex'</span>,
+  altText: <span class="str">'訂單確認'</span>,
+  contents: {          <span class="cmt">// Container</span>
+    type: <span class="str">'bubble'</span>,
+    header: { ... },   <span class="cmt">// Block</span>
+    hero:   { ... },   <span class="cmt">// Block</span>
+    body:   {          <span class="cmt">// Block</span>
+      type: <span class="str">'box'</span>,
+      layout: <span class="str">'vertical'</span>,
+      contents: [      <span class="cmt">// Components</span>
+        { type: <span class="str">'text'</span>, text: <span class="str">'商品名稱'</span>, weight: <span class="str">'bold'</span> },
+        { type: <span class="str">'separator'</span> },
+        { type: <span class="str">'button'</span>, action: { type: <span class="str">'uri'</span>, ... } }
+      ]
+    }
+  }
+}`
+      },
+      {
+        num: "4-2",
+        title: "完整訂單確認卡片實作",
+        icon: "🧾",
+        body: `以電商訂單確認為例，設計包含商品圖片、訂單明細、總金額與操作按鈕的完整卡片。`,
+        code: `<span class="fn">buildOrderCard</span>({ orderId, item, price, status }) {
+  <span class="kw">return</span> {
+    type: <span class="str">'flex'</span>, altText: <span class="str">\`訂單 \${orderId} 確認\`</span>,
+    contents: {
+      type: <span class="str">'bubble'</span>,
+      header: {
+        type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+        backgroundColor: <span class="str">'#1A1612'</span>,
+        contents: [{
+          type: <span class="str">'text'</span>, text: <span class="str">'訂單確認'</span>,
+          color: <span class="str">'#F5F0E8'</span>, weight: <span class="str">'bold'</span>, size: <span class="str">'lg'</span>
+        }]
+      },
+      body: {
+        type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>, spacing: <span class="str">'md'</span>,
+        contents: [
+          { type: <span class="str">'text'</span>, text: item, weight: <span class="str">'bold'</span>, size: <span class="str">'xl'</span> },
+          { type: <span class="str">'separator'</span> },
+          {
+            type: <span class="str">'box'</span>, layout: <span class="str">'horizontal'</span>,
+            contents: [
+              { type: <span class="str">'text'</span>, text: <span class="str">'金額'</span>, color: <span class="str">'#888888'</span>, flex: <span class="num">1</span> },
+              { type: <span class="str">'text'</span>, text: <span class="str">\`NT\$ \${price}\`</span>, weight: <span class="str">'bold'</span>, flex: <span class="num">2</span> }
+            ]
+          }
+        ]
+      },
+      footer: {
+        type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+        contents: [{
+          type: <span class="str">'button'</span>, style: <span class="str">'primary'</span>, color: <span class="str">'#C0392B'</span>,
+          action: { type: <span class="str">'postback'</span>, label: <span class="str">'查看訂單'</span>, data: <span class="str">\`order=\${orderId}\`</span> }
+        }]
+      }
+    }
+  }
+}`
+      },
+      {
+        num: "4-3",
+        title: "Flex Carousel 多卡輪播",
+        icon: "🎡",
+        body: `Carousel 型態的 Flex Message 可包含最多 12 個 bubble，每個 bubble 可獨立設計，是展示商品列表的最佳選擇。`,
+        tip: "使用 LINE Bot Designer（Figma plugin 或 Web 版）可視化設計後直接匯出 JSON，大幅加速開發效率。"
+      },
+      {
+        num: "4-4",
+        title: "動態產生 Flex Message",
+        icon: "⚡",
+        body: `從資料庫取得資料動態渲染 Flex Message，實現商品目錄、搜尋結果等動態內容展示。`,
+        code: `<span class="kw">async function</span> <span class="fn">buildProductCarousel</span>(products) {
+  <span class="kw">const</span> bubbles = products.<span class="fn">map</span>(p => ({
+    type: <span class="str">'bubble'</span>,
+    hero: {
+      type: <span class="str">'image'</span>, url: p.imageUrl,
+      size: <span class="str">'full'</span>, aspectRatio: <span class="str">'20:13'</span>
+    },
+    body: {
+      type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+      contents: [
+        { type: <span class="str">'text'</span>, text: p.name, weight: <span class="str">'bold'</span>, size: <span class="str">'xl'</span> },
+        { type: <span class="str">'text'</span>, text: <span class="str">\`NT\$ \${p.price}\`</span>, color: <span class="str">'#C0392B'</span>, weight: <span class="str">'bold'</span> }
+      ]
+    },
+    footer: {
+      type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+      contents: [{
+        type: <span class="str">'button'</span>, action: {
+          type: <span class="str">'postback'</span>, label: <span class="str">'加入購物車'</span>,
+          data: <span class="str">\`addCart=\${p.id}\`</span>
+        }
+      }]
+    }
+  }))
+
+  <span class="kw">return</span> {
+    type: <span class="str">'flex'</span>, altText: <span class="str">'商品列表'</span>,
+    contents: { type: <span class="str">'carousel'</span>, contents: bubbles }
+  }
+}`
+      }
+    ],
+    resources: ["Flex Message 官方文件", "LINE Bot Designer (Web)", "Flex Message Simulator", "Flex Message JSON 驗證工具"],
+    quiz: {
+      q: "Flex Message 的 altText 有什麼用途？",
+      opts: ["作為卡片的標題顯示", "在不支援 Flex 的環境（如通知）顯示的替代文字", "作為無障礙功能的圖片說明", "SEO 關鍵字用途"],
+      ans: 1,
+      feedback: "正確！altText 在桌面版通知、不支援 Flex 的舊版 LINE 等情況下會顯示，必須填入有意義的描述。"
+    }
+  },
+
+  {
+    num: "CH.05",
+    title: "Rich Menu 固定選單設計",
+    desc: "設計常駐於聊天室底部的 Rich Menu，打造 App 般的導航體驗，提升用戶互動效率。",
+    time: "3 小時",
+    level: "基礎",
+    tags: ["Rich Menu", "LIFF", "UX Design", "選單設計"],
+    intro: `Rich Menu 是 LINE Bot 的「常設工具列」，固定顯示在聊天室底部，讓用戶隨時能快速操作核心功能。搭配 LIFF 連結，Rich Menu 可直接開啟自訂網頁，打造接近原生 App 的體驗。本章帶你完整設計、上傳並動態切換 Rich Menu。`,
+    objectives: [
+      "設計符合 LINE 規格的 Rich Menu 圖片",
+      "使用 API 建立並設定 Default Rich Menu",
+      "實作依使用者身份動態切換 Rich Menu",
+      "理解 LIFF URL 在 Rich Menu 中的應用"
+    ],
+    lessons: [
+      {
+        num: "5-1",
+        title: "Rich Menu 規格與設計原則",
+        icon: "🎨",
+        body: `Rich Menu 的圖片規格：<br>
+        • 尺寸：寬 2500px，高 1686px（全尺寸）或 843px（半尺寸）<br>
+        • 格式：JPEG 或 PNG，最大 1MB<br>
+        • 點擊區域：最多 20 個 action area<br><br>
+        設計建議：使用清晰的 icon + 文字標籤，確保色彩對比足夠，每個區域至少 250x250px。`,
+        code: `<span class="cmt">// Rich Menu 結構</span>
+{
+  size: { width: <span class="num">2500</span>, height: <span class="num">1686</span> },
+  selected: <span class="kw">true</span>,
+  name: <span class="str">'主選單'</span>,
+  chatBarText: <span class="str">'點擊開啟選單'</span>,
+  areas: [
+    {
+      bounds: { x: <span class="num">0</span>, y: <span class="num">0</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },
+      action: { type: <span class="str">'postback'</span>, data: <span class="str">'menu=home'</span> }
+    },
+    {
+      bounds: { x: <span class="num">833</span>, y: <span class="num">0</span>, width: <span class="num">833</span>, height: <span class="num">843</span> },
+      action: { type: <span class="str">'postback'</span>, data: <span class="str">'menu=order'</span> }
+    }
+  ]
+}`
+      },
+      {
+        num: "5-2",
+        title: "建立與上傳 Rich Menu",
+        icon: "📤",
+        body: `Rich Menu 建立分三個步驟：1. 建立選單結構（取得 richMenuId）→ 2. 上傳圖片 → 3. 設為預設或連結至用戶。`,
+        code: `<span class="kw">async function</span> <span class="fn">setupRichMenu</span>(client) {
+  <span class="cmt">// Step 1: 建立 Rich Menu 定義</span>
+  <span class="kw">const</span> { richMenuId } = <span class="kw">await</span> client.<span class="fn">createRichMenu</span>({
+    size: { width: <span class="num">2500</span>, height: <span class="num">1686</span> },
+    selected: <span class="kw">true</span>,
+    name: <span class="str">'Main Menu'</span>,
+    chatBarText: <span class="str">'選單'</span>,
+    areas: [ <span class="cmt">/* action areas */</span> ]
+  })
+
+  <span class="cmt">// Step 2: 上傳選單圖片</span>
+  <span class="kw">const</span> buf = fs.<span class="fn">readFileSync</span>(<span class="str">'./rich-menu.png'</span>)
+  <span class="kw">await</span> client.<span class="fn">setRichMenuImage</span>(richMenuId, buf, <span class="str">'image/png'</span>)
+
+  <span class="cmt">// Step 3: 設為預設選單（所有用戶）</span>
+  <span class="kw">await</span> client.<span class="fn">setDefaultRichMenu</span>(richMenuId)
+  console.<span class="fn">log</span>(<span class="str">'Rich Menu 設定完成：'</span>, richMenuId)
+}`
+      },
+      {
+        num: "5-3",
+        title: "依身份動態切換 Rich Menu",
+        icon: "🔄",
+        body: `為不同用戶（如一般用戶 vs VIP）設定不同的 Rich Menu，讓體驗更個人化。`,
+        code: `<span class="kw">async function</span> <span class="fn">assignRichMenu</span>(userId, userType) {
+  <span class="kw">const</span> menuMap = {
+    guest:  <span class="str">'richmenu-guest-id'</span>,
+    member: <span class="str">'richmenu-member-id'</span>,
+    vip:    <span class="str">'richmenu-vip-id'</span>
+  }
+  <span class="kw">const</span> menuId = menuMap[userType] || menuMap.guest
+  <span class="kw">await</span> client.<span class="fn">linkRichMenuToUser</span>(userId, menuId)
+}`,
+        tip: "在 follow 事件或用戶完成登入後，立即呼叫 linkRichMenuToUser 切換對應選單。"
+      }
+    ],
+    resources: ["Rich Menu API 文件", "LINE Rich Menu Designer", "圖片規格說明", "Rich Menu Switch Action"],
+    quiz: {
+      q: "Rich Menu 的 chatBarText 屬性是什麼？",
+      opts: ["選單標題，顯示在卡片頂部", "聊天室下方收合時顯示的文字提示", "選單的 SEO 描述", "Admin 後台的備註"],
+      ans: 1,
+      feedback: "正確！chatBarText 是 Rich Menu 收合時在聊天室底部顯示的文字，引導用戶展開選單。"
+    }
+  },
+
+  {
+    num: "CH.06",
+    title: "資料庫整合與狀態管理",
+    desc: "整合 Firebase Firestore，實現用戶資料持久化、對話狀態機、訂閱管理等核心功能。",
+    time: "5 小時",
+    level: "進階",
+    tags: ["Firebase", "Firestore", "State Machine", "資料持久化"],
+    intro: `無狀態的 Bot 只能做單次問答，而真正有用的 Bot 需要「記憶」用戶的偏好、對話狀態與歷史資料。本章以 Firebase Firestore 為例，建立用戶資料模型、對話狀態機，讓你的 Bot 能進行多輪對話並記住用戶。`,
+    objectives: [
+      "設計 LINE Bot 的 Firestore 資料庫結構",
+      "實作用戶資料的 CRUD 操作",
+      "建立對話狀態機（FSM）處理多步驟流程",
+      "實作用戶偏好設定與個人化功能"
+    ],
+    lessons: [
+      {
+        num: "6-1",
+        title: "Firestore 資料模型設計",
+        icon: "🗄",
+        body: `設計合理的資料結構是關鍵。LINE Bot 通常需要以下集合：<br><br>
+        • <code>users</code>：存放 userId、displayName、狀態、偏好<br>
+        • <code>sessions</code>：多輪對話的暫時狀態<br>
+        • <code>orders</code>、<code>bookings</code> 等業務資料`,
+        code: `<span class="cmt">// Firestore 結構設計</span>
+<span class="cmt">// users/{userId}</span>
+{
+  displayName: <span class="str">'王小明'</span>,
+  pictureUrl:  <span class="str">'https://...'</span>,
+  followedAt:  <span class="cls">Timestamp</span>,
+  preferences: { language: <span class="str">'zh-TW'</span>, notify: <span class="kw">true</span> },
+  state:       <span class="str">'idle'</span>  <span class="cmt">// 對話狀態</span>
+}
+
+<span class="cmt">// sessions/{userId}</span>
+{
+  step:      <span class="str">'awaiting_phone'</span>,
+  data:      { name: <span class="str">'王小明'</span>, email: <span class="str">'...'</span> },
+  expiresAt: <span class="cls">Timestamp</span>  <span class="cmt">// 15 分鐘後過期</span>
+}`
+      },
+      {
+        num: "6-2",
+        title: "Firebase Admin SDK 初始化",
+        icon: "🔑",
+        body: `在 Node.js 後端使用 Firebase Admin SDK 直接存取 Firestore，不需要用戶端 token。`,
+        code: `<span class="kw">const</span> admin = <span class="fn">require</span>(<span class="str">'firebase-admin'</span>)
+
+admin.<span class="fn">initializeApp</span>({
+  credential: admin.credential.<span class="fn">cert</span>({
+    projectId: process.env.<span class="cls">FB_PROJECT_ID</span>,
+    privateKey: process.env.<span class="cls">FB_PRIVATE_KEY</span>.<span class="fn">replace</span>(<span class="str">/\\\\n/g</span>, <span class="str">'\\n'</span>),
+    clientEmail: process.env.<span class="cls">FB_CLIENT_EMAIL</span>
+  })
+})
+
+<span class="kw">const</span> db = admin.firestore()
+
+<span class="cmt">// 封裝常用操作</span>
+<span class="kw">const</span> UserService = {
+  <span class="fn">get</span>:    (uid) => db.collection(<span class="str">'users'</span>).doc(uid).<span class="fn">get</span>(),
+  <span class="fn">upsert</span>: (uid, data) => db.collection(<span class="str">'users'</span>).doc(uid)
+                          .<span class="fn">set</span>(data, { merge: <span class="kw">true</span> }),
+  <span class="fn">update</span>: (uid, data) => db.collection(<span class="str">'users'</span>).doc(uid).<span class="fn">update</span>(data)
+}`
+      },
+      {
+        num: "6-3",
+        title: "對話狀態機（FSM）實作",
+        icon: "🔄",
+        body: `以訂餐流程為例，實作多步驟對話狀態機：選擇餐點 → 確認數量 → 輸入地址 → 確認訂單。`,
+        code: `<span class="kw">const</span> STATES = {
+  IDLE:             <span class="str">'idle'</span>,
+  SELECT_ITEM:      <span class="str">'select_item'</span>,
+  INPUT_QUANTITY:   <span class="str">'input_quantity'</span>,
+  INPUT_ADDRESS:    <span class="str">'input_address'</span>,
+  CONFIRM_ORDER:    <span class="str">'confirm_order'</span>
+}
+
+<span class="kw">async function</span> <span class="fn">handleStatefulMessage</span>(event, client) {
+  <span class="kw">const</span> userId = event.source.userId
+  <span class="kw">const</span> text   = event.message.text
+  <span class="kw">const</span> userDoc = <span class="kw">await</span> UserService.<span class="fn">get</span>(userId)
+  <span class="kw">const</span> state   = userDoc.data()?.state || STATES.IDLE
+
+  <span class="kw">switch</span> (state) {
+    <span class="kw">case</span> STATES.IDLE:
+      <span class="kw">if</span> (text === <span class="str">'訂餐'</span>) {
+        <span class="kw">await</span> UserService.<span class="fn">update</span>(userId, { state: STATES.SELECT_ITEM })
+        <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, <span class="fn">showMenu</span>())
+      }
+      <span class="kw">break</span>
+
+    <span class="kw">case</span> STATES.SELECT_ITEM:
+      <span class="kw">await</span> SessionService.<span class="fn">set</span>(userId, { item: text })
+      <span class="kw">await</span> UserService.<span class="fn">update</span>(userId, { state: STATES.INPUT_QUANTITY })
+      <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {
+        type: <span class="str">'text'</span>, text: <span class="str">\`選擇了「\${text}」，請輸入數量：\`</span>
+      })
+  }
+}`
+      }
+    ],
+    resources: ["Firebase Admin SDK 文件", "Firestore 資料模型最佳實踐", "有限狀態機（FSM）概念", "Firebase 安全規則"],
+    quiz: {
+      q: "在 Firestore 中，set() 與 update() 的主要差異是？",
+      opts: ["set() 建立新文件，update() 修改現有文件", "set() 完整覆蓋文件，update() 只更新指定欄位", "兩者完全相同", "set() 比 update() 快"],
+      ans: 1,
+      feedback: "正確！set() 會完整覆蓋文件（除非加上 merge: true），update() 只更新指定欄位，其餘保留。"
+    }
+  },
+
+  {
+    num: "CH.07",
+    title: "LIFF 應用程式開發",
+    desc: "在 LINE 內建瀏覽器中開發網頁應用，獲取用戶 Token、建立表單介面、實現 LINE 登入。",
+    time: "4 小時",
+    level: "進階",
+    tags: ["LIFF", "LINE Login", "Web App", "liff.js"],
+    intro: `LIFF（LINE Front-end Framework）讓你在 LINE 的內建瀏覽器中執行 Web App，並可存取 LINE 的用戶資訊與功能。這打破了 Bot 純文字互動的限制，讓你能提供表單填寫、地圖選擇等豐富的 Web UI，同時保有 LINE 的身份驗證優勢。`,
+    objectives: [
+      "建立 LIFF App 並取得 LIFF ID",
+      "使用 liff.js 取得用戶 ID Token 與個人資訊",
+      "設計 LIFF 表單頁面並將資料回傳給 Bot",
+      "實作 LIFF 版的商品選擇與結帳流程"
+    ],
+    lessons: [
+      {
+        num: "7-1",
+        title: "LIFF 架構與初始化",
+        icon: "🌐",
+        body: `LIFF 本質上是一個特殊的 Web App，透過 LIFF SDK 與 LINE 平台溝通。開啟方式有三種尺寸：<br>
+        • <strong>Full</strong>：全螢幕，適合複雜表單<br>
+        • <strong>Tall</strong>：3/4 螢幕，適合中等複雜度<br>
+        • <strong>Compact</strong>：1/2 螢幕，適合簡單互動`,
+        code: `<span class="cmt"><!-- LIFF 頁面 HTML --></span>
+&lt;script src=<span class="str">"https://static.line-scdn.net/liff/edge/2/sdk.js"</span>&gt;&lt;/script&gt;
+&lt;script&gt;
+<span class="kw">async function</span> <span class="fn">initLiff</span>() {
+  <span class="kw">await</span> liff.<span class="fn">init</span>({ liffId: <span class="str">'your-liff-id'</span> })
+
+  <span class="kw">if</span> (!liff.<span class="fn">isLoggedIn</span>()) {
+    liff.<span class="fn">login</span>()
+    <span class="kw">return</span>
+  }
+
+  <span class="kw">const</span> profile = <span class="kw">await</span> liff.<span class="fn">getProfile</span>()
+  document.<span class="fn">getElementById</span>(<span class="str">'name'</span>).textContent = profile.displayName
+}
+<span class="fn">initLiff</span>()
+&lt;/script&gt;`
+      },
+      {
+        num: "7-2",
+        title: "LIFF 表單與 Bot 通訊",
+        icon: "📝",
+        body: `LIFF 頁面完成後，可透過 <code>liff.sendMessages()</code> 直接向 Bot 傳送訊息，或呼叫後端 API 儲存資料再關閉 LIFF。`,
+        code: `<span class="kw">async function</span> <span class="fn">submitForm</span>(formData) {
+  <span class="cmt">// 方式 1: 用戶名義傳訊給 Bot</span>
+  <span class="kw">await</span> liff.<span class="fn">sendMessages</span>([{
+    type: <span class="str">'text'</span>,
+    text: <span class="str">\`預約確認：\${formData.date} \${formData.time}\`</span>
+  }])
+
+  <span class="cmt">// 方式 2: 呼叫後端 API 儲存</span>
+  <span class="kw">await</span> fetch(<span class="str">'/api/booking'</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+    body: JSON.<span class="fn">stringify</span>({
+      ...formData,
+      idToken: liff.<span class="fn">getIDToken</span>()  <span class="cmt">// 驗證用戶身份</span>
+    })
+  })
+
+  liff.<span class="fn">closeWindow</span>()
+}`,
+        tip: "使用 liff.getIDToken() 將 token 傳到後端，再用 LINE API 驗證，確保資料安全。"
+      },
+      {
+        num: "7-3",
+        title: "後端驗證 LIFF Token",
+        icon: "🔒",
+        body: `永遠在後端驗證 LIFF 傳來的 ID Token，防止偽造請求。`,
+        code: `<span class="cmt">// 後端驗證 LIFF ID Token</span>
+<span class="kw">async function</span> <span class="fn">verifyLiffToken</span>(idToken) {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(
+    <span class="str">\`https://api.line.me/oauth2/v2.1/verify?id_token=\${idToken}&client_id=\${CHANNEL_ID}\`</span>,
+    { method: <span class="str">'POST'</span> }
+  )
+  <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>()
+  <span class="kw">if</span> (data.error) <span class="kw">throw new</span> <span class="cls">Error</span>(<span class="str">'Invalid token'</span>)
+  <span class="kw">return</span> data.sub  <span class="cmt">// 返回 userId</span>
+}`
+      }
+    ],
+    resources: ["LIFF 官方文件", "liff.js API 參考", "LIFF 安全最佳實踐", "LINE Login API"],
+    quiz: {
+      q: "liff.sendMessages() 的訊息是以誰的身份傳送？",
+      opts: ["Bot 的身份", "目前登入的 LINE 用戶身份", "匿名身份", "LIFF App 的身份"],
+      ans: 1,
+      feedback: "正確！liff.sendMessages() 是以登入中的 LINE 用戶身份傳送，因此會在對話中顯示為用戶傳送的訊息。"
+    }
+  },
+
+  {
+    num: "CH.08",
+    title: "整合 OpenAI 打造 AI 聊天機器人",
+    desc: "串接 GPT-4 API，實現智慧問答、客服機器人、角色扮演 Bot，加入對話記憶與上下文管理。",
+    time: "5 小時",
+    level: "進階",
+    tags: ["OpenAI", "GPT-4", "AI Bot", "Streaming"],
+    intro: `將 LINE Bot 與 OpenAI GPT 結合，能大幅提升 Bot 的智慧程度。從簡單的問答到有記憶的客服助理，再到有特定角色的 AI 夥伴，本章教你如何設計 System Prompt、管理對話歷史，以及控制 AI 的行為邊界，打造真正有用的 AI Bot。`,
+    objectives: [
+      "呼叫 OpenAI Chat Completion API 並整合到 LINE Bot",
+      "設計有效的 System Prompt 控制 AI 角色與行為",
+      "實作對話歷史管理，讓 Bot 有多輪記憶",
+      "加入 function calling 讓 AI 能查詢資料庫"
+    ],
+    lessons: [
+      {
+        num: "8-1",
+        title: "OpenAI API 整合基礎",
+        icon: "🤖",
+        body: `安裝 OpenAI SDK 並建立基本的問答 Bot，處理非同步呼叫與錯誤管理。`,
+        code: `<span class="kw">const</span> OpenAI = <span class="fn">require</span>(<span class="str">'openai'</span>)
+<span class="kw">const</span> openai = <span class="kw">new</span> <span class="cls">OpenAI</span>({ apiKey: process.env.<span class="cls">OPENAI_API_KEY</span> })
+
+<span class="kw">async function</span> <span class="fn">askGPT</span>(userMessage) {
+  <span class="kw">const</span> completion = <span class="kw">await</span> openai.chat.completions.<span class="fn">create</span>({
+    model: <span class="str">'gpt-4o'</span>,
+    messages: [
+      {
+        role: <span class="str">'system'</span>,
+        content: <span class="str">'你是一位親切的客服助理，專門回答產品問題。請用繁體中文回覆，回答簡潔有力。'</span>
+      },
+      { role: <span class="str">'user'</span>, content: userMessage }
+    ],
+    max_tokens: <span class="num">500</span>,
+    temperature: <span class="num">0.7</span>
+  })
+  <span class="kw">return</span> completion.choices[<span class="num">0</span>].message.content
+}`
+      },
+      {
+        num: "8-2",
+        title: "對話歷史管理",
+        icon: "🧠",
+        body: `GPT 是無狀態的，每次呼叫需傳入完整的對話歷史。用 Firestore 或 Redis 存儲最近 N 輪對話。`,
+        code: `<span class="kw">async function</span> <span class="fn">chatWithMemory</span>(userId, userMessage) {
+  <span class="cmt">// 讀取歷史記錄（最多 10 輪）</span>
+  <span class="kw">const</span> history = <span class="kw">await</span> HistoryService.<span class="fn">get</span>(userId)
+
+  <span class="kw">const</span> messages = [
+    { role: <span class="str">'system'</span>, content: SYSTEM_PROMPT },
+    ...history,
+    { role: <span class="str">'user'</span>, content: userMessage }
+  ]
+
+  <span class="kw">const</span> response = <span class="kw">await</span> openai.chat.completions.<span class="fn">create</span>({
+    model: <span class="str">'gpt-4o'</span>, messages, max_tokens: <span class="num">500</span>
+  })
+
+  <span class="kw">const</span> reply = response.choices[<span class="num">0</span>].message.content
+
+  <span class="cmt">// 儲存本輪對話</span>
+  <span class="kw">await</span> HistoryService.<span class="fn">append</span>(userId, [
+    { role: <span class="str">'user'</span>, content: userMessage },
+    { role: <span class="str">'assistant'</span>, content: reply }
+  ])
+
+  <span class="kw">return</span> reply
+}`,
+        tip: "對話歷史過長會增加 token 費用，建議只保留最近 5-10 輪，或用摘要替代舊記錄。"
+      },
+      {
+        num: "8-3",
+        title: "Function Calling 整合資料庫",
+        icon: "🔧",
+        body: `讓 GPT 在需要時呼叫你定義的函式（如查詢訂單、天氣），實現「工具使用」能力。`,
+        code: `<span class="kw">const</span> tools = [{
+  type: <span class="str">'function'</span>,
+  <span class="kw">function</span>: {
+    name: <span class="str">'getOrderStatus'</span>,
+    description: <span class="str">'查詢訂單狀態'</span>,
+    parameters: {
+      type: <span class="str">'object'</span>,
+      properties: {
+        orderId: { type: <span class="str">'string'</span>, description: <span class="str">'訂單編號'</span> }
+      },
+      required: [<span class="str">'orderId'</span>]
+    }
+  }
+}]
+
+<span class="kw">const</span> res = <span class="kw">await</span> openai.chat.completions.<span class="fn">create</span>({
+  model: <span class="str">'gpt-4o'</span>, messages, tools,
+  tool_choice: <span class="str">'auto'</span>
+})
+
+<span class="cmt">// 若 AI 決定呼叫函式</span>
+<span class="kw">if</span> (res.choices[<span class="num">0</span>].finish_reason === <span class="str">'tool_calls'</span>) {
+  <span class="kw">const</span> call = res.choices[<span class="num">0</span>].message.tool_calls[<span class="num">0</span>]
+  <span class="kw">const</span> args = JSON.<span class="fn">parse</span>(call.<span class="kw">function</span>.arguments)
+  <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">getOrderStatus</span>(args.orderId)
+  <span class="cmt">// 將結果加回 messages 再次呼叫 GPT 生成最終回覆</span>
+}`
+      }
+    ],
+    resources: ["OpenAI API 文件", "GPT-4 最佳 Prompt 實踐", "Function Calling 指南", "Token 計費計算工具"],
+    quiz: {
+      q: "為什麼每次呼叫 GPT API 都需要傳入完整的對話歷史？",
+      opts: ["API 規格要求", "GPT 模型本身沒有記憶，每次都是獨立對話", "提高回答品質", "減少伺服器負擔"],
+      ans: 1,
+      feedback: "正確！GPT API 是無狀態的，模型本身不記得上一次的對話，必須由你的程式將歷史記錄傳入，它才能理解上下文。"
+    }
+  },
+
+  {
+    num: "CH.09",
+    title: "雲端部署、監控與安全性",
+    desc: "將 Bot 部署到 Render / Railway，設定環境變數、日誌監控、錯誤警報，以及保護 Webhook 安全。",
+    time: "4 小時",
+    level: "實戰",
+    tags: ["Render", "Railway", "Deploy", "Security", "Monitoring"],
+    intro: `Bot 開發完成後，需要一個穩定且安全的雲端環境才能 24/7 對外服務。本章從選擇部署平台、設定生產環境、到建立監控機制與安全防護，確保你的 Bot 在生產環境中穩定運行，並在問題發生時能第一時間得知。`,
+    objectives: [
+      "將 Bot 部署到 Render 並設定自動 CI/CD",
+      "正確管理生產環境變數，避免敏感資訊外洩",
+      "實作 LINE Signature 驗證防止假 Webhook",
+      "設定 Sentry 錯誤監控與 Telegram 警報通知"
+    ],
+    lessons: [
+      {
+        num: "9-1",
+        title: "選擇部署平台",
+        icon: "☁️",
+        body: `幾個適合 LINE Bot 的雲端平台比較：<br><br>
+        • <strong>Render</strong>（推薦）：免費方案、自動 SSL、GitHub 整合，冷啟動 ~50 秒<br>
+        • <strong>Railway</strong>：操作直覺、免費額度充裕、無冷啟動<br>
+        • <strong>Fly.io</strong>：全球邊緣節點、低延遲<br>
+        • <strong>GCP Cloud Run</strong>：按需計費、企業等級穩定性`,
+        code: `<span class="cmt"># Render 部署設定 render.yaml</span>
+services:
+  - type: web
+    name: my-linebot
+    runtime: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: CHANNEL_SECRET
+        sync: false
+      - key: CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: NODE_ENV
+        value: production`
+      },
+      {
+        num: "9-2",
+        title: "LINE Signature 驗證",
+        icon: "🔐",
+        body: `務必驗證所有進來的 Webhook 請求確實來自 LINE，防止惡意攻擊。`,
+        code: `<span class="kw">const</span> crypto = <span class="fn">require</span>(<span class="str">'crypto'</span>)
+
+<span class="kw">function</span> <span class="fn">validateSignature</span>(body, signature) {
+  <span class="kw">const</span> hash = crypto
+    .<span class="fn">createHmac</span>(<span class="str">'sha256'</span>, process.env.<span class="cls">CHANNEL_SECRET</span>)
+    .<span class="fn">update</span>(body)
+    .<span class="fn">digest</span>(<span class="str">'base64'</span>)
+  <span class="kw">return</span> hash === signature
+}
+
+app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, express.<span class="fn">raw</span>({ type: <span class="str">'application/json'</span> }), (req, res) => {
+  <span class="kw">const</span> sig = req.headers[<span class="str">'x-line-signature'</span>]
+  <span class="kw">if</span> (!<span class="fn">validateSignature</span>(req.body, sig)) {
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">403</span>).<span class="fn">send</span>(<span class="str">'Invalid signature'</span>)
+  }
+  <span class="cmt">// 正常處理...</span>
+})`,
+        tip: "使用 @line/bot-sdk 的 middleware 可自動處理 Signature 驗證，不需要手動實作。"
+      },
+      {
+        num: "9-3",
+        title: "錯誤監控與警報",
+        icon: "🚨",
+        body: `整合 Sentry 自動捕捉未處理的錯誤，並設定 LINE Bot 自我警報，在錯誤發生時通知開發者。`,
+        code: `<span class="kw">const</span> Sentry = <span class="fn">require</span>(<span class="str">'@sentry/node'</span>)
+Sentry.<span class="fn">init</span>({ dsn: process.env.<span class="cls">SENTRY_DSN</span> })
+
+<span class="cmt">// 全域錯誤處理</span>
+process.<span class="fn">on</span>(<span class="str">'unhandledRejection'</span>, <span class="kw">async</span> (reason) => {
+  Sentry.<span class="fn">captureException</span>(reason)
+
+  <span class="cmt">// 透過 Bot 推送錯誤給開發者</span>
+  <span class="kw">await</span> adminClient.<span class="fn">pushMessage</span>(ADMIN_USER_ID, {
+    type: <span class="str">'text'</span>,
+    text: <span class="str">\`🚨 Bot 錯誤警報\n\${new Date().toISOString()}\n\${reason?.message || reason}\`</span>
+  })
+})`
+      },
+      {
+        num: "9-4",
+        title: "Keep-Alive 避免冷啟動",
+        icon: "⏰",
+        body: `Render 免費方案閒置 15 分鐘後會休眠，導致第一個請求慢。用定期 ping 避免休眠。`,
+        code: `<span class="cmt">// 加入健康檢查端點</span>
+app.<span class="fn">get</span>(<span class="str">'/health'</span>, (req, res) => {
+  res.<span class="fn">json</span>({ status: <span class="str">'ok'</span>, timestamp: <span class="kw">new</span> <span class="cls">Date</span>() })
+})
+
+<span class="cmt">// 用外部服務（如 UptimeRobot）每 10 分鐘 ping /health</span>
+<span class="cmt">// 免費保持服務不休眠</span>`
+      }
+    ],
+    resources: ["Render 部署文件", "Railway 快速開始", "Sentry Node.js 整合", "UptimeRobot 免費監控"],
+    quiz: {
+      q: "LINE 用哪個 HTTP Header 傳遞 Webhook 簽名？",
+      opts: ["Authorization", "X-Line-Signature", "X-Api-Key", "Content-Signature"],
+      ans: 1,
+      feedback: "正確！LINE 在每個 Webhook 請求的 X-Line-Signature Header 中放入 HMAC-SHA256 簽名，必須驗證此值確認請求來源合法。"
+    }
+  },
+
+  {
+    num: "CH.10",
+    title: "綜合實戰：打造完整電商客服 Bot",
+    desc: "整合前九章所有技術，從零建立一個具備 AI 問答、訂單查詢、商品瀏覽、推播通知的完整電商 Bot。",
+    time: "5 小時",
+    level: "實戰",
+    tags: ["Final Project", "E-commerce", "Full Stack", "整合實戰"],
+    intro: `最終章節是所有技術的大集成。我們將建立一個真實可用的電商客服 Bot：用戶可以瀏覽商品（Flex Carousel）、查詢訂單狀態（AI Function Calling）、填寫退換貨表單（LIFF），以及接收個人化促銷推播。這個專案將成為你作品集中最有說服力的展示。`,
+    objectives: [
+      "設計完整的電商 Bot 功能架構與流程圖",
+      "整合 Flex Message 商品目錄與購物車",
+      "實作 AI 客服能查詢訂單並處理常見問題",
+      "建立自動化推播系統：訂單通知與促銷活動"
+    ],
+    lessons: [
+      {
+        num: "10-1",
+        title: "系統架構設計",
+        icon: "🏗",
+        body: `電商 Bot 的完整架構包含：<br><br>
+        • <strong>入口</strong>：Rich Menu（首頁/商品/訂單/客服/帳號）<br>
+        • <strong>商品層</strong>：Firestore 商品資料 → Flex Carousel 展示<br>
+        • <strong>訂單層</strong>：LIFF 結帳表單 → 訂單寫入資料庫 → Push 確認訊息<br>
+        • <strong>AI 客服層</strong>：GPT-4 + Function Calling 查詢資料庫<br>
+        • <strong>推播層</strong>：Cron Job 定時檢查 → 個人化 Push Message`,
+        code: `<span class="cmt">// 系統模組結構</span>
+src/
+├── handlers/
+│   ├── messageHandler.js   <span class="cmt">// 文字訊息路由</span>
+│   ├── postbackHandler.js  <span class="cmt">// 按鈕事件處理</span>
+│   └── followHandler.js    <span class="cmt">// 追蹤事件</span>
+├── services/
+│   ├── aiService.js        <span class="cmt">// OpenAI 整合</span>
+│   ├── productService.js   <span class="cmt">// 商品 CRUD</span>
+│   └── orderService.js     <span class="cmt">// 訂單管理</span>
+├── builders/
+│   ├── flexBuilders.js     <span class="cmt">// Flex Message 工廠</span>
+│   └── menuBuilders.js     <span class="cmt">// Rich Menu 定義</span>
+├── jobs/
+│   └── notifyJob.js        <span class="cmt">// 定時推播任務</span>
+└── index.js`
+      },
+      {
+        num: "10-2",
+        title: "商品瀏覽功能",
+        icon: "🛍",
+        body: `從 Firestore 動態拉取商品資料，渲染成 Flex Carousel，每個商品卡片含圖片、名稱、售價與加入購物車按鈕。`,
+        code: `<span class="kw">async function</span> <span class="fn">showProducts</span>(event, client) {
+  <span class="kw">const</span> products = <span class="kw">await</span> ProductService.<span class="fn">getAll</span>({ limit: <span class="num">10</span> })
+
+  <span class="kw">const</span> flexMsg = {
+    type: <span class="str">'flex'</span>, altText: <span class="str">'商品目錄'</span>,
+    contents: {
+      type: <span class="str">'carousel'</span>,
+      contents: products.<span class="fn">map</span>(p => ({
+        type: <span class="str">'bubble'</span>,
+        hero: {
+          type: <span class="str">'image'</span>, url: p.imageUrl,
+          size: <span class="str">'full'</span>, aspectRatio: <span class="str">'20:13'</span>, action: {
+            type: <span class="str">'postback'</span>, data: <span class="str">\`view=\${p.id}\`</span>
+          }
+        },
+        body: {
+          type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+          contents: [
+            { type: <span class="str">'text'</span>, text: p.name, weight: <span class="str">'bold'</span>, size: <span class="str">'lg'</span> },
+            { type: <span class="str">'text'</span>, text: <span class="str">\`NT\$ \${p.price}\`</span>, color: <span class="str">'#C0392B'</span>, weight: <span class="str">'bold'</span> },
+            { type: <span class="str">'text'</span>, text: p.desc, size: <span class="str">'sm'</span>, color: <span class="str">'#888888'</span>, wrap: <span class="kw">true</span> }
+          ]
+        },
+        footer: {
+          type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,
+          contents: [{
+            type: <span class="str">'button'</span>, style: <span class="str">'primary'</span>, color: <span class="str">'#1A1612'</span>,
+            action: { type: <span class="str">'postback'</span>, label: <span class="str">'加入購物車 🛒'</span>, data: <span class="str">\`cart=\${p.id}\`</span> }
+          }]
+        }
+      }))
+    }
+  }
+
+  <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, flexMsg)
+}`
+      },
+      {
+        num: "10-3",
+        title: "AI 客服整合",
+        icon: "🧠",
+        body: `為 AI 客服提供查詢訂單的 Function，讓 GPT 在用戶詢問時能自動查詢並回覆。`,
+        code: `<span class="kw">const</span> SYSTEM_PROMPT = <span class="str">\`
+你是「小助」，一位友善專業的電商客服。
+- 能查詢訂單狀態（需要訂單編號）
+- 能回答退換貨政策（7天無理由退換）
+- 無法處理的問題請告知轉人工客服
+- 用繁體中文，語氣親切但簡潔
+\`</span>
+
+<span class="kw">async function</span> <span class="fn">aiCustomerService</span>(userId, userMsg) {
+  <span class="kw">const</span> history = <span class="kw">await</span> HistoryService.<span class="fn">get</span>(userId)
+  <span class="kw">const</span> response = <span class="kw">await</span> openai.chat.completions.<span class="fn">create</span>({
+    model: <span class="str">'gpt-4o'</span>,
+    messages: [{ role: <span class="str">'system'</span>, content: SYSTEM_PROMPT }, ...history,
+               { role: <span class="str">'user'</span>, content: userMsg }],
+    tools: [orderQueryTool, policyQueryTool],
+    tool_choice: <span class="str">'auto'</span>
+  })
+  <span class="cmt">// 處理 tool_calls 後再生成最終回覆...</span>
+}`,
+        tip: "在 System Prompt 中明確定義 Bot 的限制範圍，避免 AI 胡亂回覆敏感問題。"
+      },
+      {
+        num: "10-4",
+        title: "定時推播與行銷自動化",
+        icon: "📣",
+        body: `使用 node-cron 設定定時任務，自動推送訂單狀態更新與個人化促銷訊息。`,
+        code: `<span class="kw">const</span> cron = <span class="fn">require</span>(<span class="str">'node-cron'</span>)
+
+<span class="cmt">// 每日上午 10 點推送促銷訊息</span>
+cron.<span class="fn">schedule</span>(<span class="str">'0 10 * * *'</span>, <span class="kw">async</span> () => {
+  <span class="kw">const</span> users = <span class="kw">await</span> UserService.<span class="fn">getActiveUsers</span>()
+  <span class="kw">const</span> userIds = users.<span class="fn">map</span>(u => u.userId)
+
+  <span class="cmt">// Multicast 批量推送（最多 500 人）</span>
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < userIds.length; i += <span class="num">500</span>) {
+    <span class="kw">await</span> client.<span class="fn">multicast</span>(userIds.<span class="fn">slice</span>(i, i + <span class="num">500</span>), {
+      type: <span class="str">'text'</span>,
+      text: <span class="str">'🎁 今日特惠！全館滿 500 折 100，快來逛逛！'</span>
+    })
+  }
+})
+
+<span class="cmt">// 訂單出貨後推播通知</span>
+<span class="kw">async function</span> <span class="fn">notifyShipped</span>(order) {
+  <span class="kw">await</span> client.<span class="fn">pushMessage</span>(order.userId, <span class="fn">buildShipmentCard</span>(order))
+}`
+      }
+    ],
+    resources: ["node-cron 文件", "LINE Bot 效能最佳化指南", "Firestore 複合索引", "完整範例 GitHub Repo"],
+    quiz: {
+      q: "在最終專案中，以下哪種情況應使用 Push API 而非 Reply API？",
+      opts: ["用戶點選商品按鈕後回覆", "訂單出貨後主動通知用戶", "用戶輸入查詢後顯示結果", "Rich Menu 按鈕觸發的回應"],
+      ans: 1,
+      feedback: "正確！訂單出貨是系統主動觸發的事件，沒有對應的 Webhook 事件與 replyToken，必須使用 Push API 主動推送給用戶。"
+    }
+  }
+]
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════════ */
+let currentChapter = null
+
+function renderCurriculum() {
+  const grid = document.getElementById('curriculumGrid')
+  const chips = document.getElementById('heroChips')
+  grid.innerHTML = ''
+  chips.innerHTML = ''
+
+  CHAPTERS.forEach((ch, i) => {
+    // Grid card
+    const card = document.createElement('div')
+    card.className = 'chapter-card'
+    card.innerHTML = `
+      <div class="ch-num">${ch.num} · ${ch.time} · ${ch.level}</div>
+      <div class="ch-title">${ch.title}</div>
+      <div class="ch-desc">${ch.desc}</div>
+      <div class="ch-tags">${ch.tags.map((t, ti) => `<span class="ch-tag${ti===0?' red':''}">${t}</span>`).join('')}</div>
+      <div class="ch-card-link"><a href="chapter${i+1}.html" onclick="event.stopPropagation()">閱讀章節 →</a></div>
+    `
+    card.addEventListener('click', () => openModule(i))
+    grid.appendChild(card)
+
+    // Hero chip
+    const chip = document.createElement('div')
+    chip.className = 'chapter-chip'
+    chip.textContent = `CH.${String(i+1).padStart(2,'0')}`
+    chip.addEventListener('click', () => { openModule(i); document.getElementById('curriculum').scrollIntoView({behavior:'smooth'}) })
+    chips.appendChild(chip)
+  })
+}
+
+function openModule(idx) {
+  currentChapter = idx
+  const ch = CHAPTERS[idx]
+  const detail = document.getElementById('module-detail')
+  const navLink = document.getElementById('nav-current')
+  navLink.style.display = 'block'
+
+  document.getElementById('moduleContent').innerHTML = `
+    <div class="module-hero">
+      <div class="module-hero-left">
+        <div class="module-eyebrow">${ch.num} / ${ch.level}</div>
+        <div class="module-title">${ch.title}</div>
+        <div class="module-meta">
+          <div class="module-meta-row"><span>時長</span><span>${ch.time}</span></div>
+          <div class="module-meta-row"><span>難度</span><span>${ch.level}</span></div>
+          <div class="module-meta-row"><span>章節</span><span>${idx+1} / ${CHAPTERS.length}</span></div>
+        </div>
+      </div>
+      <div class="module-hero-right">
+        <div class="module-intro">${ch.intro}</div>
+        <div class="module-objectives">
+          <h4>學習目標</h4>
+          <ul class="obj-list">
+            ${ch.objectives.map(o => `<li>${o}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="module-content">
+      <div class="module-main">
+        ${ch.lessons.map((l, li) => `
+          <div class="lesson-block">
+            <div class="lesson-num">LESSON ${l.num}</div>
+            <div class="lesson-title">${l.icon} ${l.title}</div>
+            <div class="lesson-body">${l.body}</div>
+            ${l.code ? `<div class="code-block">${l.code}</div>` : ''}
+            ${l.tip ? `<div class="tip-box"><strong>💡 技巧提示</strong>${l.tip}</div>` : ''}
+          </div>
+          ${li < ch.lessons.length - 1 ? '<hr class="lesson-divider">' : ''}
+        `).join('')}
+      </div>
+
+      <div class="module-sidebar">
+        <div class="sidebar-widget">
+          <div class="sidebar-label">📚 學習資源</div>
+          <ul class="resource-list">
+            ${ch.resources.map(r => `<li>${r}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div class="sidebar-widget">
+          <div class="sidebar-label">🎯 章節標籤</div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.5rem">
+            ${ch.tags.map(t => `<span class="ch-tag">${t}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="sidebar-widget">
+          <div class="sidebar-label">✏️ 章節測驗</div>
+          <div class="quiz-block" id="quiz-${idx}">
+            <div class="quiz-q">${ch.quiz.q}</div>
+            ${ch.quiz.opts.map((o, oi) => `
+              <div class="quiz-opt" data-idx="${idx}" data-opt="${oi}" onclick="answerQuiz(${idx},${oi})">
+                ${String.fromCharCode(65+oi)}. ${o}
+              </div>
+            `).join('')}
+            <div class="quiz-feedback" id="qfeed-${idx}">${ch.quiz.feedback}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="module-nav-btn" onclick="prevModule()" ${idx===0?'disabled style="opacity:0.3"':''}>← 上一章</button>
+      <div class="module-nav-loc">
+        ${ch.num} · ${ch.title}<br>
+        <a class="chapter-link" href="chapter${idx+1}.html">進入完整章節頁面 →</a>
+      </div>
+      <button class="module-nav-btn primary" onclick="nextModule()" ${idx===CHAPTERS.length-1?'disabled style="opacity:0.3"':''}>下一章 →</button>
+    </div>
+  `
+
+  detail.classList.add('active')
+  detail.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function answerQuiz(chIdx, optIdx) {
+  const ch = CHAPTERS[chIdx]
+  const opts = document.querySelectorAll(`[data-idx="${chIdx}"]`)
+  opts.forEach((el, i) => {
+    el.classList.remove('correct', 'wrong')
+    if (i === ch.quiz.ans) el.classList.add('correct')
+    else if (i === optIdx && optIdx !== ch.quiz.ans) el.classList.add('wrong')
+  })
+  const feed = document.getElementById(`qfeed-${chIdx}`)
+  feed.style.display = 'block'
+}
+
+function nextModule() {
+  if (currentChapter < CHAPTERS.length - 1) openModule(currentChapter + 1)
+}
+function prevModule() {
+  if (currentChapter > 0) openModule(currentChapter - 1)
+}
+function closeMod() {
+  currentChapter = null
+  document.getElementById('nav-current').style.display = 'none'
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const el = document.documentElement
+  const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100
+  document.getElementById('progressBar').style.width = pct + '%'
+})
+
+// Init
+renderCurriculum()
+</script>
+</body>
+</html>

@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.10 — 綜合實戰：打造完整電商客服 Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ── MASTHEAD ───────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ── PAGE ───────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900;
+  line-height: 1.15; letter-spacing: -0.025em;
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ── OBJECTIVES ─────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red);
+  transform: rotate(45deg);
+}
+
+/* ── CONTENT LAYOUT ─────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ── LESSON ─────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ── CODE BLOCKS ────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+.code-block {
+  background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
+  line-height: 1.85; padding: 1.5rem 0; overflow-x: auto;
+  border-left: 3px solid var(--red);
+}
+.cl { display: flex; padding: 0 1.75rem 0 0; min-height: 1.85em; }
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block; width: 3rem; padding-left: 1.25rem;
+  padding-right: 1.25rem; color: #4A4440; user-select: none;
+  font-size: 0.68rem; flex-shrink: 0; text-align: right; padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+.i1 { padding-left: 2ch; } .i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; } .i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; } .i6 { padding-left: 12ch; }
+.kw  { color: #C47A6A; } .str { color: #8BAF7A; }
+.fn  { color: #7AABCF; } .num { color: #C49A5A; }
+.cls { color: #C4B570; } .cmt { color: #7A6F6A; font-style: italic; }
+
+/* ── CALLOUTS ───────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem;
+  color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code { font-family: var(--mono); font-size: 0.82em; background: rgba(0,0,0,0.08); padding: 0.1em 0.4em; }
+
+/* ── DEF LIST ───────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── TABLE ──────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2); border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ── ARCH ───────────────────────────────────── */
+.arch-wrap { margin: 2rem 0; border: 1px solid var(--paper-3); background: var(--paper-2); }
+.arch-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--paper-3); background: var(--paper-3);
+}
+.arch-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.arch-row  { display: flex; gap: 0.5rem; align-items: stretch; }
+.arch-box {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--ink-2);
+  border: 1px solid var(--paper-4); background: var(--paper);
+  padding: 0.5rem 0.75rem; line-height: 1.5; flex: 1; text-align: center;
+}
+.arch-box strong { display: block; color: var(--ink); font-weight: 700; margin-bottom: 0.15rem; }
+.arch-box.dark { background: var(--ink); color: #9A9090; }
+.arch-box.dark strong { color: var(--paper); }
+.arch-box.accent { border-color: var(--red); background: var(--red-faint); }
+.arch-box.accent strong { color: var(--red); }
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-4);
+  padding: 0 0.2rem; flex-shrink: 0;
+}
+.arch-label {
+  font-family: var(--mono); font-size: 0.58rem; color: var(--ink-4);
+  letter-spacing: 0.1em; text-transform: uppercase; text-align: center; padding: 0.25rem 0;
+}
+
+/* ── USER JOURNEY ───────────────────────────── */
+.journey {
+  margin: 2rem 0; border-left: 3px solid var(--paper-3);
+  padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0;
+}
+.j-step { display: flex; flex-direction: column; position: relative; padding-bottom: 1.5rem; }
+.j-step:last-child { padding-bottom: 0; }
+.j-step::before {
+  content: ''; position: absolute; left: -1.72rem; top: 0.3rem;
+  width: 8px; height: 8px; background: var(--paper); border: 2px solid var(--ink-4);
+}
+.j-step.active::before { background: var(--red); border-color: var(--red); }
+.j-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  color: var(--red); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.25rem;
+}
+.j-title { font-size: 0.92rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
+.j-desc  { font-size: 0.84rem; color: var(--ink-3); line-height: 1.7; }
+.j-desc code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.3em; }
+
+/* ── SIDEBAR ────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+
+/* ── COMPLETION CARD ────────────────────────── */
+.completion-card {
+  background: var(--ink); padding: 2rem 1.5rem;
+  border-left: 4px solid var(--red); margin-top: 1rem;
+}
+.completion-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--red);
+  margin-bottom: 0.75rem; display: block;
+}
+.completion-title { font-size: 1rem; font-weight: 700; color: var(--paper); line-height: 1.4; margin-bottom: 1rem; }
+.completion-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+.completion-list li {
+  font-family: var(--mono); font-size: 0.68rem; color: #9A9090;
+  padding-left: 1rem; position: relative; line-height: 1.5;
+}
+.completion-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.5em;
+  width: 5px; height: 1px; background: var(--red);
+}
+
+/* ── QUIZ ───────────────────────────────────── */
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820;
+  cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ── NAV ────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--red); color: var(--paper); border-color: var(--red); }
+.nav-btn.fwd:hover { background: var(--ink); border-color: var(--ink); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.10 — 綜合實戰：打造完整電商客服 Bot</span>
+  </div>
+  <div class="masthead-right">第 10 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ══════════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">10</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">5 小時</div>
+      <div class="ch-stat">綜合實戰</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">課程最終章</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title">綜合實戰：打造<br><span>完整電商客服 Bot</span></h1>
+    <p class="ch-standfirst">
+      前九章累積的所有技術——Webhook 處理、Flex Message、Rich Menu、
+      資料庫、FSM、LIFF、OpenAI 整合、CI/CD 部署——
+      在這一章匯聚成一個完整可運行的電商客服系統。
+      我們從需求拆解開始，逐步串接各模組，
+      處理真實場景中的邊界條件，最終完成一套
+      可以直接作為個人或商業專案起點的程式庫。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>將全課程知識整合為一個連貫架構</li>
+    <li>設計並實作完整的用戶旅程狀態機</li>
+    <li>用 Flex Message 打造訂單查詢卡片</li>
+    <li>整合 LIFF 帳號綁定與 AI 客服模式</li>
+    <li>撰寫整合測試驗證核心業務流程</li>
+    <li>完成生產部署並執行上線前的確認清單</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 10-1 ─────────────────────────────────────────────────── -->
+<article class="lesson" id="l10-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 10–1</span>
+    <h2 class="lesson-title">系統需求拆解與整體架構規劃</h2>
+  </div>
+
+  <p class="body-text">
+    在寫任何一行程式碼之前，先把功能需求轉化為技術決策。
+    本章實作的電商客服 Bot 服務對象是一個有實體會員系統的電商品牌，
+    核心需求是讓用戶在 LINE 內完成帳號綁定、查詢訂單、諮詢產品、
+    以及在需要時無縫轉接人工客服。
+  </p>
+
+  <div class="sub-heading">功能需求對應技術模組</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>功能需求</th><th>使用技術</th><th>對應章節</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>新用戶加入自動引導綁定</td>
+        <td>Follow 事件 + Push Message</td>
+        <td>CH.02</td>
+      </tr>
+      <tr>
+        <td>LINE 帳號與會員系統綁定</td>
+        <td>LIFF + ID Token 驗證</td>
+        <td>CH.07</td>
+      </tr>
+      <tr>
+        <td>固定選單導覽（訪客版 / 會員版）</td>
+        <td>Rich Menu + alias 切換</td>
+        <td>CH.05</td>
+      </tr>
+      <tr>
+        <td>訂單查詢卡片</td>
+        <td>Flex Message + Function Calling</td>
+        <td>CH.04, CH.08</td>
+      </tr>
+      <tr>
+        <td>多輪 AI 客服對話</td>
+        <td>OpenAI + Redis 記憶管理</td>
+        <td>CH.08</td>
+      </tr>
+      <tr>
+        <td>轉人工客服流程</td>
+        <td>FSM + Push Message 通知</td>
+        <td>CH.06</td>
+      </tr>
+      <tr>
+        <td>用戶資料與對話記錄儲存</td>
+        <td>PostgreSQL + Knex</td>
+        <td>CH.06</td>
+      </tr>
+      <tr>
+        <td>生產部署與監控</td>
+        <td>Docker + GitHub Actions + Sentry</td>
+        <td>CH.09</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">最終系統架構</div>
+
+  <div class="arch-wrap">
+    <div class="arch-head">電商客服 Bot — 完整系統架構</div>
+    <div class="arch-body">
+      <div class="arch-label">用戶端</div>
+      <div class="arch-row">
+        <div class="arch-box dark"><strong>LINE App</strong>聊天室 / WebView</div>
+        <div class="arch-arrow">⟷</div>
+        <div class="arch-box dark"><strong>LINE Platform</strong>Messaging API / LIFF</div>
+      </div>
+      <div class="arch-arrow" style="align-self:center; padding: 0.3rem 0;">↕ Webhook / API</div>
+      <div class="arch-label">你的後端（Railway）</div>
+      <div class="arch-row">
+        <div class="arch-box accent"><strong>Bot Server</strong>Express + 簽名驗證 + 速率限制</div>
+        <div class="arch-arrow">⟷</div>
+        <div class="arch-box accent"><strong>LIFF App</strong>帳號綁定表單（Vercel）</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-box"><strong>Event Router</strong>訊息 / 追蹤 / Postback 分流</div>
+        <div class="arch-box"><strong>AI Handler</strong>OpenAI + 速率限制 + 記憶</div>
+        <div class="arch-box"><strong>FSM Engine</strong>綁定流程 / 客服流程</div>
+      </div>
+      <div class="arch-label">資料層</div>
+      <div class="arch-row">
+        <div class="arch-box"><strong>PostgreSQL</strong>用戶 / 訂單 / 訊息記錄</div>
+        <div class="arch-box"><strong>Redis</strong>Session / 速率限制 / 去重</div>
+        <div class="arch-box"><strong>Sentry + pino</strong>錯誤追蹤 / 日誌</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">完整的目錄結構</div>
+
+  <div class="code-figure">
+    <div class="code-caption">最終專案目錄結構</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc">ecommerce-bot/</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc">├── src/</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc">│   ├── ai/              <span class="cmt">chat, tools, memoryManager, rateLimiter, inputFilter</span></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc">│   ├── db/              <span class="cmt">knex.js, migrations/, seeds/</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">│   ├── fsm/             <span class="cmt">FSMEngine, registrationFSM, supportFSM</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc">│   ├── handlers/        <span class="cmt">messageHandler, followHandler, postbackHandler, aiHandler</span></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc">│   ├── repositories/    <span class="cmt">UserRepository, OrderRepository, MessageRepository</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">│   ├── richMenus/       <span class="cmt">richMenuManager, templates/</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc">│   ├── routes/          <span class="cmt">webhook, liff, health</span></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc">│   ├── session/         <span class="cmt">RedisSessionStore</span></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">│   ├── templates/       <span class="cmt">Flex Message 範本函式</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc">│   ├── instrument.js    <span class="cmt">Sentry 初始化</span></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc">│   └── logger.js        <span class="cmt">pino 日誌</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">├── liff-app/            <span class="cmt">帳號綁定 LIFF 前端（Vite + React）</span></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc">├── tests/               <span class="cmt">unit/, integration/</span></span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc">├── scripts/             <span class="cmt">deploy-rich-menu.js, seed-orders.js</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc">├── .github/workflows/   <span class="cmt">deploy.yml</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc">├── Dockerfile</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc">├── knexfile.js</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc">├── index.js             <span class="cmt">Express app 入口</span></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc">└── .env.example</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 10-2 ─────────────────────────────────────────────────── -->
+<article class="lesson" id="l10-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 10–2</span>
+    <h2 class="lesson-title">用戶旅程與事件路由的完整實作</h2>
+  </div>
+
+  <p class="body-text">
+    電商客服 Bot 的用戶從加好友那一刻開始，
+    就進入一個需要系統性管理的旅程：
+    引導綁定、使用選單功能、發起 AI 諮詢、查詢訂單、轉人工客服。
+    每個節點的行為取決於用戶目前的狀態（是否已綁定、目前的 FSM 狀態）。
+  </p>
+
+  <div class="sub-heading">完整用戶旅程</div>
+
+  <div class="journey">
+    <div class="j-step active">
+      <div class="j-label">Step 1</div>
+      <div class="j-title">加好友 — Follow 事件</div>
+      <div class="j-desc">
+        記錄用戶到資料庫（<code>findOrCreate</code>），發送歡迎訊息（含綁定引導按鈕），
+        設定訪客版 Rich Menu（<code>RICH_MENU_GUEST</code>）。
+      </div>
+    </div>
+    <div class="j-step active">
+      <div class="j-label">Step 2</div>
+      <div class="j-title">點選「綁定帳號」— Postback 事件</div>
+      <div class="j-desc">
+        傳送含 LIFF URL 的按鈕訊息，用戶點擊後開啟帳號綁定頁面。
+        LIFF 完成後觸發後端 <code>/api/liff/bind</code>，切換為會員版 Rich Menu。
+      </div>
+    </div>
+    <div class="j-step active">
+      <div class="j-label">Step 3</div>
+      <div class="j-title">使用 Rich Menu — 選單互動</div>
+      <div class="j-desc">
+        會員版選單提供「查訂單」、「AI 客服」、「專人服務」三個熱區，
+        各自觸發不同的 Postback action。
+      </div>
+    </div>
+    <div class="j-step active">
+      <div class="j-label">Step 4A</div>
+      <div class="j-title">查訂單 — Postback + Flex Message</div>
+      <div class="j-desc">
+        查詢該用戶最近 3 筆訂單，以 Flex Message Carousel 展示，
+        每張卡片包含訂單狀態、物流號碼和「查看詳情」按鈕。
+      </div>
+    </div>
+    <div class="j-step active">
+      <div class="j-label">Step 4B</div>
+      <div class="j-title">AI 客服 — 多輪對話模式</div>
+      <div class="j-desc">
+        進入 AI 對話模式，所有文字訊息路由到 AI handler，
+        保有多輪記憶，可查詢訂單（Function Calling）。
+        傳送「/離開」結束模式並清除記憶。
+      </div>
+    </div>
+    <div class="j-step active">
+      <div class="j-label">Step 4C</div>
+      <div class="j-title">轉人工客服 — FSM 流程</div>
+      <div class="j-desc">
+        進入 SUPPORT FSM，收集問題描述，
+        推播通知到客服管理群組，用戶收到「已轉接，客服將於 X 分鐘內回覆」確認訊息。
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">核心事件路由器</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/eventRouter.js — 狀態感知的事件分流</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> SessionStore   = <span class="fn">require</span>(<span class="str">'../session/RedisSessionStore'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> { handleFollow }   = <span class="fn">require</span>(<span class="str">'./followHandler'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> { handlePostback } = <span class="fn">require</span>(<span class="str">'./postbackHandler'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="kw">const</span> { handleAIMessage }  = <span class="fn">require</span>(<span class="str">'./aiMessageHandler'</span>)</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">const</span> { handleFSMMessage } = <span class="fn">require</span>(<span class="str">'./fsmMessageHandler'</span>)</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"><span class="kw">const</span> { handleGeneralMessage } = <span class="fn">require</span>(<span class="str">'./generalMessageHandler'</span>)</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="kw">const</span> logger = <span class="fn">require</span>(<span class="str">'../logger'</span>)</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"><span class="kw">async function</span> <span class="fn">routeEvent</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1"><span class="kw">const</span> { type, source } = event</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="kw">const</span> userId = source?.userId</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="cmt">// 非文字事件直接分流</span></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="kw">if</span> (type === <span class="str">'follow'</span>)   <span class="kw">return</span> <span class="fn">handleFollow</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1"><span class="kw">if</span> (type === <span class="str">'postback'</span>) <span class="kw">return</span> <span class="fn">handlePostback</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="kw">if</span> (type !== <span class="str">'message'</span> || event.message.type !== <span class="str">'text'</span>) <span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1"><span class="cmt">// 文字訊息：查看 session 狀態決定路由</span></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1"><span class="kw">const</span> [aiSession, fsmSession] = <span class="kw">await</span> <span class="cls">Promise</span>.<span class="fn">all</span>([</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">SessionStore.<span class="fn">get</span>(userId, <span class="str">'ai-chat'</span>).<span class="fn">catch</span>(() => <span class="kw">null</span>),</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i2">SessionStore.<span class="fn">get</span>(userId, <span class="str">'support-fsm'</span>).<span class="fn">catch</span>(() => <span class="kw">null</span>),</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1">])</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="cmt">// FSM 模式優先（人工客服收集流程進行中）</span></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">if</span> (fsmSession && fsmSession.state !== <span class="str">'DONE'</span>) {</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">logger.<span class="fn">info</span>({ userId, state: fsmSession.state }, <span class="str">'routing to FSM'</span>)</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2"><span class="kw">return</span> <span class="fn">handleFSMMessage</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="cmt">// AI 對話模式</span></span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1"><span class="kw">if</span> (aiSession) {</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2">logger.<span class="fn">info</span>({ userId }, <span class="str">'routing to AI'</span>)</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2"><span class="kw">return</span> <span class="fn">handleAIMessage</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i1"><span class="cmt">// 一般訊息（顯示選單提示）</span></span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i1"><span class="kw">return</span> <span class="fn">handleGeneralMessage</span>(event, client)</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc">module.exports = { routeEvent }</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Follow Handler：歡迎訊息與狀態初始化</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/handlers/followHandler.js</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> UserRepo    = <span class="fn">require</span>(<span class="str">'../repositories/UserRepository'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> { syncRichMenu } = <span class="fn">require</span>(<span class="str">'../richMenus/richMenuManager'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> logger = <span class="fn">require</span>(<span class="str">'../logger'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">async function</span> <span class="fn">handleFollow</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="kw">const</span> userId = event.source.userId</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1"><span class="cmt">// 取得 LINE 用戶資料</span></span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="kw">const</span> profile = <span class="kw">await</span> client.<span class="fn">getProfile</span>(userId)</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="cmt">// 建立或更新資料庫記錄</span></span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i1"><span class="kw">const</span> user = <span class="kw">await</span> UserRepo.<span class="fn">findOrCreate</span>(userId, {</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i2">displayName: profile.displayName,</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">pictureUrl:  profile.pictureUrl,</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1">logger.<span class="fn">info</span>({ userId, isNew: user._isNew }, <span class="str">'user followed'</span>)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i1"><span class="cmt">// 依是否已綁定設定 Rich Menu</span></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i1"><span class="fn">syncRichMenu</span>(userId, user, client).<span class="fn">catch</span>(err =></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i2">logger.<span class="fn">warn</span>({ err }, <span class="str">'syncRichMenu failed'</span>)</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1">)</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="cmt">// 根據綁定狀態顯示不同的歡迎訊息</span></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">const</span> isBound = !!user.memberId</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1"><span class="kw">const</span> messages = isBound</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">? <span class="fn">buildReturningMemberWelcome</span>(user)</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2">: <span class="fn">buildNewUserWelcome</span>(profile.displayName)</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="kw">return</span> client.<span class="fn">pushMessage</span>(userId, messages)</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc"><span class="cmt">// 新用戶：顯示品牌歡迎語 + 綁定引導 Flex 卡片</span></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc"><span class="kw">function</span> <span class="fn">buildNewUserWelcome</span>(displayName) {</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i1"><span class="kw">return</span> [</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2">{ type: <span class="str">'text'</span>, text: <span class="str">`您好，${displayName}！感謝加入我們的官方帳號。\n綁定您的會員帳號，即可查詢訂單、享有專屬優惠。`</span> },</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2">{</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i3">type: <span class="str">'template'</span>,</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i3">altText: <span class="str">'立即綁定帳號'</span>,</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i3">template: {</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i4">type:    <span class="str">'buttons'</span>,</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i4">text:    <span class="str">'只需一步，即可解鎖完整功能'</span>,</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i4">actions: [</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i5">{</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i6">type:  <span class="str">'uri'</span>,</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i6">label: <span class="str">'立即綁定會員帳號'</span>,</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i6">uri:   <span class="str">`https://liff.line.me/${process.env.LIFF_ID}`</span>,</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i5">},</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc i4">],</span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i3">},</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i1">]</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc">}</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 10-3 ─────────────────────────────────────────────────── -->
+<article class="lesson" id="l10-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 10–3</span>
+    <h2 class="lesson-title">訂單查詢 Flex Message 與人工客服 FSM</h2>
+  </div>
+
+  <p class="body-text">
+    訂單查詢是電商 Bot 最核心的功能之一。
+    用戶點選 Rich Menu 的「查訂單」，Bot 從資料庫查出最近幾筆訂單，
+    以 Flex Message Carousel 展示——每張卡片的視覺優先序、
+    顏色和按鈕動作都需要仔細設計，讓用戶一眼看出訂單狀態。
+  </p>
+
+  <div class="sub-heading">訂單狀態卡片 Flex Message</div>
+
+  <div class="code-figure">
+    <div class="code-caption">src/templates/orderCard.js — 單張訂單狀態卡片</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt">// 訂單狀態對應的顏色與中文標籤</span></span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> STATUS_MAP = {</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i1">pending:   { label: <span class="str">'待付款'</span>,   color: <span class="str">'#C49A5A'</span> },</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i1">paid:      { label: <span class="str">'已付款'</span>,   color: <span class="str">'#5A8BAF'</span> },</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i1">shipped:   { label: <span class="str">'已出貨'</span>,   color: <span class="str">'#5A8F5A'</span> },</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1">delivered: { label: <span class="str">'已送達'</span>,   color: <span class="str">'#4A7A4A'</span> },</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">cancelled: { label: <span class="str">'已取消'</span>,   color: <span class="str">'#AF5A5A'</span> },</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc"><span class="kw">function</span> <span class="fn">buildOrderCard</span>(order) {</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1"><span class="kw">const</span> statusInfo = STATUS_MAP[order.status] || { label: order.status, color: <span class="str">'#8C7E74'</span> }</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc i1"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i2">type: <span class="str">'bubble'</span>,</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i2">size: <span class="str">'kilo'</span>,</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2">header: {</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i3">type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i3">backgroundColor: statusInfo.color,</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i3">contents: [{</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i4">type: <span class="str">'text'</span>, text: statusInfo.label,</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i4">color: <span class="str">'#FFFFFF'</span>, weight: <span class="str">'bold'</span>, size: <span class="str">'sm'</span>,</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i3">}],</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i2">body: {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i3">type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>, spacing: <span class="str">'sm'</span>,</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i3">contents: [</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i4">{ type: <span class="str">'text'</span>, text: <span class="str">`訂單 ${order.orderCode}`</span>, weight: <span class="str">'bold'</span>, size: <span class="str">'md'</span> },</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i4"><span class="fn">buildRow</span>(<span class="str">'下單日期'</span>, <span class="kw">new</span> <span class="cls">Date</span>(order.createdAt).<span class="fn">toLocaleDateString</span>(<span class="str">'zh-TW'</span>)),</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i4"><span class="fn">buildRow</span>(<span class="str">'總金額'</span>,   <span class="str">`NT$ ${order.totalAmount.<span class="fn">toLocaleString</span>()}`</span>),</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i4">order.trackingNo ? <span class="fn">buildRow</span>(<span class="str">'物流單號'</span>, order.trackingNo) : <span class="kw">null</span>,</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i3">].<span class="fn">filter</span>(<span class="cls">Boolean</span>),</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i2">footer: {</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i3">type: <span class="str">'box'</span>, layout: <span class="str">'vertical'</span>,</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i3">contents: [{</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i4">type:   <span class="str">'button'</span>,</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i4">style:  <span class="str">'secondary'</span>,</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i4">height: <span class="str">'sm'</span>,</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i4">action: {</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i5">type:  <span class="str">'postback'</span>,</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i5">label: <span class="str">'查看明細'</span>,</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc i5">data:  <span class="str">`action=order_detail&orderId=${order.id}`</span>,</span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i4">},</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i3">}],</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i2">},</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc"><span class="cmt">// 兩欄文字列（左標籤，右數值）</span></span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc"><span class="kw">function</span> <span class="fn">buildRow</span>(label, value) {</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i1"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i2">type: <span class="str">'box'</span>, layout: <span class="str">'horizontal'</span>,</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i2">contents: [</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i3">{ type: <span class="str">'text'</span>, text: label, size: <span class="str">'xs'</span>, color: <span class="str">'#8C7E74'</span>, flex: <span class="num">2</span> },</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i3">{ type: <span class="str">'text'</span>, text: value, size: <span class="str">'xs'</span>, align: <span class="str">'end'</span>,  flex: <span class="num">3</span>, wrap: <span class="kw">true</span> },</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc i2">],</span></div>
+      <div class="cl"><span class="ln">57</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">58</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">59</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">60</span><span class="lc"><span class="cmt">// 多筆訂單：組成 Carousel</span></span></div>
+      <div class="cl"><span class="ln">61</span><span class="lc"><span class="kw">function</span> <span class="fn">buildOrderCarousel</span>(orders) {</span></div>
+      <div class="cl"><span class="ln">62</span><span class="lc i1"><span class="kw">if</span> (orders.length === <span class="num">0</span>) {</span></div>
+      <div class="cl"><span class="ln">63</span><span class="lc i2"><span class="kw">return</span> { type: <span class="str">'text'</span>, text: <span class="str">'目前查無訂單記錄。'</span> }</span></div>
+      <div class="cl"><span class="ln">64</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">65</span><span class="lc i1"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">66</span><span class="lc i2">type: <span class="str">'flex'</span>, altText: <span class="str">`您有 ${orders.length} 筆近期訂單`</span>,</span></div>
+      <div class="cl"><span class="ln">67</span><span class="lc i2">contents: { type: <span class="str">'carousel'</span>, contents: orders.<span class="fn">map</span>(buildOrderCard) },</span></div>
+      <div class="cl"><span class="ln">68</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">69</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">70</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">71</span><span class="lc">module.exports = { buildOrderCarousel }</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">人工客服 FSM</div>
+  <p class="body-text">
+    當用戶選擇「專人服務」，Bot 進入客服收集流程：
+    詢問問題類型（Buttons Template）、收集問題描述，
+    最後推播 Push Message 到客服群組通知有新案件，
+    同時告知用戶預計回覆時間。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/fsm/supportFSM.js — 人工客服收集流程</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> SUPPORT_FSM = {</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc i1">AWAIT_ISSUE_TYPE: {</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc i2"><span class="str">'ORDER_ISSUE'</span>:   { next: <span class="str">'AWAIT_DESCRIPTION'</span>, ctx: <span class="str">'order'</span> },</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc i2"><span class="str">'PRODUCT_ISSUE'</span>: { next: <span class="str">'AWAIT_DESCRIPTION'</span>, ctx: <span class="str">'product'</span> },</span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc i2"><span class="str">'OTHER'</span>:         { next: <span class="str">'AWAIT_DESCRIPTION'</span>, ctx: <span class="str">'other'</span> },</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i2"><span class="str">'CANCEL'</span>:        { next: <span class="str">'DONE'</span>,              action: <span class="str">'cancel'</span> },</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i1">AWAIT_DESCRIPTION: {</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2"><span class="str">'TEXT_INPUT'</span>: { next: <span class="str">'DONE'</span>, action: <span class="str">'submit'</span> },</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">},</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"><span class="kw">async function</span> <span class="fn">handleFSMMessage</span>(event, client) {</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc i1"><span class="kw">const</span> userId    = event.source.userId</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1"><span class="kw">const</span> userText  = event.message.text</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="kw">const</span> session   = <span class="kw">await</span> SessionStore.<span class="fn">get</span>(userId, <span class="str">'support-fsm'</span>)</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="kw">const</span> state     = session.state</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i1"><span class="kw">const</span> ctx       = session.context || {}</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i1"><span class="kmt">// 取得當前狀態的轉換表</span></span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i1"><span class="kw">const</span> transitions = SUPPORT_FSM[state]</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i1"><span class="kw">const</span> eventKey = transitions[userText] ? userText : <span class="str">'TEXT_INPUT'</span></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1"><span class="kw">const</span> transition = transitions[eventKey]</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc i1"><span class="kw">if</span> (!transition) <span class="kw">return</span></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i1"><span class="cmt">// 更新 context</span></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1"><span class="kw">if</span> (transition.ctx)  ctx.issueType   = transition.ctx</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i1"><span class="kw">if</span> (eventKey === <span class="str">'TEXT_INPUT'</span>) ctx.description = userText</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i1"><span class="kw">if</span> (transition.action === <span class="str">'submit'</span>) {</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i2"><span class="kw">await</span> <span class="fn">submitSupportRequest</span>(userId, ctx, client)</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2"><span class="kw">await</span> SessionStore.<span class="fn">clear</span>(userId, <span class="str">'support-fsm'</span>)</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc i1">} <span class="kw">else</span> {</span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2"><span class="kw">await</span> SessionStore.<span class="fn">set</span>(userId, <span class="str">'support-fsm'</span>, transition.next, ctx)</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="kw">await</span> <span class="fn">sendNextPrompt</span>(userId, transition.next, client)</span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc"><span class="cmt">// 提交案件：寫入 DB + 推播客服群組</span></span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc"><span class="kw">async function</span> <span class="fn">submitSupportRequest</span>(userId, ctx, client) {</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i1"><span class="kw">const</span> ticket = <span class="kw">await</span> SupportTicketRepo.<span class="fn">create</span>({ userId, ...ctx })</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i1"><span class="cmt">// 通知客服群組</span></span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i1"><span class="kw">if</span> (process.env.<span class="cls">SUPPORT_GROUP_ID</span>) {</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i2"><span class="kw">await</span> client.<span class="fn">pushMessage</span>(process.env.<span class="cls">SUPPORT_GROUP_ID</span>, {</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i3">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i3">text: <span class="str">`新客服案件 #${ticket.id}\n類別：${ctx.issueType}\n描述：${ctx.description}`</span>,</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i2">})</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i1"><span class="cmt">// 確認訊息給用戶</span></span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i1"><span class="kw">return</span> client.<span class="fn">pushMessage</span>(userId, {</span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i2">type: <span class="str">'text'</span>,</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i2">text: <span class="str">`您的問題已收到（案件編號 #${ticket.id}），客服將於工作日 24 小時內與您聯繫。`</span>,</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc">}</span></div>
+    </div>
+  </div>
+</article>
+
+<!-- ── LESSON 10-4 ─────────────────────────────────────────────────── -->
+<article class="lesson" id="l10-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 10–4</span>
+    <h2 class="lesson-title">整合測試策略與關鍵業務流程驗證</h2>
+  </div>
+
+  <p class="body-text">
+    LINE Bot 的整合測試面臨一個核心問題：
+    真實測試需要呼叫 LINE API、OpenAI API 和 Redis，
+    這既昂貴又不穩定，也無法在 CI 中自動化運行。
+    解法是<strong>測試替身（Test Double）</strong>——
+    用假的實作替換外部依賴，
+    讓你能在不連網路的環境中驗證業務邏輯的正確性。
+  </p>
+
+  <div class="sub-heading">測試策略分層</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>層級</th><th>測試範圍</th><th>速度</th><th>工具</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>單元測試</td>
+        <td>Flex Message 範本、FSM 轉換邏輯、工具函式</td>
+        <td>極快（ms）</td>
+        <td>Jest</td>
+      </tr>
+      <tr>
+        <td>整合測試</td>
+        <td>Webhook 端點 + 資料庫（使用 SQLite in-memory）</td>
+        <td>快（秒）</td>
+        <td>Jest + supertest</td>
+      </tr>
+      <tr>
+        <td>端對端測試</td>
+        <td>真實 LINE API + 測試 Channel</td>
+        <td>慢（分鐘）</td>
+        <td>手動 / 專屬測試腳本</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">模擬 LINE Webhook 請求</div>
+
+  <div class="code-figure">
+    <div class="code-caption">tests/helpers/lineWebhookHelper.js — 產生合法簽名的測試請求</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> crypto  = <span class="fn">require</span>(<span class="str">'crypto'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> request = <span class="fn">require</span>(<span class="str">'supertest'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> app     = <span class="fn">require</span>(<span class="str">'../../index'</span>)</span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc"><span class="kw">const</span> TEST_SECRET = <span class="str">'test-channel-secret'</span></span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt">// 產生合法的 LINE 簽名，讓 middleware 驗證通過</span></span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc"><span class="kw">function</span> <span class="fn">signBody</span>(body) {</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i1"><span class="kw">return</span> crypto</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i2">.<span class="fn">createHmac</span>(<span class="str">'sha256'</span>, TEST_SECRET)</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i2">.<span class="fn">update</span>(<span class="cls">JSON</span>.<span class="fn">stringify</span>(body))</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc i2">.<span class="fn">digest</span>(<span class="str">'base64'</span>)</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc"><span class="kw">function</span> <span class="fn">sendWebhook</span>(events) {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i1"><span class="kw">const</span> body = { destination: <span class="str">'Utest'</span>, events }</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i1"><span class="kw">return</span> <span class="fn">request</span>(app)</span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2">.<span class="fn">post</span>(<span class="str">'/webhook'</span>)</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2">.<span class="fn">set</span>(<span class="str">'X-Line-Signature'</span>, <span class="fn">signBody</span>(body))</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i2">.<span class="fn">send</span>(body)</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc"><span class="cmt">// 常用事件工廠函式</span></span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"><span class="kw">function</span> <span class="fn">textEvent</span>(userId, text, replyToken = <span class="str">'test-reply-token'</span>) {</span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1"><span class="kw">return</span> {</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc i2">type:           <span class="str">'message'</span>,</span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i2">replyToken,</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2">webhookEventId: <span class="str">`evt-${Date.now()}`</span>,</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i2">source:         { type: <span class="str">'user'</span>, userId },</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i2">message:        { id: <span class="str">'1'</span>, type: <span class="str">'text'</span>, text },</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i1">}</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc">}</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc">module.exports = { sendWebhook, textEvent }</span></div>
+    </div>
+  </div>
+
+  <div class="code-figure">
+    <div class="code-caption">tests/integration/orderFlow.test.js — 訂單查詢流程整合測試</div>
+    <div class="code-block">
+      <div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">const</span> { sendWebhook, textEvent } = <span class="fn">require</span>(<span class="str">'../helpers/lineWebhookHelper'</span>)</span></div>
+      <div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> db = <span class="fn">require</span>(<span class="str">'../../src/db/knex'</span>)</span></div>
+      <div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt">// Mock LINE client，避免真實 API 呼叫</span></span></div>
+      <div class="cl"><span class="ln">5</span><span class="lc">jest.<span class="fn">mock</span>(<span class="str">'@line/bot-sdk'</span>, () => ({</span></div>
+      <div class="cl"><span class="ln">6</span><span class="lc i1"><span class="cls">Client</span>: jest.<span class="fn">fn</span>().<span class="fn">mockImplementation</span>(() => ({</span></div>
+      <div class="cl"><span class="ln">7</span><span class="lc i2">replyMessage: jest.<span class="fn">fn</span>().<span class="fn">mockResolvedValue</span>({}),</span></div>
+      <div class="cl"><span class="ln">8</span><span class="lc i2">pushMessage:  jest.<span class="fn">fn</span>().<span class="fn">mockResolvedValue</span>({}),</span></div>
+      <div class="cl"><span class="ln">9</span><span class="lc i2">getProfile:   jest.<span class="fn">fn</span>().<span class="fn">mockResolvedValue</span>({ userId: <span class="str">'U001'</span>, displayName: <span class="str">'Test'</span> }),</span></div>
+      <div class="cl"><span class="ln">10</span><span class="lc i1">})),</span></div>
+      <div class="cl"><span class="ln">11</span><span class="lc i1">middleware: () => (req, res, next) => { req.body = req.body; <span class="fn">next</span>() },</span></div>
+      <div class="cl"><span class="ln">12</span><span class="lc">}))</span></div>
+      <div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">14</span><span class="lc">describe(<span class="str">'訂單查詢流程'</span>, () => {</span></div>
+      <div class="cl"><span class="ln">15</span><span class="lc i1">beforeAll(<span class="kw">async</span> () => {</span></div>
+      <div class="cl"><span class="ln">16</span><span class="lc i2"><span class="kw">await</span> db.<span class="fn">migrate</span>.<span class="fn">latest</span>()</span></div>
+      <div class="cl"><span class="ln">17</span><span class="lc i2"><span class="cmt">// 建立測試資料</span></span></div>
+      <div class="cl"><span class="ln">18</span><span class="lc i2"><span class="kw">await</span> db(<span class="str">'users'</span>).<span class="fn">insert</span>({ lineUserId: <span class="str">'U001'</span>, memberId: <span class="str">'M001'</span>, displayName: <span class="str">'Test'</span> })</span></div>
+      <div class="cl"><span class="ln">19</span><span class="lc i2"><span class="kw">await</span> db(<span class="str">'orders'</span>).<span class="fn">insert</span>([</span></div>
+      <div class="cl"><span class="ln">20</span><span class="lc i3">{ userId: <span class="num">1</span>, orderCode: <span class="str">'ORD-001'</span>, status: <span class="str">'shipped'</span>, totalAmount: <span class="num">1200</span> },</span></div>
+      <div class="cl"><span class="ln">21</span><span class="lc i3">{ userId: <span class="num">1</span>, orderCode: <span class="str">'ORD-002'</span>, status: <span class="str">'delivered'</span>, totalAmount: <span class="num">890</span> },</span></div>
+      <div class="cl"><span class="ln">22</span><span class="lc i2">])</span></div>
+      <div class="cl"><span class="ln">23</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">24</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">25</span><span class="lc i1">afterAll(<span class="kw">async</span> () => { <span class="kw">await</span> db.<span class="fn">destroy</span>() })</span></div>
+      <div class="cl"><span class="ln">26</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">27</span><span class="lc i1">it(<span class="str">'已綁定會員查詢訂單，應回傳 Flex Message Carousel'</span>, <span class="kw">async</span> () => {</span></div>
+      <div class="cl"><span class="ln">28</span><span class="lc i2"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">sendWebhook</span>([</span></div>
+      <div class="cl"><span class="ln">29</span><span class="lc i3">{ type: <span class="str">'postback'</span>, source: { type: <span class="str">'user'</span>, userId: <span class="str">'U001'</span> },</span></div>
+      <div class="cl"><span class="ln">30</span><span class="lc i4">replyToken: <span class="str">'tok'</span>, webhookEventId: <span class="str">'e1'</span>,</span></div>
+      <div class="cl"><span class="ln">31</span><span class="lc i4">postback: { data: <span class="str">'action=my_orders'</span> } },</span></div>
+      <div class="cl"><span class="ln">32</span><span class="lc i2">])</span></div>
+      <div class="cl"><span class="ln">33</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">34</span><span class="lc i2"><span class="fn">expect</span>(res.statusCode).<span class="fn">toBe</span>(<span class="num">200</span>)</span></div>
+      <div class="cl"><span class="ln">35</span><span class="lc i2"><span class="cmt">// 驗證 replyMessage 被呼叫且訊息類型正確</span></span></div>
+      <div class="cl"><span class="ln">36</span><span class="lc i2"><span class="kw">const</span> lineClient = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>).<span class="cls">Client</span>.<span class="fn">mock</span>.instances[<span class="num">0</span>]</span></div>
+      <div class="cl"><span class="ln">37</span><span class="lc i2"><span class="kw">const</span> [, msg] = lineClient.replyMessage.mock.calls[<span class="num">0</span>]</span></div>
+      <div class="cl"><span class="ln">38</span><span class="lc i2"><span class="fn">expect</span>(msg.type).<span class="fn">toBe</span>(<span class="str">'flex'</span>)</span></div>
+      <div class="cl"><span class="ln">39</span><span class="lc i2"><span class="fn">expect</span>(msg.contents.type).<span class="fn">toBe</span>(<span class="str">'carousel'</span>)</span></div>
+      <div class="cl"><span class="ln">40</span><span class="lc i2"><span class="fn">expect</span>(msg.contents.contents).<span class="fn">toHaveLength</span>(<span class="num">2</span>)</span></div>
+      <div class="cl"><span class="ln">41</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">42</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">43</span><span class="lc i1">it(<span class="str">'未綁定用戶查詢訂單，應回傳綁定引導訊息'</span>, <span class="kw">async</span> () => {</span></div>
+      <div class="cl"><span class="ln">44</span><span class="lc i2"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">sendWebhook</span>([</span></div>
+      <div class="cl"><span class="ln">45</span><span class="lc i3">{ type: <span class="str">'postback'</span>, source: { type: <span class="str">'user'</span>, userId: <span class="str">'U999'</span> },</span></div>
+      <div class="cl"><span class="ln">46</span><span class="lc i4">replyToken: <span class="str">'tok2'</span>, webhookEventId: <span class="str">'e2'</span>,</span></div>
+      <div class="cl"><span class="ln">47</span><span class="lc i4">postback: { data: <span class="str">'action=my_orders'</span> } },</span></div>
+      <div class="cl"><span class="ln">48</span><span class="lc i2">])</span></div>
+      <div class="cl"><span class="ln">49</span><span class="lc"></span></div>
+      <div class="cl"><span class="ln">50</span><span class="lc i2"><span class="kw">const</span> lineClient = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>).<span class="cls">Client</span>.<span class="fn">mock</span>.instances[<span class="num">0</span>]</span></div>
+      <div class="cl"><span class="ln">51</span><span class="lc i2"><span class="kw">const</span> [, msg] = lineClient.replyMessage.mock.calls[<span class="num">1</span>]</span></div>
+      <div class="cl"><span class="ln">52</span><span class="lc i2"><span class="cmt">// 未綁定應回傳文字訊息，提示用戶先綁定</span></span></div>
+      <div class="cl"><span class="ln">53</span><span class="lc i2"><span class="fn">expect</span>(msg.type).<span class="fn">toBe</span>(<span class="str">'text'</span>)</span></div>
+      <div class="cl"><span class="ln">54</span><span class="lc i2"><span class="fn">expect</span>(msg.text).<span class="fn">toContain</span>(<span class="str">'綁定'</span>)</span></div>
+      <div class="cl"><span class="ln">55</span><span class="lc i1">})</span></div>
+      <div class="cl"><span class="ln">56</span><span class="lc">})</span></div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <span class="callout-label">測試覆蓋率的務實觀點</span>
+    追求 100% 覆蓋率往往得不償失。
+    對 LINE Bot 而言，最值得覆蓋的是：
+    FSM 的每個狀態轉換（特別是邊界條件）、
+    Flex Message 範本函式（確保不會因資料缺欄位而崩潰）、
+    以及所有涉及費用的路徑（AI 呼叫、Push Message）的防護邏輯。
+    事件路由器的整合測試確保各模組正確串接。
+    與 LINE API 的互動細節（replyToken 過期、API 限流）則留給手動測試。
+  </div>
+</article>
+
+<!-- ── LESSON 10-5 ─────────────────────────────────────────────────── -->
+<article class="lesson" id="l10-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 10–5</span>
+    <h2 class="lesson-title">上線前確認清單與課程總結</h2>
+  </div>
+
+  <p class="body-text">
+    第一次將 Bot 切換到真實用戶流量之前，
+    有一系列容易被忽略的設定需要逐一確認。
+    跳過這些步驟不會讓 Bot 無法運作，
+    但可能在高流量時造成意外費用、在問題發生時缺乏診斷資訊、
+    或在資安事件中讓損失擴大。
+  </p>
+
+  <div class="sub-heading">上線前確認清單</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>類別</th><th>項目</th><th>確認方式</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>LINE Console</td>
+        <td>Webhook URL 指向生產伺服器，且 Verify 通過</td>
+        <td>Console → Messaging API → Webhook settings</td>
+      </tr>
+      <tr>
+        <td>LINE Console</td>
+        <td>Auto-reply message 和 Greeting message 已關閉（避免與 Bot 回覆重複）</td>
+        <td>Console → Messaging API → Response settings</td>
+      </tr>
+      <tr>
+        <td>LINE Console</td>
+        <td>Rich Menu 已部署並設定為 Default Rich Menu</td>
+        <td>執行 <code>scripts/deploy-rich-menu.js</code>，確認 Console 可見</td>
+      </tr>
+      <tr>
+        <td>環境變數</td>
+        <td>生產環境所有必要環境變數已設定（無遺漏）</td>
+        <td>在伺服器執行 <code>node -e "require('./src/config')"</code> 無錯誤</td>
+      </tr>
+      <tr>
+        <td>資料庫</td>
+        <td>Migration 已在生產 DB 執行完成</td>
+        <td><code>knex migrate:status</code> 顯示所有 migration 已套用</td>
+      </tr>
+      <tr>
+        <td>監控</td>
+        <td>外部監控服務已設定 <code>/health</code> 檢查（每 1–5 分鐘）</td>
+        <td>Betteruptime / UptimeRobot 控制台確認</td>
+      </tr>
+      <tr>
+        <td>監控</td>
+        <td>Sentry 已接收測試錯誤（手動觸發一次例外確認）</td>
+        <td>Sentry Issues 頁面可見測試錯誤</td>
+      </tr>
+      <tr>
+        <td>費用保護</td>
+        <td>OpenAI 月費用上限已設定</td>
+        <td>platform.openai.com → Settings → Usage limits</td>
+      </tr>
+      <tr>
+        <td>費用保護</td>
+        <td>LINE Push Message 月用量已估算，確認在免費額度或預算內</td>
+        <td>LINE Developers Console → Statistics</td>
+      </tr>
+      <tr>
+        <td>安全性</td>
+        <td>生產 Channel Secret 與開發環境不同</td>
+        <td>比較兩個環境的 <code>LINE_CHANNEL_SECRET</code></td>
+      </tr>
+      <tr>
+        <td>安全性</td>
+        <td>npm audit 無高危漏洞</td>
+        <td><code>npm audit --audit-level=high</code></td>
+      </tr>
+      <tr>
+        <td>功能驗證</td>
+        <td>以真實帳號完整走過用戶旅程一遍（加好友 → 綁定 → 查訂單 → AI 對話）</td>
+        <td>手動測試</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">課程完成：你已掌握的能力</div>
+
+  <p class="body-text">
+    完成這十章後，你已具備從零開始獨立開發、部署、
+    並維運一個生產級 LINE Bot 的完整能力。
+    以下是這套系統的核心設計決策，
+    每一個都可以在你的下一個專案中根據需求調整：
+  </p>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">事件驅動架構</div>
+      <div class="def-desc">
+        Webhook 立即回應 200，事件非同步處理，
+        確保在任何部署環境下都不會因為業務邏輯複雜度超過 LINE 的 1 秒限制而失敗。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">狀態感知路由</div>
+      <div class="def-desc">
+        EventRouter 在分流前先查詢 Redis session，
+        FSM 模式優先於 AI 模式優先於一般訊息，
+        讓多個進行中的流程（帳號綁定、客服收集）能並行運作而不互相干擾。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">Repository 模式</div>
+      <div class="def-desc">
+        所有資料庫操作封裝在 Repository 類別中，
+        業務邏輯不直接依賴 Knex 查詢語法，
+        讓測試替換資料層、未來更換資料庫引擎都不影響上層程式碼。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">費用邊界明確</div>
+      <div class="def-desc">
+        每一個會產生外部費用的呼叫（OpenAI、LINE Push Message）
+        都有對應的速率限制或去重機制，
+        且都有可觀測的指標計數，讓費用異常能被及早發現。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">防禦縱深</div>
+      <div class="def-desc">
+        Webhook 簽名驗證 + 全局 IP 速率限制 + 每用戶 AI 速率限制 + Prompt Injection 過濾，
+        四層防護各自獨立，任一層失效不影響其他層的保護作用。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">可觀測性優先</div>
+      <div class="def-desc">
+        結構化日誌（pino）、集中化錯誤追蹤（Sentry）、
+        外部監控（Betteruptime）和應用程式指標共同構成完整的可觀測性基礎，
+        確保問題發生時能快速定位根本原因。
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">延伸方向</span>
+    本課程建立了 Bot 開發的核心基礎，以下是進階延伸的學習方向。
+    若需要服務大量同時在線用戶，可研究 Node.js Cluster 模式或
+    使用 PM2 的多核心模式水平擴展。
+    若需要更豐富的 AI 知識庫支援，可以整合 pgvector 和 RAG 架構，
+    讓 Bot 能夠回答基於你的內部文件的問題。
+    若需要複雜的推廣活動管理（集點、抽獎、分眾推播），
+    可以在現有資料架構上擴充 campaigns 和 segments 資料表。
+    所有這些延伸都建立在本課程建立的架構基礎之上，
+    不需要推翻現有設計。
+  </div>
+</article>
+
+</main>
+
+<!-- ══ SIDEBAR ════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l10-1" class="toc-link">10–1 需求拆解與架構規劃</a></li>
+      <li class="toc-item"><a href="#l10-2" class="toc-link">10–2 用戶旅程與事件路由</a></li>
+      <li class="toc-item"><a href="#l10-3" class="toc-link">10–3 訂單卡片與客服 FSM</a></li>
+      <li class="toc-item"><a href="#l10-4" class="toc-link">10–4 整合測試策略</a></li>
+      <li class="toc-item"><a href="#l10-5" class="toc-link">10–5 上線清單與課程總結</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">核心術語</div>
+    <div class="term-row">
+      <div class="term-name">事件驅動架構</div>
+      <div class="term-def">以事件觸發業務邏輯，立即回應後非同步處理，解耦接收與處理。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">狀態感知路由</div>
+      <div class="term-def">路由器在分流前先查詢用戶狀態，讓相同的輸入因狀態不同而導向不同的處理器。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Test Double</div>
+      <div class="term-def">測試替身的統稱，包含 Mock、Stub、Spy，用假的實作替換外部依賴以隔離測試。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">Repository 模式</div>
+      <div class="term-def">封裝資料存取邏輯的設計模式，讓業務層不依賴具體的資料庫實作。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">防禦縱深</div>
+      <div class="term-def">多層獨立的安全機制，確保任一層失效時其他層仍能提供保護。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name">可觀測性</div>
+      <div class="term-def">透過日誌、指標和追蹤三個維度，讓系統內部狀態能被外部工具推斷和理解。</div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item"><strong>Jest 文件</strong>JavaScript 測試框架，含 Mock、Spy 的完整 API 說明。jestjs.io</li>
+      <li class="res-item"><strong>supertest</strong>HTTP 整合測試函式庫，可在不啟動實際伺服器的情況下測試 Express 路由。</li>
+      <li class="res-item"><strong>LINE Bot SDK Node.js</strong>完整 API 參考，含所有客戶端方法的型別定義。github.com/line/line-bot-sdk-nodejs</li>
+      <li class="res-item"><strong>pgvector</strong>PostgreSQL 向量擴充，用於 RAG 的向量相似度搜尋。github.com/pgvector/pgvector</li>
+      <li class="res-item"><strong>LINE Developers Console</strong>管理 Channel、檢視統計、設定 Webhook 的官方介面。developers.line.biz/console</li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="completion-card">
+      <span class="completion-label">課程完成</span>
+      <div class="completion-title">LINE Bot 速成班<br>全 10 章已完成</div>
+      <ul class="completion-list">
+        <li>Webhook 架構與事件處理</li>
+        <li>訊息型別與 Flex Message</li>
+        <li>Rich Menu 與 Tab 切換</li>
+        <li>資料庫整合與 FSM 狀態管理</li>
+        <li>LIFF 應用程式與帳號綁定</li>
+        <li>OpenAI 整合與費用控制</li>
+        <li>CI/CD 部署與安全加固</li>
+        <li>電商客服 Bot 完整實作</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="quiz-wrap">
+      <div class="quiz-q">EventRouter 為何讓 FSM 模式的優先級高於 AI 模式？</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>A.</span>FSM 的程式碼比 AI handler 更輕量，可以先執行以節省資源</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, true)"><span>B.</span>FSM 是有限期的表單收集流程，若被 AI 搶先處理會導致流程中斷</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>C.</span>AI handler 需要呼叫外部 API，延遲高，應排在後面</div>
+      <div class="quiz-opt" onclick="answerQuiz(this, false)"><span>D.</span>LINE 平台規定 Postback 事件必須優先處理</div>
+      <div class="quiz-feedback" id="qf">
+        正確。FSM 代表一個進行中的多步驟流程（如客服問題收集），
+        這個流程有明確的開始和結束，每個步驟都在等待特定的用戶輸入。
+        若用戶在 FSM 進行中傳送的任意文字被路由到 AI 而不是 FSM，
+        FSM 永遠無法收到它等待的輸入，流程將永久卡住。
+        相反地，AI 對話模式沒有嚴格的步驟依賴，
+        被 FSM 中斷後用戶完成 FSM 流程再繼續 AI 對話也完全合理。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div>
+
+</div><!-- end page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter9.html" class="nav-btn">← CH.09 雲端部署</a>
+    <div class="nav-loc">CH.10 / 10 &nbsp;—&nbsp; 綜合實戰：打造完整電商客服 Bot</div>
+    <a href="index.html" class="nav-btn fwd">回到課程首頁 →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement
+  const pct = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100
+  document.getElementById('rp').style.width = Math.min(pct, 100) + '%'
+})
+
+const lessons  = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const match = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (match) match.classList.add('active')
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+lessons.forEach(l => io.observe(l))
+
+function answerQuiz(el, correct) {
+  const opts = el.parentElement.querySelectorAll('.quiz-opt')
+  opts.forEach(o => { o.onclick = null; o.style.cursor = 'default' })
+  el.classList.add(correct ? 'correct' : 'wrong')
+  if (!correct) opts[1].classList.add('correct')
+  document.getElementById('qf').style.display = 'block'
+}
+</script>
+</body>
+</html>

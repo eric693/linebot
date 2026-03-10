@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.04 — Flex Message 打造精美互動卡片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ─── MASTHEAD ───────────────────────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ─── PAGE / HEADER ──────────────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num { font-size: 4.5rem; font-weight: 900; line-height: 1; color: var(--ink); letter-spacing: -0.04em; }
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900; line-height: 1.15; letter-spacing: -0.025em; }
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ─── OBJECTIVES ─────────────────────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red); transform: rotate(45deg);
+}
+
+/* ─── CONTENT LAYOUT ─────────────────────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ─── LESSONS ────────────────────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ─── CODE ───────────────────────────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+.code-block {
+  background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
+  line-height: 1.75; padding: 1.5rem 1.75rem; overflow-x: auto;
+  border-left: 3px solid var(--red); tab-size: 2;
+}
+.ln { display: inline-block; width: 2em; color: #4A4440; user-select: none; font-size: 0.68rem; margin-right: 0.5rem; }
+.c-cmt { color: #7A6F6A; font-style: italic; }
+.c-kw  { color: #C47A6A; }
+.c-str { color: #8BAF7A; }
+.c-fn  { color: #7AABCF; }
+.c-num { color: #C49A5A; }
+.c-cls { color: #C4B570; }
+.c-pun { color: #9A9090; }
+.c-def { color: #E8E0D8; }
+.c-prop{ color: #B0C8E8; }
+
+/* ─── CALLOUTS ───────────────────────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem; color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.07); padding: 0.1em 0.4em;
+}
+
+/* ─── DEF LIST ───────────────────────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 190px 1fr;
+  gap: 0; border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term { font-family: var(--mono); font-size: 0.72rem; font-weight: 600; color: var(--ink); padding-right: 1rem; padding-top: 0.1rem; }
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code { font-family: var(--mono); font-size: 0.82em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ─── TABLE ──────────────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2); border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+
+/* ─── TREE DIAGRAM ───────────────────────────────────────────── */
+.tree {
+  font-family: var(--mono); font-size: 0.78rem;
+  background: var(--paper-2); border: 1px solid var(--paper-3);
+  padding: 1.25rem 1.5rem; line-height: 2; margin: 1.5rem 0;
+  color: var(--ink-2); overflow-x: auto;
+}
+.tree .node-root  { color: var(--ink); font-weight: 600; }
+.tree .node-key   { color: var(--red); }
+.tree .node-type  { color: var(--ink-4); font-size: 0.7rem; }
+.tree .node-req   { color: #5A8A5A; font-size: 0.68rem; font-style: italic; }
+.tree .node-opt   { color: var(--ink-4); font-size: 0.68rem; font-style: italic; }
+.tree .indent-1   { padding-left: 1.5rem; }
+.tree .indent-2   { padding-left: 3rem; }
+.tree .indent-3   { padding-left: 4.5rem; }
+
+/* ─── SCHEMA BLOCK ───────────────────────────────────────────── */
+.schema-block {
+  background: var(--paper-3); border-left: 3px solid var(--ink-3);
+  padding: 1rem 1.25rem; margin: 1.5rem 0;
+  font-family: var(--mono); font-size: 0.75rem; line-height: 1.9;
+  color: var(--ink-2); overflow-x: auto;
+}
+.schema-block .sk { color: var(--red); font-weight: 600; }
+.schema-block .sv { color: var(--ink-3); }
+.schema-block .sc { color: var(--ink-4); font-style: italic; }
+
+/* ─── FLOW ───────────────────────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; }
+.flow-row { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 0.68rem; min-width: max-content; }
+.fnode {
+  border: 1px solid var(--ink); padding: 0.5rem 0.85rem;
+  background: var(--paper-2); color: var(--ink); text-align: center; line-height: 1.4;
+  min-width: 90px; white-space: nowrap;
+}
+.fnode.dark  { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.fnode.red   { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.fnode.ghost { border-style: dashed; border-color: var(--ink-4); color: var(--ink-4); background: transparent; }
+.fsub { font-size: 0.58rem; color: var(--ink-4); display: block; margin-top: 0.15rem; }
+.fnode.dark .fsub { color: #8C8070; }
+.farrow { padding: 0 0.4rem; color: var(--ink-4); }
+
+/* ─── PROPERTY TABLE (compact) ───────────────────────────────── */
+.prop-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.82rem; }
+.prop-table th {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--paper-3); color: var(--ink-3); padding: 0.5rem 0.85rem; text-align: left;
+  border-bottom: 1px solid var(--paper-4);
+}
+.prop-table td {
+  padding: 0.55rem 0.85rem; color: var(--ink-2); border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.65;
+}
+.prop-table tr:last-child td { border-bottom: none; }
+.prop-table code { font-family: var(--mono); font-size: 0.8em; background: var(--paper-3); padding: 0.1em 0.35em; }
+.prop-req { color: var(--red); font-family: var(--mono); font-size: 0.65rem; font-weight: 600; }
+.prop-opt { color: var(--ink-4); font-family: var(--mono); font-size: 0.65rem; }
+
+/* ─── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before { content: ''; display: block; width: 0; height: 1px; background: var(--red); transition: width 0.2s; flex-shrink: 0; }
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+.res-list { list-style: none; }
+.res-item { padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3); font-size: 0.8rem; color: var(--ink-2); line-height: 1.5; }
+.res-item strong { display: block; font-family: var(--mono); font-size: 0.68rem; color: var(--ink); margin-bottom: 0.15rem; }
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt { font-family: var(--mono); font-size: 0.7rem; color: #9A9090; padding: 0.4rem 0; border-bottom: 1px solid #2E2820; cursor: pointer; transition: color 0.15s; display: flex; gap: 0.5rem; }
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820; font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none; }
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner { max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3); color: var(--ink-3);
+  padding: 0.6rem 1.25rem; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+.note-inline { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-4); border-top: 1px solid var(--paper-3); margin-top: 1.5rem; padding-top: 0.75rem; line-height: 1.7; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .def-item { grid-template-columns: 130px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.04 — Flex Message 打造精美互動卡片</span>
+  </div>
+  <div class="masthead-right">第 4 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ═════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">04</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">5 小時</div>
+      <div class="ch-stat">中級</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含動態渲染</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title"><span>Flex Message</span><br>打造精美互動卡片</h1>
+    <p class="ch-standfirst">
+      Template Message 給你幾個固定版型；Flex Message 給你一套完整的排版系統。
+      基於 CSS Flexbox 模型，Flex Message 讓你從零開始設計任意佈局——
+      多欄比較表、訂單確認單、含進度條的會員卡——
+      並透過動態資料填充，讓每個用戶看到為他量身定制的卡片。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>理解 Flex Message 的三層容器模型與渲染原理</li>
+    <li>掌握 Bubble 容器的六個區塊結構</li>
+    <li>熟悉 Box、Text、Image、Button 等核心元件的屬性</li>
+    <li>實作可從資料動態產生的 Flex Message 工廠函式</li>
+    <li>使用 Carousel 容器組合多個 Bubble</li>
+    <li>善用 LINE Flex Message Simulator 迭代設計</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ═════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 4-1 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l4-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 4–1</span>
+    <h2 class="lesson-title">Flex Message 架構模型：三層容器</h2>
+  </div>
+
+  <p class="body-text">
+    Flex Message 是 LINE 提供的進階訊息格式，其設計概念直接源自 CSS Flexbox 規範。
+    理解它的關鍵在於掌握一個三層嵌套的容器模型：
+    最外層的 <strong>Flex Message 物件</strong>、中間層的<strong>容器（Container）</strong>、
+    以及最內層的<strong>元件（Component）</strong>。
+    每一層的職責清晰分離，不能跳層，不能混用。
+  </p>
+
+  <div class="flow-wrap">
+    <div class="flow-row">
+      <div class="fnode dark">Flex Message<div class="fsub">type: "flex"</div></div>
+      <div class="farrow">→ contents →</div>
+      <div class="fnode red">Container<div class="fsub">bubble | carousel</div></div>
+      <div class="farrow">→ body/hero/... →</div>
+      <div class="fnode">Component<div class="fsub">box | text | image | button</div></div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    最外層的 Flex Message 物件只有兩個必填欄位：<code>type: "flex"</code> 與
+    <code>altText</code>（不支援 Flex 的環境顯示的替代文字），以及一個 <code>contents</code> 欄位指向容器。
+    容器分為兩種：<code>bubble</code>（單一卡片）和 <code>carousel</code>（可橫向滑動的多卡片）。
+    元件是實際呈現內容的積木，包括 <code>box</code>（排版容器）、
+    <code>text</code>、<code>image</code>、<code>button</code>、<code>separator</code>（分隔線）等。
+  </p>
+
+  <div class="sub-heading">Bubble 容器的六個區塊</div>
+  <p class="body-text">
+    Bubble 容器（<code>type: "bubble"</code>）最多可包含六個具名區塊，
+    每個區塊的角色都有明確語意定義，且全部為選填——
+    你可以只使用其中幾個，完全依設計需求決定。
+  </p>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">header</div>
+      <div class="def-desc">
+        卡片頂部，通常放置標題列或分類標籤。接受 <code>box</code> 元件。
+        預設有白色背景，可透過 <code>styles.header.backgroundColor</code> 覆寫。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">hero</div>
+      <div class="def-desc">
+        主視覺區，通常放置橫幅圖片或影片。直接接受 <code>image</code>、<code>video</code> 或 <code>box</code> 元件。
+        是最常用來放置大尺寸產品圖的區塊。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">body</div>
+      <div class="def-desc">
+        主要內容區，通常是最大、最複雜的區塊。接受 <code>box</code> 元件，
+        內部可以無限嵌套 box 來實現多欄、表格等複雜排版。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">footer</div>
+      <div class="def-desc">
+        底部區域，通常放置 CTA 按鈕群組。接受 <code>box</code> 元件。
+        預設有淡灰背景與頂部分隔線，視覺上自然區隔行動按鈕與內容。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">styles</div>
+      <div class="def-desc">
+        整個 Bubble 的外觀設定，可為每個區塊指定背景色（<code>backgroundColor</code>）
+        與是否顯示分隔線（<code>separator</code>、<code>separatorColor</code>）。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">size</div>
+      <div class="def-desc">
+        Bubble 的整體寬度，可選值為 <code>nano</code>、<code>micro</code>、<code>kilo</code>、
+        <code>mega</code>（預設）、<code>giga</code>，對應不同的像素寬度。
+        在 Carousel 中所有 Bubble 的 size 必須一致。
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Flex Message 與 Template Message 的核心差異</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>面向</th><th>Template Message</th><th>Flex Message</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>排版自由度</td>
+        <td>固定版型（buttons / confirm / carousel）</td>
+        <td>任意 Flexbox 佈局，可多欄、任意嵌套</td>
+      </tr>
+      <tr>
+        <td>學習曲線</td>
+        <td>低，直接設定幾個必填欄位</td>
+        <td>中高，需理解容器層次與 Flexbox 屬性</td>
+      </tr>
+      <tr>
+        <td>客製化程度</td>
+        <td>顏色、圖片有限，按鈕數固定</td>
+        <td>完整控制顏色、間距、字型大小、對齊</td>
+      </tr>
+      <tr>
+        <td>按鈕動作</td>
+        <td>整欄共用 action</td>
+        <td>每個元件可獨立設定 action</td>
+      </tr>
+      <tr>
+        <td>Simulator 工具</td>
+        <td>無官方視覺編輯器</td>
+        <td>官方 Flex Message Simulator 即時預覽</td>
+      </tr>
+      <tr>
+        <td>適用時機</td>
+        <td>快速原型、簡單選單</td>
+        <td>品牌卡片、訂單詳情、多欄比較表</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+
+<!-- ── LESSON 4-2 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l4-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 4–2</span>
+    <h2 class="lesson-title">核心元件詳解：Box、Text、Image、Button</h2>
+  </div>
+
+  <p class="body-text">
+    Flex Message 的所有視覺內容都由元件（Component）構成。
+    元件分為兩類：<strong>容器元件</strong>（只有 <code>box</code>，可包含子元件）
+    與<strong>葉元件</strong>（<code>text</code>、<code>image</code>、<code>button</code>、
+    <code>icon</code>、<code>separator</code>、<code>spacer</code>、<code>video</code>）。
+    理解每個元件的關鍵屬性，是設計任意複雜排版的基礎。
+  </p>
+
+  <div class="sub-heading">Box 元件：Flex 排版的核心</div>
+  <p class="body-text">
+    <code>box</code> 是整個 Flex Message 排版系統的骨架，等同於 HTML 的 <code>div</code>。
+    它本身不顯示任何內容，只負責定義子元件的排列方向與對齊方式。
+    幾乎所有複雜佈局都是透過嵌套 box 來實現的。
+  </p>
+
+  <table class="prop-table">
+    <thead>
+      <tr><th>屬性</th><th>型別 / 值</th><th>說明</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>layout</code></td>
+        <td><code>horizontal</code> | <code>vertical</code> | <code>baseline</code></td>
+        <td>子元件的排列方向。<code>baseline</code> 用於文字基線對齊（通常搭配 icon）</td>
+        <td><span class="prop-req">必填</span></td>
+      </tr>
+      <tr>
+        <td><code>contents</code></td>
+        <td>元件陣列</td>
+        <td>子元件清單，可包含 box、text、image、button 等</td>
+        <td><span class="prop-req">必填</span></td>
+      </tr>
+      <tr>
+        <td><code>spacing</code></td>
+        <td><code>none</code> | <code>xs</code> | <code>sm</code> | <code>md</code> | <code>lg</code> | <code>xl</code> | <code>xxl</code></td>
+        <td>子元件之間的間距，LINE 的預設間距系統，md 約為 8px</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>margin</code></td>
+        <td>同 spacing 值</td>
+        <td>此 box 相對於上一個元件的外距</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>paddingAll</code></td>
+        <td>同 spacing 值 或 <code>px</code> 值</td>
+        <td>box 的內距，可單邊設定（<code>paddingTop</code> 等）</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>backgroundColor</code></td>
+        <td>十六進位色碼 <code>#RRGGBB</code> 或含透明度 <code>#RRGGBBAA</code></td>
+        <td>box 的背景色，支援 8 位元 hex 透明度</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>cornerRadius</code></td>
+        <td><code>xs</code>–<code>xxl</code> 或 <code>px</code> 值</td>
+        <td>圓角半徑，常用於標籤、卡片角落</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>flex</code></td>
+        <td>整數</td>
+        <td>此元件在父容器中占據的比例權重，等同 CSS <code>flex-grow</code></td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>action</code></td>
+        <td>action 物件</td>
+        <td>點擊整個 box 區域觸發的動作，讓整塊區域可點擊</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">Text 元件</div>
+  <p class="body-text">
+    <code>text</code> 元件是顯示文字的基本單位，支援細緻的字型、顏色、對齊控制。
+    特別要注意的是 <code>wrap</code> 屬性——預設值為 <code>false</code>，
+    超出寬度的文字會被截斷顯示為省略號。
+    絕大多數情況下都應將 <code>wrap: true</code> 打開，
+    除非你明確需要單行截斷效果（如標題列的緊湊展示）。
+  </p>
+
+  <table class="prop-table">
+    <thead>
+      <tr><th>屬性</th><th>值</th><th>說明</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>text</code></td>
+        <td>字串</td>
+        <td>顯示的文字內容，支援 <code>\n</code> 換行</td>
+        <td><span class="prop-req">必填</span></td>
+      </tr>
+      <tr>
+        <td><code>size</code></td>
+        <td><code>xxs</code>–<code>5xl</code> 或 <code>px</code> 值</td>
+        <td>字型大小，sm 約 13px，md 約 14px，lg 約 17px，xl 約 20px</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>weight</code></td>
+        <td><code>regular</code> | <code>bold</code></td>
+        <td>字重</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>color</code></td>
+        <td>十六進位色碼</td>
+        <td>文字顏色，預設繼承主題色</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>align</code></td>
+        <td><code>start</code> | <code>center</code> | <code>end</code></td>
+        <td>水平對齊</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>wrap</code></td>
+        <td><code>true</code> | <code>false</code>（預設 false）</td>
+        <td>是否允許文字換行。<strong>強烈建議顯式設為 true</strong></td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>maxLines</code></td>
+        <td>整數</td>
+        <td>最大顯示行數，超出截斷。需先開啟 wrap</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>decoration</code></td>
+        <td><code>none</code> | <code>underline</code> | <code>line-through</code></td>
+        <td>文字裝飾，常用於刪除線顯示原價</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>contents</code></td>
+        <td>span 陣列</td>
+        <td>取代 text 欄位，允許在同一行內混合不同樣式的文字片段</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">Image 元件</div>
+
+  <table class="prop-table">
+    <thead>
+      <tr><th>屬性</th><th>值</th><th>說明</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>url</code></td>
+        <td>HTTPS URL</td>
+        <td>圖片網址，必須為公開 HTTPS，最大 1MB，支援 JPEG / PNG / GIF（靜態）</td>
+        <td><span class="prop-req">必填</span></td>
+      </tr>
+      <tr>
+        <td><code>size</code></td>
+        <td><code>xxs</code>–<code>full</code> 或 <code>px</code> 值</td>
+        <td>圖片寬度；<code>full</code> 佔滿父容器寬度</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>aspectRatio</code></td>
+        <td><code>20:13</code>、<code>1:1</code>、<code>4:3</code> 等</td>
+        <td>圖片顯示比例，格式為 <code>寬:高</code></td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>aspectMode</code></td>
+        <td><code>cover</code>（預設）| <code>fit</code></td>
+        <td>超出比例時裁切（cover）或留白（fit）</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>action</code></td>
+        <td>action 物件</td>
+        <td>點擊圖片時觸發的動作</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sub-heading">Button 元件</div>
+  <p class="body-text">
+    Flex Message 的 <code>button</code> 元件比 Template Message 的按鈕靈活得多：
+    它可以出現在 Bubble 的任何位置（不只是 footer），
+    可以透過 <code>color</code> 設定完全自訂顏色，
+    並且透過 <code>style</code> 選擇外框線式（<code>link</code>）、填色式（<code>primary</code>）
+    或次要樣式（<code>secondary</code>）。
+  </p>
+
+  <table class="prop-table">
+    <thead>
+      <tr><th>屬性</th><th>值</th><th>說明</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>action</code></td>
+        <td>action 物件</td>
+        <td>按鈕點擊動作，支援 postback、uri、message</td>
+        <td><span class="prop-req">必填</span></td>
+      </tr>
+      <tr>
+        <td><code>style</code></td>
+        <td><code>primary</code> | <code>secondary</code> | <code>link</code></td>
+        <td>primary：填色主要按鈕；secondary：淺灰背景；link：無背景純文字</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>color</code></td>
+        <td>十六進位色碼</td>
+        <td>按鈕顏色（primary/secondary 為背景色，link 為文字色）</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>height</code></td>
+        <td><code>sm</code> | <code>md</code></td>
+        <td>按鈕高度，sm 較緊湊，md 為預設</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+      <tr>
+        <td><code>gravity</code></td>
+        <td><code>top</code> | <code>center</code> | <code>bottom</code></td>
+        <td>在父容器中的垂直對齊，配合 flex 延伸使用</td>
+        <td><span class="prop-opt">選填</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="callout-label">設計原則</span>
+    Flex Message 的間距與大小系統採用相對值（<code>xs</code>、<code>sm</code>、<code>md</code>...）
+    而非固定像素，這讓同一份 JSON 在不同螢幕尺寸上都能合理縮放。
+    只在絕對必要時才使用 <code>px</code> 固定值，
+    例如強制某個圖示寬度不隨內容變化。
+    多數情況下，<code>md</code>（約 8px）作為間距基準、
+    <code>sm</code>（約 4px）作為緊密間距，就足以應對大多數設計需求。
+  </div>
+
+</article>
+
+<!-- ── LESSON 4-3 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l4-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 4–3</span>
+    <h2 class="lesson-title">實作：訂單確認 Bubble</h2>
+  </div>
+
+  <p class="body-text">
+    理論學完最好的驗證方法是動手做一個真實的設計。
+    本節以「訂單確認卡片」為範例，這是電商 Bot 最典型的 Flex Message 應用場景：
+    顯示訂單編號、商品清單、金額小計，以及確認與追蹤按鈕。
+    我們將逐步構建完整的 JSON 結構，並解釋每個設計決策背後的理由。
+  </p>
+
+  <div class="sub-heading">目標卡片結構規劃</div>
+  <p class="body-text">
+    在寫 JSON 之前先規劃結構，能大幅減少試誤時間。
+    訂單卡片的佈局從上到下分為四個區域：
+    標題列（header）顯示訂單狀態標籤；
+    主體（body）包含訂單資訊表格與商品列表；
+    底部（footer）包含兩個 CTA 按鈕。
+    主體內的資訊表格用 horizontal box 實現左右對齊，每行是一個 horizontal box 包含兩個 text。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">order-bubble.js — 訂單確認卡片完整實作</div>
+    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>/**</span>
+<span class="c-cmt"><span class="ln">2</span> * 產生訂單確認 Flex Message Bubble</span>
+<span class="c-cmt"><span class="ln">3</span> * @param {Object} order  訂單資料物件</span>
+<span class="c-cmt"><span class="ln">4</span> * @returns {Object}      Flex Message 物件</span>
+<span class="c-cmt"><span class="ln">5</span> */</span>
+<span class="c-kw"><span class="ln">6</span>function</span> <span class="c-fn">buildOrderBubble</span><span class="c-pun">(</span><span class="c-def">order</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">7</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">8</span>    type<span class="c-pun">:</span>    <span class="c-str">'flex'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">9</span>    altText<span class="c-pun">:</span> <span class="c-str">`訂單 ${order.id} 確認通知`</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>    contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">11</span>      type<span class="c-pun">:</span> <span class="c-str">'bubble'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">12</span>      size<span class="c-pun">:</span> <span class="c-str">'mega'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">13</span></span>
+<span class="c-cmt"><span class="ln">14</span>      // ── HEADER：訂單狀態標籤 ──────────────────────────────</span>
+<span class="c-def"><span class="ln">15</span>      header<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">16</span>        type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">17</span>        layout<span class="c-pun">:</span>         <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">18</span>        backgroundColor<span class="c-pun">:</span> <span class="c-str">'#1A1612'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">19</span>        paddingAll<span class="c-pun">:</span>      <span class="c-str">'md'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">20</span>        contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">21</span>          {</span>
+<span class="c-def"><span class="ln">22</span>            type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">23</span>            text<span class="c-pun">:</span>   <span class="c-str">'訂單確認'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">24</span>            color<span class="c-pun">:</span>  <span class="c-str">'#F5F0E8'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">25</span>            size<span class="c-pun">:</span>   <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">26</span>            weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
+<span class="c-def"><span class="ln">27</span>          <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">28</span>          {</span>
+<span class="c-cmt"><span class="ln">29</span>            // 狀態標籤：動態根據 order.status 改變顏色</span>
+<span class="c-def"><span class="ln">30</span>            type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">31</span>            layout<span class="c-pun">:</span>         <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">32</span>            backgroundColor<span class="c-pun">:</span> <span class="c-fn">statusColor</span><span class="c-pun">(</span><span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">status</span><span class="c-pun">),</span></span>
+<span class="c-def"><span class="ln">33</span>            cornerRadius<span class="c-pun">:</span>    <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">34</span>            paddingAll<span class="c-pun">:</span>      <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">35</span>            contents<span class="c-pun">: [{</span></span>
+<span class="c-def"><span class="ln">36</span>              type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">37</span>              text<span class="c-pun">:</span>   <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">statusLabel</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">38</span>              color<span class="c-pun">:</span>  <span class="c-str">'#FFFFFF'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">39</span>              size<span class="c-pun">:</span>   <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">40</span>              weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
+<span class="c-def"><span class="ln">41</span>            <span class="c-pun">}]</span></span>
+<span class="c-def"><span class="ln">42</span>          <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">43</span>        <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">44</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">45</span></span>
+<span class="c-cmt"><span class="ln">46</span>      // ── BODY：訂單明細 ────────────────────────────────────</span>
+<span class="c-def"><span class="ln">47</span>      body<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">48</span>        type<span class="c-pun">:</span>      <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">49</span>        layout<span class="c-pun">:</span>   <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">50</span>        spacing<span class="c-pun">:</span>  <span class="c-str">'md'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">51</span>        paddingAll<span class="c-pun">:</span> <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">52</span>        contents<span class="c-pun">: [</span></span>
+<span class="c-cmt"><span class="ln">53</span>          // 訂單資訊列（用 infoRow 工廠函式產生）</span>
+<span class="c-fn"><span class="ln">54</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'訂單編號'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">id</span><span class="c-pun">),</span></span>
+<span class="c-fn"><span class="ln">55</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'下單時間'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">createdAt</span><span class="c-pun">),</span></span>
+<span class="c-fn"><span class="ln">56</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'付款方式'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">paymentMethod</span><span class="c-pun">),</span></span>
+<span class="c-def"><span class="ln">57</span></span>
+<span class="c-cmt"><span class="ln">58</span>          // 分隔線</span>
+<span class="c-def"><span class="ln">59</span>          { type<span class="c-pun">:</span> <span class="c-str">'separator'</span><span class="c-pun">,</span> margin<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">60</span></span>
+<span class="c-cmt"><span class="ln">61</span>          // 商品列表（動態展開）</span>
+<span class="c-def"><span class="ln">62</span>          <span class="c-pun">...</span><span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">items</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">item</span> <span class="c-pun">=&gt;</span> <span class="c-fn">itemRow</span><span class="c-pun">(</span><span class="c-def">item</span><span class="c-pun">)),</span></span>
+<span class="c-def"><span class="ln">63</span></span>
+<span class="c-cmt"><span class="ln">64</span>          // 第二條分隔線</span>
+<span class="c-def"><span class="ln">65</span>          { type<span class="c-pun">:</span> <span class="c-str">'separator'</span><span class="c-pun">,</span> margin<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">66</span></span>
+<span class="c-cmt"><span class="ln">67</span>          // 合計金額（加粗強調）</span>
+<span class="c-def"><span class="ln">68</span>          <span class="c-pun">{</span></span>
+<span class="c-def"><span class="ln">69</span>            type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">70</span>            layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">71</span>            margin<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">72</span>            contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">73</span>              { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'合計'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">74</span>              {</span>
+<span class="c-def"><span class="ln">75</span>                type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">76</span>                text<span class="c-pun">:</span>   <span class="c-str">`NT$ ${order.total.toLocaleString()}`</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">77</span>                weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">78</span>                size<span class="c-pun">:</span>   <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">79</span>                align<span class="c-pun">:</span>  <span class="c-str">'end'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">80</span>                color<span class="c-pun">:</span>  <span class="c-str">'#B83025'</span></span>
+<span class="c-def"><span class="ln">81</span>              <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">82</span>            <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">83</span>          <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">84</span>        <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">85</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">86</span></span>
+<span class="c-cmt"><span class="ln">87</span>      // ── FOOTER：CTA 按鈕 ──────────────────────────────────</span>
+<span class="c-def"><span class="ln">88</span>      footer<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">89</span>        type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">90</span>        layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">91</span>        spacing<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">92</span>        contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">93</span>          {</span>
+<span class="c-def"><span class="ln">94</span>            type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">95</span>            style<span class="c-pun">:</span>  <span class="c-str">'primary'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">96</span>            color<span class="c-pun">:</span>  <span class="c-str">'#1A1612'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">97</span>            height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">98</span>            action<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">99</span>              type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">100</span>              label<span class="c-pun">:</span> <span class="c-str">'追蹤物流'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">101</span>              data<span class="c-pun">:</span>  <span class="c-str">`action=track&orderId=${order.id}`</span></span>
+<span class="c-def"><span class="ln">102</span>            <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">103</span>          <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">104</span>          {</span>
+<span class="c-def"><span class="ln">105</span>            type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">106</span>            style<span class="c-pun">:</span>  <span class="c-str">'link'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">107</span>            height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">108</span>            action<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">109</span>              type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">110</span>              label<span class="c-pun">:</span> <span class="c-str">'申請退換'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">111</span>              data<span class="c-pun">:</span>  <span class="c-str">`action=return&orderId=${order.id}`</span></span>
+<span class="c-def"><span class="ln">112</span>            <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">113</span>          <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">114</span>        <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">115</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">116</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">117</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">118</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">119</span></span>
+<span class="c-cmt"><span class="ln">120</span>// ── 輔助工廠函式 ────────────────────────────────────────────</span>
+<span class="c-def"><span class="ln">121</span></span>
+<span class="c-cmt"><span class="ln">122</span>// 資訊列：左側標籤 + 右側數值</span>
+<span class="c-kw"><span class="ln">123</span>function</span> <span class="c-fn">infoRow</span><span class="c-pun">(</span><span class="c-def">label</span><span class="c-pun">,</span> <span class="c-def">value</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">124</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">125</span>    type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">126</span>    layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">127</span>    contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">128</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">label</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">2</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">129</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">value</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">3</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">130</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">131</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">132</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">133</span></span>
+<span class="c-cmt"><span class="ln">134</span>// 商品列：名稱 + 數量 + 小計</span>
+<span class="c-kw"><span class="ln">135</span>function</span> <span class="c-fn">itemRow</span><span class="c-pun">(</span><span class="c-def">item</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">136</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">137</span>    type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">138</span>    layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">139</span>    margin<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">140</span>    contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">141</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">item</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>  size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">4</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">142</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`x${item.qty}`</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">1</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'center'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">143</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`$${item.price}`</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">2</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">144</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">145</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">146</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">147</span></span>
+<span class="c-cmt"><span class="ln">148</span>// 訂單狀態對應顏色</span>
+<span class="c-kw"><span class="ln">149</span>function</span> <span class="c-fn">statusColor</span><span class="c-pun">(</span><span class="c-def">status</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">150</span>  const</span> <span class="c-def">map</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">151</span>    pending<span class="c-pun">:</span>   <span class="c-str">'#C49A5A'</span><span class="c-pun">,</span>  <span class="c-cmt">// 待處理 → 橙黃</span></span>
+<span class="c-def"><span class="ln">152</span>    confirmed<span class="c-pun">:</span> <span class="c-str">'#5A8A5A'</span><span class="c-pun">,</span>  <span class="c-cmt">// 已確認 → 綠</span></span>
+<span class="c-def"><span class="ln">153</span>    shipped<span class="c-pun">:</span>   <span class="c-str">'#4A7AAF'</span><span class="c-pun">,</span>  <span class="c-cmt">// 已出貨 → 藍</span></span>
+<span class="c-def"><span class="ln">154</span>    cancelled<span class="c-pun">:</span> <span class="c-str">'#B83025'</span>   <span class="c-cmt">// 已取消 → 紅</span></span>
+<span class="c-def"><span class="ln">155</span>  <span class="c-pun">}</span></span>
+<span class="c-kw"><span class="ln">156</span>  return</span> <span class="c-def">map</span><span class="c-pun">[</span><span class="c-def">status</span><span class="c-pun">]</span> <span class="c-pun">||</span> <span class="c-str">'#8C7E74'</span>
+<span class="c-def"><span class="ln">157</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">158</span></span>
+<span class="c-def"><span class="ln">159</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> buildOrderBubble <span class="c-pun">}</span></span></div>
+  </div>
+
+  <p class="body-text">
+    這段程式碼的關鍵設計是將重複出現的結構（<code>infoRow</code>、<code>itemRow</code>）
+    抽取為輔助函式，讓主函式的結構一眼可見，不被細節淹沒。
+    <code>statusColor</code> 函式將業務邏輯（訂單狀態的視覺意義）
+    集中在一個位置，而非散落在 JSON 各處。
+    第 62 行的展開語法（<code>...order.items.map()</code>）
+    讓商品列表動態注入到 body 的 <code>contents</code> 陣列中，
+    無論訂單有幾件商品都能正確渲染。
+  </p>
+
+</article>
+
+<!-- ── LESSON 4-4 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l4-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 4–4</span>
+    <h2 class="lesson-title">Carousel 容器與多 Bubble 組合</h2>
+  </div>
+
+  <p class="body-text">
+    當你需要在單一訊息中呈現多個同質性卡片時，Flex Message 的 <code>carousel</code>
+    容器讓你將多個 Bubble 橫向排列。這與第三章的 Template Carousel 概念相同，
+    但 Flex Carousel 的每個 Bubble 具有完整的佈局自由度，
+    可以是訂單卡片、商品卡片、或任何自訂設計。
+  </p>
+
+  <p class="body-text">
+    Flex Carousel 的結構非常直觀：<code>type: "carousel"</code> 容器只有一個必填欄位
+    <code>contents</code>，接受一個 Bubble 物件的陣列，最多 12 個 Bubble。
+    注意這裡的限制是 12，比 Template Carousel 的 10 更多。
+    與 Template Carousel 不同的是，Flex Carousel 允許每個 Bubble 有不同的高度，
+    但 LINE 會以最高的 Bubble 為基準統一高度，較矮的 Bubble 底部會留白。
+    為了視覺一致性，建議在設計階段就讓每個 Bubble 的結構相同。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">buildProductCarousel — 從商品陣列產生 Flex Carousel</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>function</span> <span class="c-fn">buildProductBubble</span><span class="c-pun">(</span><span class="c-def">product</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">2</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">3</span>    type<span class="c-pun">:</span> <span class="c-str">'bubble'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">4</span>    size<span class="c-pun">:</span> <span class="c-str">'kilo'</span><span class="c-pun">,</span>  <span class="c-cmt">// Carousel 中使用較小 size 可橫排更多卡片</span></span>
+<span class="c-def"><span class="ln">5</span>    hero<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">6</span>      type<span class="c-pun">:</span>        <span class="c-str">'image'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">7</span>      url<span class="c-pun">:</span>         <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">imageUrl</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">8</span>      size<span class="c-pun">:</span>        <span class="c-str">'full'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">9</span>      aspectRatio<span class="c-pun">:</span> <span class="c-str">'4:3'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>      aspectMode<span class="c-pun">:</span>  <span class="c-str">'cover'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">11</span>      action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'uri'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'查看'</span><span class="c-pun">,</span> uri<span class="c-pun">:</span> <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">url</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">12</span>    <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">13</span>    body<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">14</span>      type<span class="c-pun">:</span>       <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>      layout<span class="c-pun">:</span>    <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">16</span>      spacing<span class="c-pun">:</span>   <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">17</span>      paddingAll<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">18</span>      contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">19</span>        { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>  weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span><span class="c-pun">,</span> maxLines<span class="c-pun">:</span> <span class="c-num">2</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">20</span>        {</span>
+<span class="c-def"><span class="ln">21</span>          type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">22</span>          layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">23</span>          contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">24</span>            {</span>
+<span class="c-cmt"><span class="ln">25</span>              // 原價加刪除線</span>
+<span class="c-def"><span class="ln">26</span>              type<span class="c-pun">:</span>       <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">27</span>              text<span class="c-pun">:</span>       <span class="c-str">`NT$ ${product.originalPrice}`</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">28</span>              color<span class="c-pun">:</span>      <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">29</span>              size<span class="c-pun">:</span>       <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">30</span>              decoration<span class="c-pun">:</span> <span class="c-str">'line-through'</span>  <span class="c-cmt">// 刪除線顯示原價</span></span>
+<span class="c-def"><span class="ln">31</span>            <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">32</span>            { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`NT$ ${product.salePrice}`</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">33</span>          <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">34</span>        <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">35</span>      <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">36</span>    <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">37</span>    footer<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">38</span>      type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span> layout<span class="c-pun">:</span> <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">39</span>      contents<span class="c-pun">: [{</span></span>
+<span class="c-def"><span class="ln">40</span>        type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span> style<span class="c-pun">:</span> <span class="c-str">'primary'</span><span class="c-pun">,</span> height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">41</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'加入購物車'</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-str">`action=addCart&id=${product.id}`</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">42</span>      <span class="c-pun">}]</span></span>
+<span class="c-def"><span class="ln">43</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">44</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">45</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">46</span></span>
+<span class="c-cmt"><span class="ln">47</span>// 組合成 Carousel Flex Message</span>
+<span class="c-kw"><span class="ln">48</span>function</span> <span class="c-fn">buildProductCarousel</span><span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">49</span>  if</span> <span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">.</span><span class="c-def">length</span> <span class="c-pun">===</span> <span class="c-num">0</span><span class="c-pun">)</span> <span class="c-kw">throw new</span> <span class="c-cls">Error</span><span class="c-pun">(</span><span class="c-str">'商品陣列不可為空'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">50</span>  if</span> <span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">.</span><span class="c-def">length</span> <span class="c-pun">&gt;</span> <span class="c-num">12</span><span class="c-pun">)</span> <span class="c-def">products</span> <span class="c-pun">=</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-num">0</span><span class="c-pun">,</span> <span class="c-num">12</span><span class="c-pun">)</span>  <span class="c-cmt">// 上限 12</span>
+<span class="c-def"><span class="ln">51</span></span>
+<span class="c-kw"><span class="ln">52</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">53</span>    type<span class="c-pun">:</span>    <span class="c-str">'flex'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">54</span>    altText<span class="c-pun">:</span> <span class="c-str">`${products.length} 件商品推薦`</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">55</span>    contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">56</span>      type<span class="c-pun">:</span>     <span class="c-str">'carousel'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">57</span>      contents<span class="c-pun">:</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">p</span> <span class="c-pun">=&gt;</span> <span class="c-fn">buildProductBubble</span><span class="c-pun">(</span><span class="c-def">p</span><span class="c-pun">))</span></span>
+<span class="c-def"><span class="ln">58</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">59</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">60</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">61</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> buildProductCarousel<span class="c-pun">,</span> buildOrderBubble <span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-label">常見錯誤</span>
+    Flex Carousel 的 <code>contents</code> 陣列中的每個元素必須是 Bubble 物件
+    （<code>type: "bubble"</code>），不能直接放 Flex Message 物件（<code>type: "flex"</code>）。
+    初學者常犯的錯誤是把整個 <code>buildOrderBubble()</code> 的回傳值（含最外層的 flex 包裝）
+    放進 carousel 的 contents，這會導致 400 錯誤。
+    放進 carousel 的應該是 <code>order.contents</code>（即 Bubble 物件本身），而非 Flex Message 物件。
+  </div>
+
+</article>
+
+<!-- ── LESSON 4-5 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l4-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 4–5</span>
+    <h2 class="lesson-title">Flex Message Simulator 與進階技巧</h2>
+  </div>
+
+  <p class="body-text">
+    LINE 提供官方的 <strong>Flex Message Simulator</strong>
+    （位於 developers.line.biz/flex-simulator），讓你在瀏覽器中直接貼上 JSON，
+    即時看到渲染結果。這個工具是迭代設計 Flex Message 不可或缺的輔助，
+    因為 Flex Message 的 JSON 結構深且複雜，在手機實機測試之前用 Simulator
+    快速確認佈局，能節省大量的部署與掃碼時間。
+  </p>
+
+  <div class="sub-heading">開發工作流程建議</div>
+  <p class="body-text">
+    最有效率的 Flex Message 開發流程是：在 Simulator 中設計靜態版本
+    （使用寫死的測試資料）確認視覺效果，
+    再回到程式碼中改寫為接受動態資料的工廠函式。
+    不要試圖一邊設計一邊寫動態邏輯——這兩個任務同時進行時，
+    難以判斷排版問題是 JSON 結構錯誤還是資料格式問題。
+  </p>
+
+  <div class="sub-heading">span 元件：行內混合樣式</div>
+  <p class="body-text">
+    當你需要在同一行中讓不同片段的文字有不同樣式（顏色、大小、粗細），
+    可以用 <code>text</code> 元件的 <code>contents</code> 欄位放置 <code>span</code> 物件陣列，
+    取代頂層的 <code>text</code> 字串欄位。
+    <code>span</code> 是純文字片段，不能包含子元件，
+    每個 span 可獨立設定 <code>size</code>、<code>weight</code>、<code>color</code>、<code>decoration</code>。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">span 行內混合樣式 — 顯示「剩餘 3 件」警示</div>
+    <div class="code-block"><span class="c-pun"><span class="ln">1</span>{</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  contents<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">4</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'庫存：'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">5</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'僅剩 3 件'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">6</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'，請盡速下單'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">7</span>  <span class="c-pun">]</span></span>
+<span class="c-pun"><span class="ln">8</span>}</span></div>
+  </div>
+
+  <div class="sub-heading">box 的 position 屬性與絕對定位</div>
+  <p class="body-text">
+    Flex Message 支援類似 CSS <code>position: absolute</code> 的定位方式。
+    將 box 的 <code>position</code> 設為 <code>absolute</code>，
+    再搭配 <code>offsetTop</code>、<code>offsetStart</code>、<code>offsetEnd</code>、<code>offsetBottom</code>
+    可以讓元素浮出正常排版流之外，疊加在其他元素之上。
+    這個技巧常用於在圖片上疊加標籤（如「熱銷」、「限時」、折扣百分比），
+    但使用時需要確保父容器有 <code>position: relative</code>（即不設定 position，預設為 relative）。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">在圖片上疊加「熱銷」標籤</div>
+    <div class="code-block"><span class="c-pun"><span class="ln">1</span>{</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>   <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  layout<span class="c-pun">:</span> <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: [</span></span>
+<span class="c-cmt"><span class="ln">5</span>    // 底層圖片（正常排版流）</span>
+<span class="c-def"><span class="ln">6</span>    { type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span> url<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/product.jpg'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'full'</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">7</span></span>
+<span class="c-cmt"><span class="ln">8</span>    // 絕對定位的標籤，疊加在圖片左上角</span>
+<span class="c-def"><span class="ln">9</span>    {</span>
+<span class="c-def"><span class="ln">10</span>      type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">11</span>      layout<span class="c-pun">:</span>         <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">12</span>      position<span class="c-pun">:</span>       <span class="c-str">'absolute'</span><span class="c-pun">,</span>  <span class="c-cmt">// 脫離正常排版流</span></span>
+<span class="c-def"><span class="ln">13</span>      offsetTop<span class="c-pun">:</span>      <span class="c-str">'10px'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">14</span>      offsetStart<span class="c-pun">:</span>    <span class="c-str">'10px'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>      backgroundColor<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">16</span>      cornerRadius<span class="c-pun">:</span>   <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">17</span>      paddingAll<span class="c-pun">:</span>     <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">18</span>      contents<span class="c-pun">: [{</span></span>
+<span class="c-def"><span class="ln">19</span>        type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">20</span>        text<span class="c-pun">:</span>   <span class="c-str">'熱銷'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">21</span>        color<span class="c-pun">:</span>  <span class="c-str">'#FFFFFF'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">22</span>        size<span class="c-pun">:</span>   <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">23</span>        weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
+<span class="c-def"><span class="ln">24</span>      <span class="c-pun">}]</span></span>
+<span class="c-def"><span class="ln">25</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">26</span>  <span class="c-pun">]</span></span>
+<span class="c-pun"><span class="ln">27</span>}</span></div>
+  </div>
+
+  <div class="sub-heading">常見排版問題診斷</div>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>症狀</th><th>可能原因</th><th>解決方式</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>文字被截斷顯示省略號</td>
+        <td>text 元件的 <code>wrap</code> 預設為 false</td>
+        <td>加上 <code>wrap: true</code>；若需單行限制則搭配 <code>maxLines</code></td>
+      </tr>
+      <tr>
+        <td>兩欄寬度比例不對</td>
+        <td>未設定 <code>flex</code> 權重，預設平均分配</td>
+        <td>為每個子元件設定 <code>flex</code> 整數值，比例由各值之和決定</td>
+      </tr>
+      <tr>
+        <td>圖片出現留白或被裁切</td>
+        <td><code>aspectRatio</code> 與實際圖片比例不符</td>
+        <td>確認 <code>aspectRatio</code>，或改用 <code>aspectMode: "fit"</code> 保留完整圖片</td>
+      </tr>
+      <tr>
+        <td>API 回傳 400，無明確錯誤訊息</td>
+        <td>必填欄位缺失、型別錯誤、字串值拼錯</td>
+        <td>先在 Simulator 貼上 JSON 驗證結構；確認 <code>layout</code>、<code>type</code> 拼字正確</td>
+      </tr>
+      <tr>
+        <td>Carousel 各卡片高度不一致</td>
+        <td>各 Bubble 內容量不同，LINE 以最高者為基準</td>
+        <td>讓每個 Bubble 的 body 使用相同結構，用 <code>spacer</code> 或固定高度 box 補齊</td>
+      </tr>
+      <tr>
+        <td>絕對定位元素不顯示</td>
+        <td>父容器的寬高未被撐開，絕對定位元素無參考</td>
+        <td>確保父容器有足夠的寬度；嘗試在父容器加上 <code>height</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <span class="callout-label">生產環境建議</span>
+    Flex Message 的 JSON 結構在資料量大時可能超過 LINE API 的單則訊息大小限制（50KB）。
+    若你的卡片包含大量商品（如 12 個 Bubble，每個含多個文字和圖片元件），
+    要定期用 <code>JSON.stringify(msg).length</code> 檢查訊息大小。
+    超出限制時 LINE 回傳 400 而非描述性錯誤。
+    解決方式是減少 Carousel 的 Bubble 數量，或將部分文字說明移到獨立的文字訊息。
+  </div>
+
+  <div class="note-inline">
+    本章完整的 Flex Message 範例，包含會員卡、物流追蹤進度條等進階設計，
+    可在課程 GitHub Repository 的 <code>ch04/examples/</code> 目錄中找到，
+    均可直接貼入 Flex Message Simulator 預覽。
+  </div>
+
+</article>
+
+</main>
+
+<!-- ─── SIDEBAR ───────────────────────────────────────────────── -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l4-1" class="toc-link">4–1 三層容器架構模型</a></li>
+      <li class="toc-item"><a href="#l4-2" class="toc-link">4–2 Box / Text / Image / Button</a></li>
+      <li class="toc-item"><a href="#l4-3" class="toc-link">4–3 訂單確認 Bubble 實作</a></li>
+      <li class="toc-item"><a href="#l4-4" class="toc-link">4–4 Carousel 與多 Bubble 組合</a></li>
+      <li class="toc-item"><a href="#l4-5" class="toc-link">4–5 Simulator 與進階技巧</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">關鍵術語</div>
+    <div class="term-list">
+      <div class="term-row">
+        <div class="term-name">Bubble</div>
+        <div class="term-def">單一卡片容器，最多含 header / hero / body / footer 四個區塊。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">Carousel</div>
+        <div class="term-def">橫向可滑動的多 Bubble 容器，最多 12 個 Bubble。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">box layout</div>
+        <div class="term-def">horizontal / vertical / baseline 決定子元件排列方向。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">flex 屬性</div>
+        <div class="term-def">元件在父容器中的比例權重，等同 CSS flex-grow。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">span</div>
+        <div class="term-def">text 元件內的行內片段，允許混合樣式。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">position: absolute</div>
+        <div class="term-def">脫離正常排版流，疊加在其他元素上方。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">altText</div>
+        <div class="term-def">Flex Message 必填，不支援環境的替代文字。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item">
+        <strong>Flex Message Simulator</strong>
+        developers.line.biz/flex-simulator — 官方即時預覽工具
+      </li>
+      <li class="res-item">
+        <strong>Flex Message 元件參考</strong>
+        developers.line.biz/en/reference/messaging-api/#flex-message-components
+      </li>
+      <li class="res-item">
+        <strong>Bubble 容器規格</strong>
+        developers.line.biz/en/reference/messaging-api/#bubble
+      </li>
+      <li class="res-item">
+        <strong>Box 元件屬性</strong>
+        developers.line.biz/en/reference/messaging-api/#box-component
+      </li>
+      <li class="res-item">
+        <strong>Flex Message 範例庫</strong>
+        developers.line.biz/en/docs/messaging-api/flex-message-layout
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">章節測驗</div>
+    <div class="quiz-wrap">
+      <div class="quiz-q">下列何者是將多個 Bubble 組合成 Carousel 的正確方式？</div>
+      <div class="quiz-opt" onclick="answerQuiz(0)">A. 將多個 Flex Message 物件（type: "flex"）放入 carousel 的 contents</div>
+      <div class="quiz-opt" onclick="answerQuiz(1)">B. 將多個 Bubble 物件（type: "bubble"）放入 carousel 的 contents</div>
+      <div class="quiz-opt" onclick="answerQuiz(2)">C. 將多個 Flex Message 物件作為獨立訊息陣列傳送</div>
+      <div class="quiz-opt" onclick="answerQuiz(3)">D. Flex Message 不支援 Carousel，需改用 Template Carousel</div>
+      <div class="quiz-feedback" id="qfeed">
+        正確。Flex Carousel 的 contents 陣列直接放 Bubble 物件（<code>type: "bubble"</code>），
+        而非外層有 <code>type: "flex"</code> 包裝的 Flex Message 物件。
+        常見錯誤是將工廠函式回傳的整個 Flex Message 物件塞入，
+        應只取其 <code>contents</code> 欄位（即 Bubble 本身）。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div><!-- .content-wrap -->
+
+</div><!-- .page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter3.html" class="nav-btn">← CH.03 訊息型別與 Push API</a>
+    <div class="nav-loc">
+      <div>CH.04 — Flex Message 打造精美互動卡片</div>
+      <div style="margin-top:0.25rem;font-size:0.58rem;color:var(--ink-4)">第 4 章，共 10 章</div>
+    </div>
+    <a href="chapter5.html" class="nav-btn fwd">CH.05 Rich Menu 固定選單 →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement
+  document.getElementById('rp').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%'
+})
+
+const sections = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const a = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (a) a.classList.add('active')
+    }
+  })
+}, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' })
+sections.forEach(s => obs.observe(s))
+
+function answerQuiz(idx) {
+  const CORRECT = 1
+  document.querySelectorAll('.quiz-opt').forEach((el, i) => {
+    el.classList.remove('correct', 'wrong')
+    if (i === CORRECT) el.classList.add('correct')
+    else if (i === idx && idx !== CORRECT) el.classList.add('wrong')
+  })
+  document.getElementById('qfeed').style.display = 'block'
+}
+</script>
+</body>
+</html>

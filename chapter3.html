@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH.03 — 訊息型別與 Reply / Push API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --paper:    #F5F0E8;
+  --paper-2:  #EDE8DF;
+  --paper-3:  #E2DBD0;
+  --paper-4:  #D4CCC0;
+  --ink:      #1A1612;
+  --ink-2:    #2E2720;
+  --ink-3:    #5A4F47;
+  --ink-4:    #8C7E74;
+  --red:      #B83025;
+  --red-faint:#F0E8E6;
+  --serif:    'Noto Serif TC', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --col-w:    680px;
+  --wide-w:   960px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-4); }
+
+#rp {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--red); width: 0%; z-index: 200;
+  transition: width 0.08s linear;
+}
+
+/* ─── MASTHEAD ───────────────────────────────────────────────── */
+.masthead {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px; background: var(--paper);
+  border-bottom: 1px solid var(--paper-3);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.masthead-left { display: flex; align-items: center; gap: 1.25rem; }
+.back-link {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-link:hover { color: var(--red); border-color: var(--red); }
+.masthead-sep { color: var(--paper-4); }
+.masthead-chapter { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); letter-spacing: 0.08em; }
+.masthead-right { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-4); }
+
+/* ─── PAGE / HEADER ──────────────────────────────────────────── */
+.page { padding-top: 48px; }
+
+.ch-header {
+  max-width: var(--wide-w); margin: 0 auto;
+  padding: 5rem 2rem 0;
+  display: grid; grid-template-columns: 1fr 2px 2fr;
+  gap: 0 3rem; align-items: start;
+  animation: fadeUp 0.7s ease both;
+}
+.ch-meta-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 0.5rem;
+}
+.ch-meta-num {
+  font-size: 4.5rem; font-weight: 900; line-height: 1;
+  color: var(--ink); letter-spacing: -0.04em;
+}
+.ch-meta-of { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-4); margin-top: 0.5rem; }
+.ch-meta-stats { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ch-stat {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3);
+  letter-spacing: 0.08em; display: flex; gap: 0.5rem; align-items: center;
+}
+.ch-stat::before { content: ''; display: block; width: 12px; height: 1px; background: var(--ink-3); }
+.ch-divider { width: 2px; background: var(--ink); align-self: stretch; min-height: 180px; }
+.ch-title-block { padding-top: 0.3rem; }
+.ch-kicker {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 1.25rem;
+}
+.ch-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900; line-height: 1.15; letter-spacing: -0.025em;
+}
+.ch-title span { color: var(--red); }
+.ch-standfirst {
+  margin-top: 1.75rem; font-size: 1.05rem; font-weight: 400;
+  color: var(--ink-2); line-height: 1.9; max-width: 55ch;
+  border-left: 3px solid var(--red); padding-left: 1.25rem;
+  animation: fadeUp 0.7s ease 0.15s both;
+}
+
+.h-rule { max-width: var(--wide-w); margin: 3.5rem auto 0; padding: 0 2rem; }
+.h-rule hr { border: none; border-top: 1px solid var(--paper-3); }
+
+/* ─── OBJECTIVES ─────────────────────────────────────────────── */
+.objectives-strip {
+  max-width: var(--wide-w); margin: 0 auto; padding: 2.5rem 2rem;
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0 3rem; border-bottom: 1px solid var(--paper-3);
+  animation: fadeUp 0.7s ease 0.25s both;
+}
+.obj-label {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-4); padding-top: 0.2rem;
+}
+.obj-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 2rem; list-style: none; }
+.obj-list li {
+  font-size: 0.88rem; color: var(--ink-2); line-height: 1.7;
+  padding-left: 1.1rem; position: relative;
+}
+.obj-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em;
+  width: 5px; height: 5px; border: 1px solid var(--red); transform: rotate(45deg);
+}
+
+/* ─── CONTENT LAYOUT ─────────────────────────────────────────── */
+.content-wrap {
+  max-width: var(--wide-w); margin: 0 auto; padding: 0 2rem;
+  display: grid; grid-template-columns: var(--col-w) 1fr;
+  gap: 0 3.5rem; align-items: start;
+}
+
+/* ─── LESSONS ────────────────────────────────────────────────── */
+.lesson { padding: 4rem 0; border-bottom: 1px solid var(--paper-3); }
+.lesson:last-child { border-bottom: none; }
+.lesson-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.25rem; }
+.lesson-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); flex-shrink: 0;
+}
+.lesson-title { font-size: 1.45rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+
+.body-text { font-size: 0.96rem; color: var(--ink-2); line-height: 1.95; margin-bottom: 1.4rem; }
+.body-text:last-child { margin-bottom: 0; }
+.body-text strong { font-weight: 600; color: var(--ink); }
+.body-text code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em; color: var(--ink-2);
+}
+
+.sub-heading {
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  margin: 2.2rem 0 0.75rem; letter-spacing: -0.005em;
+}
+.sub-heading::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--red);
+  margin-right: 0.6rem; vertical-align: middle; transform: translateY(-1px);
+}
+
+/* ─── CODE ───────────────────────────────────────────────────── */
+.code-figure { margin: 2rem 0; }
+.code-caption {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+  margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
+.code-block {
+  background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
+  line-height: 1.75; padding: 1.5rem 1.75rem; overflow-x: auto;
+  border-left: 3px solid var(--red); tab-size: 2;
+}
+.ln { display: inline-block; width: 2em; color: #4A4440; user-select: none; font-size: 0.68rem; margin-right: 0.5rem; }
+.c-cmt { color: #7A6F6A; font-style: italic; }
+.c-kw  { color: #C47A6A; }
+.c-str { color: #8BAF7A; }
+.c-fn  { color: #7AABCF; }
+.c-num { color: #C49A5A; }
+.c-cls { color: #C4B570; }
+.c-pun { color: #9A9090; }
+.c-def { color: #E8E0D8; }
+.c-key { color: #CF9060; }
+
+/* ─── CALLOUTS ───────────────────────────────────────────────── */
+.callout {
+  margin: 2rem 0; padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--ink-3);
+  background: var(--paper-2); font-size: 0.88rem; color: var(--ink-2); line-height: 1.85;
+}
+.callout.warn { border-left-color: var(--red); background: var(--red-faint); }
+.callout.tip  { border-left-color: var(--ink); background: var(--paper-3); }
+.callout-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.6rem; display: block;
+}
+.callout.warn .callout-label { color: var(--red); }
+.callout.tip  .callout-label { color: var(--ink); }
+.callout code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: rgba(0,0,0,0.07); padding: 0.1em 0.4em;
+}
+
+/* ─── DEFINITION LIST ────────────────────────────────────────── */
+.def-list { margin: 1.5rem 0; }
+.def-item {
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 0; border-top: 1px solid var(--paper-3); padding: 0.85rem 0;
+}
+.def-item:last-child { border-bottom: 1px solid var(--paper-3); }
+.def-term {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); padding-right: 1rem; padding-top: 0.1rem;
+}
+.def-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.75; }
+.def-desc code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+.data-table th {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 0.65rem 1rem; text-align: left;
+}
+.data-table td {
+  padding: 0.7rem 1rem; color: var(--ink-2); border-bottom: 1px solid var(--paper-3);
+  vertical-align: top; line-height: 1.7;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--paper-2); }
+.data-table code {
+  font-family: var(--mono); font-size: 0.8em;
+  background: var(--paper-3); padding: 0.1em 0.35em;
+}
+.tag {
+  font-family: var(--mono); font-size: 0.6em; font-weight: 600;
+  letter-spacing: 0.06em; padding: 0.15em 0.45em;
+  border: 1px solid; display: inline-block; line-height: 1.4;
+}
+.tag-red   { border-color: var(--red);   color: var(--red); }
+.tag-ink   { border-color: var(--ink-3); color: var(--ink-3); }
+.tag-green { border-color: #5A8A5A; color: #5A8A5A; }
+
+/* ─── COMPARISON GRID ────────────────────────────────────────── */
+.compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 0; margin: 1.5rem 0; border: 1px solid var(--paper-3);
+}
+.compare-col { padding: 1.25rem; border-right: 1px solid var(--paper-3); }
+.compare-col:last-child { border-right: none; }
+.compare-head {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--paper-3);
+}
+.compare-head.accent { color: var(--red); border-color: var(--red); }
+.compare-value {
+  font-family: var(--mono); font-size: 0.85rem; font-weight: 600;
+  color: var(--ink); margin-bottom: 0.5rem;
+}
+.compare-desc { font-size: 0.82rem; color: var(--ink-3); line-height: 1.7; }
+
+/* ─── FLOW DIAGRAM ───────────────────────────────────────────── */
+.flow-wrap { margin: 2rem 0; overflow-x: auto; }
+.flow-diagram {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 0.68rem; min-width: max-content;
+}
+.flow-node {
+  border: 1px solid var(--ink); padding: 0.55rem 0.85rem;
+  text-align: center; line-height: 1.45; background: var(--paper-2);
+  color: var(--ink); font-weight: 500; white-space: nowrap; min-width: 100px;
+}
+.flow-node.dark { background: var(--ink); color: var(--paper); }
+.flow-node.red  { background: var(--red-faint); border-color: var(--red); color: var(--red); }
+.flow-node.ghost { border-style: dashed; border-color: var(--ink-4); color: var(--ink-4); background: transparent; }
+.flow-sub { font-size: 0.58rem; color: var(--ink-4); display: block; margin-top: 0.2rem; }
+.flow-node.dark .flow-sub  { color: #8C8070; }
+.flow-node.red  .flow-sub  { color: var(--red); opacity: 0.7; }
+.flow-arrow { padding: 0 0.4rem; color: var(--ink-4); font-size: 0.85rem; }
+
+/* ─── MSG PREVIEW BLOCK ──────────────────────────────────────── */
+.msg-preview {
+  margin: 1.5rem 0;
+  border: 1px solid var(--paper-3);
+  background: var(--paper-2);
+}
+.msg-preview-head {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-4); padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--paper-3);
+  background: var(--paper-3);
+}
+.msg-preview-body { padding: 1rem; }
+
+/* Simulated LINE message bubbles */
+.bubble-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+.bubble {
+  max-width: 75%; font-size: 0.85rem; line-height: 1.7;
+  padding: 0.55rem 0.9rem; color: var(--ink-2);
+  border: 1px solid var(--paper-3); background: var(--paper);
+  align-self: flex-end;
+}
+.bubble.bot {
+  align-self: flex-start; background: white;
+  border-color: var(--paper-4);
+}
+.bubble-label {
+  font-family: var(--mono); font-size: 0.55rem; color: var(--ink-4);
+  margin-bottom: 0.15rem; letter-spacing: 0.05em;
+}
+
+/* Template card preview */
+.template-card {
+  border: 1px solid var(--paper-4); background: white;
+  max-width: 260px; margin: 0.75rem 0;
+}
+.template-card-img {
+  height: 80px; background: var(--paper-3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.6rem; color: var(--ink-4);
+  letter-spacing: 0.1em;
+}
+.template-card-body { padding: 0.75rem; border-top: 1px solid var(--paper-3); }
+.template-card-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--ink); }
+.template-card-text { font-size: 0.75rem; color: var(--ink-3); line-height: 1.5; margin-bottom: 0.6rem; }
+.template-card-btns { border-top: 1px solid var(--paper-3); }
+.template-card-btn {
+  display: block; padding: 0.45rem 0.75rem; font-size: 0.72rem;
+  font-family: var(--mono); color: var(--red); text-align: center;
+  border-bottom: 1px solid var(--paper-3); letter-spacing: 0.04em;
+}
+.template-card-btn:last-child { border-bottom: none; }
+
+/* ─── STEP LIST ──────────────────────────────────────────────── */
+.step-list { margin: 1.5rem 0; counter-reset: step; }
+.step-item {
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 0 1rem; margin-bottom: 1.1rem; align-items: start;
+  counter-increment: step;
+}
+.step-num {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--paper); background: var(--ink);
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; margin-top: 0.15rem;
+}
+.step-num::after { content: counter(step, decimal-leading-zero); }
+.step-body { font-size: 0.9rem; color: var(--ink-2); line-height: 1.8; }
+.step-body strong { color: var(--ink); font-weight: 600; }
+.step-body code {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--paper-3); padding: 0.1em 0.4em;
+}
+
+/* ─── COST TABLE ─────────────────────────────────────────────── */
+.cost-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0; border: 1px solid var(--paper-3); margin: 1.5rem 0;
+}
+.cost-cell {
+  padding: 1rem; border-right: 1px solid var(--paper-3);
+  border-bottom: 1px solid var(--paper-3);
+}
+.cost-cell:nth-child(4n) { border-right: none; }
+.cost-cell:nth-last-child(-n+4) { border-bottom: none; }
+.cost-cell.header {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.cost-cell.accent { background: var(--paper-2); }
+.cost-api {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--ink); margin-bottom: 0.3rem;
+}
+.cost-detail { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; }
+.cost-detail strong { color: var(--red); font-weight: 600; }
+
+/* ─── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar { padding-top: 4rem; position: sticky; top: 68px; align-self: start; }
+.sidebar-widget { margin-bottom: 2.5rem; }
+.sidebar-label {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--paper-3); margin-bottom: 1rem;
+}
+.toc-list { list-style: none; }
+.toc-item { padding: 0.3rem 0; border-bottom: 1px solid var(--paper-3); }
+.toc-link {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.toc-link::before {
+  content: ''; display: block; width: 0; height: 1px;
+  background: var(--red); transition: width 0.2s; flex-shrink: 0;
+}
+.toc-link:hover, .toc-link.active { color: var(--red); }
+.toc-link:hover::before, .toc-link.active::before { width: 12px; }
+
+.res-list { list-style: none; }
+.res-item {
+  padding: 0.4rem 0; border-bottom: 1px solid var(--paper-3);
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.5;
+}
+.res-item strong {
+  display: block; font-family: var(--mono); font-size: 0.68rem;
+  color: var(--ink); margin-bottom: 0.15rem;
+}
+.term-row { padding: 0.5rem 0; border-bottom: 1px solid var(--paper-3); }
+.term-name { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--ink); }
+.term-def { font-size: 0.78rem; color: var(--ink-3); line-height: 1.6; margin-top: 0.15rem; }
+
+.quiz-wrap { background: var(--ink-2); padding: 1.25rem; }
+.quiz-q { font-size: 0.82rem; color: var(--paper); line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+.quiz-opt {
+  font-family: var(--mono); font-size: 0.7rem; color: #9A9090;
+  padding: 0.4rem 0; border-bottom: 1px solid #2E2820; cursor: pointer;
+  transition: color 0.15s; display: flex; gap: 0.5rem;
+}
+.quiz-opt:last-of-type { border-bottom: none; }
+.quiz-opt:hover { color: var(--paper); }
+.quiz-opt.correct { color: #8BAF7A; }
+.quiz-opt.wrong   { color: #C47A6A; }
+.quiz-feedback {
+  margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #2E2820;
+  font-size: 0.75rem; color: #9A9090; line-height: 1.7; display: none;
+}
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+.chapter-nav { border-top: 2px solid var(--ink); background: var(--paper-2); }
+.chapter-nav-inner {
+  max-width: var(--wide-w); margin: 0 auto; padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-btn {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: none; border: 1px solid var(--ink-3);
+  color: var(--ink-3); padding: 0.6rem 1.25rem; cursor: pointer;
+  text-decoration: none; display: inline-block; transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--ink); color: var(--ink); }
+.nav-btn.fwd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nav-btn.fwd:hover { background: var(--red); border-color: var(--red); }
+.nav-loc { font-family: var(--mono); font-size: 0.65rem; color: var(--ink-4); text-align: center; }
+
+/* ─── NOTE ───────────────────────────────────────────────────── */
+.note-inline {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--ink-4);
+  border-top: 1px solid var(--paper-3); margin-top: 1.5rem;
+  padding-top: 0.75rem; line-height: 1.7;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .ch-header { grid-template-columns: 1fr; }
+  .ch-divider { display: none; }
+  .objectives-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .obj-list { grid-template-columns: 1fr; }
+  .content-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; padding-top: 0; border-top: 1px solid var(--paper-3); margin-top: 2rem; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .compare-col { border-right: none; border-bottom: 1px solid var(--paper-3); }
+  .cost-grid { grid-template-columns: 1fr 1fr; }
+  .cost-cell:nth-child(4n) { border-right: 1px solid var(--paper-3); }
+  .cost-cell:nth-child(2n) { border-right: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="rp"></div>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <a href="index.html" class="back-link">LINE Bot 速成班</a>
+    <span class="masthead-sep">/</span>
+    <span class="masthead-chapter">CH.03 — 訊息型別與 Reply / Push API</span>
+  </div>
+  <div class="masthead-right">第 3 章，共 10 章</div>
+</header>
+
+<div class="page">
+
+<!-- ═══ HEADER ═════════════════════════════════════════════════ -->
+<div class="ch-header">
+  <div class="ch-meta">
+    <div class="ch-meta-label">Chapter</div>
+    <div class="ch-meta-num">03</div>
+    <div class="ch-meta-of">of 10</div>
+    <div class="ch-meta-stats">
+      <div class="ch-stat">4 小時</div>
+      <div class="ch-stat">基礎</div>
+      <div class="ch-stat">5 個課節</div>
+      <div class="ch-stat">含費用策略</div>
+    </div>
+  </div>
+  <div class="ch-divider"></div>
+  <div class="ch-title-block">
+    <div class="ch-kicker">LINE Bot Development Crash Course</div>
+    <h1 class="ch-title">訊息型別與<br><span>Reply / Push API</span></h1>
+    <p class="ch-standfirst">
+      Bot 能傳送的遠不只是文字。本章系統性地覆蓋所有可傳送的訊息型別——
+      從圖片、影片、位置，到按鈕樣板、輪播卡片——並深入探討
+      Reply API 與 Push API 在費用、時效與使用情境上的根本差異。
+      選錯 API 不只影響成本，更直接影響用戶體驗。
+    </p>
+  </div>
+</div>
+
+<div class="h-rule"><hr></div>
+
+<div class="objectives-strip">
+  <div class="obj-label">學習目標</div>
+  <ul class="obj-list">
+    <li>掌握全部可傳送訊息型別的結構與限制</li>
+    <li>理解 Reply、Push、Multicast、Broadcast 的差異與費用</li>
+    <li>實作 Buttons Template 與 Confirm Template</li>
+    <li>實作 Carousel Template 多欄輪播卡片</li>
+    <li>設計 Quick Reply 快速回覆選項</li>
+    <li>制定符合實際需求的訊息推送策略</li>
+  </ul>
+</div>
+
+<!-- ═══ CONTENT ══════════════════════════════════════════════════ -->
+<div class="content-wrap">
+<main>
+
+<!-- ── LESSON 3-1 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l3-1">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 3–1</span>
+    <h2 class="lesson-title">所有可傳送訊息型別總覽</h2>
+  </div>
+
+  <p class="body-text">
+    LINE Bot 能傳送的訊息型別分為兩大類：<strong>基本訊息</strong>（Basic Messages）
+    與<strong>樣板訊息</strong>（Template Messages）。
+    基本訊息對應使用者日常能傳送的格式；樣板訊息是 Bot 專屬的結構化介面，
+    提供按鈕、輪播等互動元件，但只在行動版 LINE 上完整呈現，
+    桌機版或不支援的用戶端會顯示 <code>altText</code> 替代文字。
+    第四章會介紹功能更強大的 Flex Message，本章聚焦於基本訊息與樣板訊息。
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>類別</th>
+        <th>type 值</th>
+        <th>關鍵欄位</th>
+        <th>使用場景</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>基本</td>
+        <td><code>text</code></td>
+        <td><code>text</code></td>
+        <td>一般對話、通知、確認訊息，支援換行與 LINE emoji</td>
+      </tr>
+      <tr>
+        <td>基本</td>
+        <td><code>image</code></td>
+        <td><code>originalContentUrl</code>, <code>previewImageUrl</code></td>
+        <td>商品圖、活動橫幅、報告截圖，需提供公開可訪問的 HTTPS URL</td>
+      </tr>
+      <tr>
+        <td>基本</td>
+        <td><code>video</code></td>
+        <td><code>originalContentUrl</code>, <code>previewImageUrl</code></td>
+        <td>教學影片、產品展示，需同時提供預覽縮圖</td>
+      </tr>
+      <tr>
+        <td>基本</td>
+        <td><code>audio</code></td>
+        <td><code>originalContentUrl</code>, <code>duration</code></td>
+        <td>語音通知，<code>duration</code> 為毫秒整數</td>
+      </tr>
+      <tr>
+        <td>基本</td>
+        <td><code>location</code></td>
+        <td><code>title</code>, <code>address</code>, <code>latitude</code>, <code>longitude</code></td>
+        <td>門市地址、集合地點、外送位置</td>
+      </tr>
+      <tr>
+        <td>基本</td>
+        <td><code>sticker</code></td>
+        <td><code>packageId</code>, <code>stickerId</code></td>
+        <td>互動回應、情緒表達，僅限 LINE 官方貼圖包</td>
+      </tr>
+      <tr>
+        <td>樣板</td>
+        <td><code>template</code> / <code>buttons</code></td>
+        <td><code>title</code>, <code>text</code>, <code>actions</code></td>
+        <td>單一選單、確認提示，最多 4 個按鈕動作</td>
+      </tr>
+      <tr>
+        <td>樣板</td>
+        <td><code>template</code> / <code>confirm</code></td>
+        <td><code>text</code>, <code>actions</code>（僅 2 個）</td>
+        <td>是／否確認、選擇操作，強制兩選一</td>
+      </tr>
+      <tr>
+        <td>樣板</td>
+        <td><code>template</code> / <code>carousel</code></td>
+        <td><code>columns</code>（最多 10 欄）</td>
+        <td>商品列表、方案比較、多項目選擇</td>
+      </tr>
+      <tr>
+        <td>樣板</td>
+        <td><code>template</code> / <code>image_carousel</code></td>
+        <td><code>columns</code>（僅圖片 + 單一 action）</td>
+        <td>純圖片輪播，視覺為主的情境</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="body-text">
+    所有傳送媒體（image、video、audio）的 URL 都必須是 <strong>HTTPS</strong>，
+    且必須能從公開網路直接訪問——LINE 的伺服器會主動去抓取這些資源以產生預覽。
+    本地端的 <code>localhost</code> URL 不可用，開發期間必須先將媒體上傳到雲端或使用 CDN。
+    圖片的 <code>previewImageUrl</code> 通常是原圖的壓縮版本，
+    建議寬度不超過 240px 以加快預覽載入速度，
+    而 <code>originalContentUrl</code> 則是點擊後顯示的完整原圖。
+  </p>
+
+  <div class="sub-heading">一次最多傳送 5 則</div>
+  <p class="body-text">
+    Reply API 與 Push API 的 <code>messages</code> 參數都接受陣列，
+    一次呼叫最多可傳送 <strong>5 則</strong>訊息。
+    這讓你可以組合不同型別，例如先傳文字說明、再傳圖片、最後附上按鈕選單，
+    在一次 API 呼叫中完成整個互動單元，減少 API 呼叫次數與用戶等待感。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">一次傳送多種型別的組合範例</div>
+    <div class="code-block"><span class="c-def"><span class="ln">1</span></span><span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">replyToken</span><span class="c-pun">, [</span>
+<span class="c-cmt"><span class="ln">2</span>  // 訊息一：文字說明</span>
+<span class="c-def"><span class="ln">3</span>  {</span>
+<span class="c-def"><span class="ln">4</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">5</span>    text<span class="c-pun">:</span> <span class="c-str">'本月最新優惠方案如下：'</span></span>
+<span class="c-def"><span class="ln">6</span>  <span class="c-pun">},</span></span>
+<span class="c-cmt"><span class="ln">7</span>  // 訊息二：圖片</span>
+<span class="c-def"><span class="ln">8</span>  {</span>
+<span class="c-def"><span class="ln">9</span>    type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>    originalContentUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/promo-may.jpg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">11</span>    previewImageUrl<span class="c-pun">:</span>   <span class="c-str">'https://cdn.example.com/promo-may-thumb.jpg'</span></span>
+<span class="c-def"><span class="ln">12</span>  <span class="c-pun">},</span></span>
+<span class="c-cmt"><span class="ln">13</span>  // 訊息三：位置（門市地址）</span>
+<span class="c-def"><span class="ln">14</span>  {</span>
+<span class="c-def"><span class="ln">15</span>    type<span class="c-pun">:</span>      <span class="c-str">'location'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">16</span>    title<span class="c-pun">:</span>     <span class="c-str">'台北旗艦店'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">17</span>    address<span class="c-pun">:</span>   <span class="c-str">'台北市信義區松高路12號'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">18</span>    latitude<span class="c-pun">:</span>  <span class="c-num">25.0408</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">19</span>    longitude<span class="c-pun">:</span> <span class="c-num">121.5676</span></span>
+<span class="c-def"><span class="ln">20</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">21</span><span class="c-pun">])</span></span></div>
+  </div>
+
+</article>
+
+<!-- ── LESSON 3-2 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l3-2">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 3–2</span>
+    <h2 class="lesson-title">Reply API 與 Push API：費用、時效與選擇策略</h2>
+  </div>
+
+  <p class="body-text">
+    LINE Messaging API 提供四種不同的訊息傳送方式，各有其對象、費用結構與使用時機。
+    混淆這四者是初學者最常犯的架構錯誤，選擇不當會導致不必要的費用支出，
+    或在需要主動通知時才發現無法傳送。
+  </p>
+
+  <div class="cost-grid">
+    <div class="cost-cell header">API</div>
+    <div class="cost-cell header">對象</div>
+    <div class="cost-cell header">費用</div>
+    <div class="cost-cell header">觸發條件</div>
+
+    <div class="cost-cell accent">
+      <div class="cost-api">Reply API</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">單一用戶，需 <code>replyToken</code></div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail"><strong>免費</strong>，不計入訊息用量</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">必須由 Webhook 事件觸發，30 秒內有效</div>
+    </div>
+
+    <div class="cost-cell accent">
+      <div class="cost-api">Push API</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">單一用戶，需 <code>userId</code></div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail"><strong>計費</strong>，依方案訊息則數計算</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">可在任意時間主動觸發，無需用戶互動</div>
+    </div>
+
+    <div class="cost-cell accent">
+      <div class="cost-api">Multicast API</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">最多 500 個 <code>userId</code> 清單</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail"><strong>計費</strong>，依訊息則數 × 用戶數</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">批次推送，適合分群行銷、分批通知</div>
+    </div>
+
+    <div class="cost-cell accent">
+      <div class="cost-api">Broadcast API</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">所有追蹤者（無需 userId 清單）</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail"><strong>計費</strong>，依總追蹤人數計算</div>
+    </div>
+    <div class="cost-cell">
+      <div class="cost-detail">全員公告、促銷活動，注意費用可能極高</div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    理解這個表格後，決策規則很直觀：<strong>只要有 replyToken 就優先用 Reply API</strong>，
+    因為它完全免費且天然契合互動語境。需要主動推送時才使用 Push API，
+    並務必在資料庫中事先儲存好 <code>userId</code>（通常在 <code>follow</code> 事件時儲存）。
+    Multicast 適合同時通知一批特定用戶（例如「已下訂單的所有用戶」），
+    Broadcast 則適合真正全員公告，使用前請確認你的 LINE Official Account 訂閱方案的訊息額度。
+  </p>
+
+  <div class="sub-heading">四種 API 的程式碼對照</div>
+
+  <div class="code-figure">
+    <div class="code-caption">四種傳送方式的呼叫語法</div>
+    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>// Reply API：需要 replyToken，只能用一次，30 秒有效</span>
+<span class="c-kw"><span class="ln">2</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">replyToken</span><span class="c-pun">,</span> message<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span>// Push API：需要 userId（或 groupId / roomId）</span>
+<span class="c-kw"><span class="ln">5</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">pushMessage</span><span class="c-pun">(</span><span class="c-def">userId</span><span class="c-pun">,</span> message<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">6</span></span>
+<span class="c-cmt"><span class="ln">7</span>// Multicast：userId 陣列，上限 500，訊息為單一物件或陣列</span>
+<span class="c-kw"><span class="ln">8</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">multicast</span><span class="c-pun">([</span><span class="c-def">userId1</span><span class="c-pun">,</span> <span class="c-def">userId2</span><span class="c-pun">,</span> <span class="c-def">userId3</span><span class="c-pun">],</span> message<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">9</span></span>
+<span class="c-cmt"><span class="ln">10</span>// Broadcast：無需提供用戶清單，推送給所有追蹤者</span>
+<span class="c-kw"><span class="ln">11</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">broadcast</span><span class="c-pun">(</span>message<span class="c-pun">)</span>
+<span class="c-def"><span class="ln">12</span></span>
+<span class="c-cmt"><span class="ln">13</span>// Multicast 超過 500 人時需分批</span>
+<span class="c-kw"><span class="ln">14</span>async function</span> <span class="c-fn">multicastAll</span><span class="c-pun">(</span><span class="c-def">allUserIds</span><span class="c-pun">,</span> <span class="c-def">message</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">15</span>  const</span> <span class="c-def">BATCH</span> <span class="c-pun">=</span> <span class="c-num">500</span>
+<span class="c-kw"><span class="ln">16</span>  for</span> <span class="c-pun">(</span><span class="c-kw">let</span> <span class="c-def">i</span> <span class="c-pun">=</span> <span class="c-num">0</span><span class="c-pun">;</span> <span class="c-def">i</span> <span class="c-pun">&lt;</span> <span class="c-def">allUserIds</span><span class="c-pun">.</span><span class="c-def">length</span><span class="c-pun">;</span> <span class="c-def">i</span> <span class="c-pun">+=</span> <span class="c-def">BATCH</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">17</span>    const</span> <span class="c-def">batch</span> <span class="c-pun">=</span> <span class="c-def">allUserIds</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-def">i</span><span class="c-pun">,</span> <span class="c-def">i</span> <span class="c-pun">+</span> <span class="c-def">BATCH</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">18</span>    await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">multicast</span><span class="c-pun">(</span><span class="c-def">batch</span><span class="c-pun">,</span> <span class="c-def">message</span><span class="c-pun">)</span>
+<span class="c-cmt"><span class="ln">19</span>    // 批次之間稍作等待，避免 rate limit</span>
+<span class="c-kw"><span class="ln">20</span>    await new</span> <span class="c-cls">Promise</span><span class="c-pun">(</span><span class="c-def">r</span> <span class="c-pun">=></span> <span class="c-fn">setTimeout</span><span class="c-pun">(</span><span class="c-def">r</span><span class="c-pun">,</span> <span class="c-num">200</span><span class="c-pun">))</span>
+<span class="c-def"><span class="ln">21</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">22</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="callout warn">
+    <span class="callout-label">費用警告</span>
+    LINE Official Account 的訊息費用依方案而異。免費方案每月有限額，
+    超出後每則訊息都會計費。Broadcast 對 10,000 名追蹤者傳送 1 則訊息，
+    就消耗 10,000 則配額。在傳送大量推播前，務必先確認當月剩餘額度，
+    或升級到適合的付費方案，避免月底超額停送。
+    可透過 <code>client.getMessageQuota()</code> 取得當月額度與已用量。
+  </div>
+
+  <div class="sub-heading">查詢訊息配額</div>
+
+  <div class="code-figure">
+    <div class="code-caption">取得訊息配額與已使用量</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>async function</span> <span class="c-fn">checkQuota</span><span class="c-pun">() {</span>
+<span class="c-cmt"><span class="ln">2</span>  // 取得本月配額上限</span>
+<span class="c-kw"><span class="ln">3</span>  const</span> <span class="c-def">quota</span> <span class="c-pun">=</span> <span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">getMessageQuota</span><span class="c-pun">()</span>
+<span class="c-def"><span class="ln">4</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">'配額上限：'</span><span class="c-pun">,</span> <span class="c-def">quota</span><span class="c-pun">.</span><span class="c-def">value</span><span class="c-pun">)</span>   <span class="c-cmt">// -1 代表無限制</span>
+<span class="c-def"><span class="ln">5</span></span>
+<span class="c-cmt"><span class="ln">6</span>  // 取得本月已傳送則數</span>
+<span class="c-kw"><span class="ln">7</span>  const</span> <span class="c-def">usage</span> <span class="c-pun">=</span> <span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">getMessageQuotaConsumption</span><span class="c-pun">()</span>
+<span class="c-def"><span class="ln">8</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">'已使用：'</span><span class="c-pun">,</span> <span class="c-def">usage</span><span class="c-pun">.</span><span class="c-def">totalUsage</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">9</span></span>
+<span class="c-kw"><span class="ln">10</span>  const</span> <span class="c-def">remaining</span> <span class="c-pun">=</span> <span class="c-def">quota</span><span class="c-pun">.</span><span class="c-def">value</span> <span class="c-pun">-</span> <span class="c-def">usage</span><span class="c-pun">.</span><span class="c-def">totalUsage</span>
+<span class="c-def"><span class="ln">11</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`剩餘：${remaining} 則`</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">12</span>  <span class="c-kw">return</span> <span class="c-def">remaining</span></span>
+<span class="c-def"><span class="ln">13</span><span class="c-pun">}</span></span></div>
+  </div>
+
+</article>
+
+<!-- ── LESSON 3-3 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l3-3">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 3–3</span>
+    <h2 class="lesson-title">Buttons Template 與 Confirm Template</h2>
+  </div>
+
+  <p class="body-text">
+    Template Messages 讓 Bot 傳送帶有可點擊按鈕的結構化訊息，
+    是製作互動選單的基礎。按鈕可以觸發三種動作：
+    <code>postback</code>（靜默地向 Bot 發送資料，不顯示在聊天視窗）、
+    <code>uri</code>（開啟指定 URL，可搭配 LIFF）、
+    <code>message</code>（以用戶身份傳送指定文字）。
+    理解這三種 action 型別的差異，是設計良好互動流程的關鍵。
+  </p>
+
+  <div class="def-list">
+    <div class="def-item">
+      <div class="def-term">action type: postback</div>
+      <div class="def-desc">
+        點擊後向 Webhook 發送 <code>postback</code> 事件，<code>data</code> 欄位攜帶自訂字串（最多 300 字元）。
+        訊息視窗不顯示任何文字，適合傳遞機器可讀的狀態或指令，是最常用的 action 型別。
+        選填的 <code>displayText</code> 欄位可讓按鈕在聊天室顯示一段人類可讀的文字。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">action type: uri</div>
+      <div class="def-desc">
+        點擊後在 LINE 內建瀏覽器開啟指定 <code>uri</code>。
+        若 URI 是 <code>https://liff.line.me/{liffId}</code>，則開啟 LIFF 應用程式。
+        適合連結到外部網站、線上表單、付款頁面。
+      </div>
+    </div>
+    <div class="def-item">
+      <div class="def-term">action type: message</div>
+      <div class="def-desc">
+        點擊後以用戶身份傳送 <code>text</code> 欄位指定的文字，
+        內容會顯示在聊天室。行為等同用戶手動輸入，觸發 <code>message</code> Webhook 事件。
+        適合設計預設回應選項，如「查詢訂單」、「聯絡客服」。
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Buttons Template 實作</div>
+  <p class="body-text">
+    Buttons Template 是最基本的互動訊息，適合呈現單一情境的選項。
+    可選擇加入縮圖圖片（<code>thumbnailImageUrl</code>）、標題（<code>title</code>）與說明文字（<code>text</code>），
+    最多配置 4 個按鈕動作。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Buttons Template 完整結構</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">buttonsMsg</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'請選擇服務項目'</span><span class="c-pun">,</span>  <span class="c-cmt">// 不支援 template 的環境顯示此文字</span></span>
+<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span>              <span class="c-str">'buttons'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">6</span>    thumbnailImageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/service-banner.jpg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">7</span>    imageAspectRatio<span class="c-pun">:</span>  <span class="c-str">'rectangle'</span><span class="c-pun">,</span>  <span class="c-cmt">// 'rectangle' | 'square'</span></span>
+<span class="c-def"><span class="ln">8</span>    imageSize<span class="c-pun">:</span>         <span class="c-str">'cover'</span><span class="c-pun">,</span>       <span class="c-cmt">// 'cover' | 'contain'</span></span>
+<span class="c-def"><span class="ln">9</span>    title<span class="c-pun">:</span>             <span class="c-str">'客服中心'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>    text<span class="c-pun">:</span>              <span class="c-str">'請選擇你需要的服務項目'</span><span class="c-pun">,</span>  <span class="c-cmt">// 必填，有圖時最多 60 字</span></span>
+<span class="c-def"><span class="ln">11</span>    actions<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">12</span>      {</span>
+<span class="c-def"><span class="ln">13</span>        type<span class="c-pun">:</span>        <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">14</span>        label<span class="c-pun">:</span>       <span class="c-str">'查詢訂單'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>        data<span class="c-pun">:</span>        <span class="c-str">'action=query&type=order'</span><span class="c-pun">,</span>  <span class="c-cmt">// URLSearchParams 格式建議</span></span>
+<span class="c-def"><span class="ln">16</span>        displayText<span class="c-pun">:</span> <span class="c-str">'我要查詢訂單'</span>  <span class="c-cmt">// 可選：聊天室顯示文字</span></span>
+<span class="c-def"><span class="ln">17</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">18</span>      {</span>
+<span class="c-def"><span class="ln">19</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">20</span>        label<span class="c-pun">:</span> <span class="c-str">'退換貨申請'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">21</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=return'</span></span>
+<span class="c-def"><span class="ln">22</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">23</span>      {</span>
+<span class="c-def"><span class="ln">24</span>        type<span class="c-pun">:</span>  <span class="c-str">'uri'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">25</span>        label<span class="c-pun">:</span> <span class="c-str">'前往官方網站'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">26</span>        uri<span class="c-pun">:</span>   <span class="c-str">'https://www.example.com'</span></span>
+<span class="c-def"><span class="ln">27</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">28</span>      {</span>
+<span class="c-def"><span class="ln">29</span>        type<span class="c-pun">:</span> <span class="c-str">'message'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">30</span>        label<span class="c-pun">:</span> <span class="c-str">'轉接真人客服'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">31</span>        text<span class="c-pun">:</span>  <span class="c-str">'我要轉接真人客服'</span>  <span class="c-cmt">// 以用戶身份傳送</span></span>
+<span class="c-def"><span class="ln">32</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">33</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">34</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">35</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="sub-heading">Postback 資料的解析</div>
+  <p class="body-text">
+    <code>postback.data</code> 是一個自訂字串，最多 300 個字元。
+    建議採用 URL query string 格式（如 <code>action=query&type=order&id=123</code>）
+    來編碼多個參數，這樣可以用標準的 <code>URLSearchParams</code> 直接解析，
+    無需自行實作解析邏輯，也大幅降低格式錯誤的風險。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">postbackHandler.js — 解析 postback data</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>async function</span> <span class="c-fn">postbackHandler</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">) {</span>
+<span class="c-cmt"><span class="ln">2</span>  // 用 URLSearchParams 解析 data 字串</span>
+<span class="c-kw"><span class="ln">3</span>  const</span> <span class="c-def">params</span> <span class="c-pun">=</span> <span class="c-kw">new</span> <span class="c-cls">URLSearchParams</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">postback</span><span class="c-pun">.</span><span class="c-def">data</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">4</span>  const</span> <span class="c-def">action</span> <span class="c-pun">=</span> <span class="c-def">params</span><span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'action'</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">5</span>  const</span> <span class="c-def">type</span>   <span class="c-pun">=</span> <span class="c-def">params</span><span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'type'</span><span class="c-pun">)</span>
+<span class="c-def"><span class="ln">6</span></span>
+<span class="c-kw"><span class="ln">7</span>  switch</span> <span class="c-pun">(</span><span class="c-def">action</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">8</span>    case</span> <span class="c-str">'query'</span><span class="c-pun">:</span>
+<span class="c-kw"><span class="ln">9</span>      return</span> <span class="c-fn">handleQuery</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">,</span> <span class="c-def">type</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">10</span>    case</span> <span class="c-str">'return'</span><span class="c-pun">:</span>
+<span class="c-kw"><span class="ln">11</span>      return</span> <span class="c-fn">handleReturn</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">12</span>    default</span><span class="c-pun">:</span>
+<span class="c-def"><span class="ln">13</span>      console<span class="c-pun">.</span><span class="c-fn">warn</span><span class="c-pun">(</span><span class="c-str">`Unknown postback action: ${action}`</span><span class="c-pun">)</span>
+<span class="c-kw"><span class="ln">14</span>      return</span> <span class="c-kw">null</span>
+<span class="c-def"><span class="ln">15</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">16</span><span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">17</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">=</span> <span class="c-def">postbackHandler</span></span></div>
+  </div>
+
+  <div class="sub-heading">Confirm Template</div>
+  <p class="body-text">
+    Confirm Template 強制限定為兩個按鈕，語意上代表「確認」與「取消」，
+    適用於刪除資料、送出訂單前的最終確認步驟。
+    它沒有縮圖和標題欄位，只有必填的 <code>text</code> 和兩個 <code>actions</code>。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Confirm Template — 訂單送出確認</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">confirmMsg</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'確認送出訂單？'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span> <span class="c-str">'confirm'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">6</span>    text<span class="c-pun">:</span> <span class="c-str">'確認送出以下訂單？\n商品：限定版手提袋 × 2\n金額：NT$ 1,480'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">7</span>    actions<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">8</span>      {</span>
+<span class="c-def"><span class="ln">9</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>        label<span class="c-pun">:</span> <span class="c-str">'確認送出'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">11</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=confirm_order&orderId=ORD-2025-0521'</span></span>
+<span class="c-def"><span class="ln">12</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">13</span>      {</span>
+<span class="c-def"><span class="ln">14</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>        label<span class="c-pun">:</span> <span class="c-str">'取消'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">16</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=cancel_order&orderId=ORD-2025-0521'</span></span>
+<span class="c-def"><span class="ln">17</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">20</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">字數限制</span>
+    Template Message 各欄位都有嚴格的字數上限。<code>text</code> 欄位在有縮圖圖片時
+    最多 60 字、無圖時最多 160 字。<code>title</code> 最多 40 字。
+    <code>label</code>（按鈕文字）最多 20 字。超出限制時 LINE 不會傳送訊息，
+    而是回傳 400 錯誤，且錯誤訊息不一定明確指出是哪個欄位超出，
+    排查時要逐一確認。
+  </div>
+
+</article>
+
+<!-- ── LESSON 3-4 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l3-4">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 3–4</span>
+    <h2 class="lesson-title">Carousel Template 與 Image Carousel</h2>
+  </div>
+
+  <p class="body-text">
+    Carousel Template 允許在單則訊息中橫向排列最多 10 個卡片（column），
+    每個卡片擁有獨立的圖片、標題、說明與按鈕組合。
+    使用者可以左右滑動瀏覽，非常適合展示商品目錄、服務方案比較、
+    或多步驟引導中的選項呈現。
+  </p>
+
+  <p class="body-text">
+    Carousel 有一個重要的排版規則：<strong>所有欄位的按鈕數量必須一致</strong>。
+    若第一個 column 有 3 個按鈕，其他所有 column 也必須有 3 個按鈕，
+    否則 LINE API 會回傳錯誤。若某個 column 語意上不需要某個按鈕，
+    可以放一個帶有佔位 label 的 dummy action 來補齊數量。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Carousel Template — 商品列表（2 欄示範）</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>function</span> <span class="c-fn">buildProductCarousel</span><span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">) {</span>
+<span class="c-kw"><span class="ln">2</span>  const</span> <span class="c-def">columns</span> <span class="c-pun">=</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">p</span> <span class="c-pun">=&gt; ({</span>
+<span class="c-def"><span class="ln">3</span>    thumbnailImageUrl<span class="c-pun">:</span> <span class="c-def">p</span><span class="c-pun">.</span><span class="c-def">imageUrl</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">4</span>    imageBackgroundColor<span class="c-pun">:</span> <span class="c-str">'#F5F0E8'</span><span class="c-pun">,</span>  <span class="c-cmt">// 圖片載入前的背景色</span></span>
+<span class="c-def"><span class="ln">5</span>    title<span class="c-pun">:</span> <span class="c-def">p</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>          <span class="c-cmt">// 最多 40 字</span></span>
+<span class="c-def"><span class="ln">6</span>    text<span class="c-pun">:</span>  <span class="c-str">`NT$ ${p.price} | ${p.stock > 0 ? '有貨' : '缺貨'}`</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">7</span>    actions<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">8</span>      {</span>
+<span class="c-def"><span class="ln">9</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">10</span>        label<span class="c-pun">:</span> <span class="c-str">'加入購物車'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">11</span>        data<span class="c-pun">:</span>  <span class="c-str">`action=addCart&productId=${p.id}`</span></span>
+<span class="c-def"><span class="ln">12</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">13</span>      {</span>
+<span class="c-def"><span class="ln">14</span>        type<span class="c-pun">:</span>  <span class="c-str">'uri'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>        label<span class="c-pun">:</span> <span class="c-str">'查看詳情'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">16</span>        uri<span class="c-pun">:</span>   <span class="c-str">`https://shop.example.com/products/${p.id}`</span></span>
+<span class="c-def"><span class="ln">17</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span>  <span class="c-cmt">// 注意：每個 column 的按鈕數必須相同</span></span>
+<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}))</span></span>
+<span class="c-def"><span class="ln">20</span></span>
+<span class="c-kw"><span class="ln">21</span>  return</span> <span class="c-pun">{</span>
+<span class="c-def"><span class="ln">22</span>    type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">23</span>    altText<span class="c-pun">:</span> <span class="c-str">'商品目錄'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">24</span>    contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">25</span>      type<span class="c-pun">:</span>              <span class="c-str">'carousel'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">26</span>      imageAspectRatio<span class="c-pun">:</span>  <span class="c-str">'rectangle'</span><span class="c-pun">,</span>  <span class="c-cmt">// 全 carousel 統一的圖片比例</span></span>
+<span class="c-def"><span class="ln">27</span>      imageSize<span class="c-pun">:</span>         <span class="c-str">'cover'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">28</span>      columns<span class="c-pun">:</span>           <span class="c-def">columns</span></span>
+<span class="c-def"><span class="ln">29</span>    <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">30</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">31</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="sub-heading">Image Carousel</div>
+  <p class="body-text">
+    Image Carousel 是 Carousel 的純圖版本，每個欄位只有一張大圖與一個 action，
+    沒有文字說明。適合純視覺驅動的場景，如活動橫幅輪播、優惠圖示切換。
+    最多同樣支援 10 張圖片。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Image Carousel — 活動橫幅輪播</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">imageCarouselMsg</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'本月活動一覽'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span> <span class="c-str">'image_carousel'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">6</span>    columns<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">7</span>      {</span>
+<span class="c-def"><span class="ln">8</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/event-01.jpg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">9</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'活動一'</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-str">'event=1'</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">10</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">11</span>      {</span>
+<span class="c-def"><span class="ln">12</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/event-02.jpg'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">13</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'uri'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'活動二'</span><span class="c-pun">,</span> uri<span class="c-pun">:</span> <span class="c-str">'https://example.com/event/2'</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">14</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">15</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">16</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">17</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="sub-heading">Template Message 規格限制總覽</div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>型別</th>
+        <th>最大欄數</th>
+        <th>按鈕數（每欄）</th>
+        <th>圖片</th>
+        <th>title</th>
+        <th>text</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>buttons</code></td>
+        <td>—</td>
+        <td>最多 4</td>
+        <td>可選</td>
+        <td>最多 40 字</td>
+        <td>有圖 60 字 / 無圖 160 字</td>
+      </tr>
+      <tr>
+        <td><code>confirm</code></td>
+        <td>—</td>
+        <td>固定 2</td>
+        <td>無</td>
+        <td>無</td>
+        <td>最多 240 字</td>
+      </tr>
+      <tr>
+        <td><code>carousel</code></td>
+        <td>最多 10</td>
+        <td>最多 3，各欄須一致</td>
+        <td>可選</td>
+        <td>最多 40 字</td>
+        <td>有圖 60 字 / 無圖 160 字</td>
+      </tr>
+      <tr>
+        <td><code>image_carousel</code></td>
+        <td>最多 10</td>
+        <td>固定 1</td>
+        <td>必填</td>
+        <td>無</td>
+        <td>無</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+
+<!-- ── LESSON 3-5 ─────────────────────────────────────────────── -->
+<article class="lesson" id="l3-5">
+  <div class="lesson-header">
+    <span class="lesson-num">Lesson 3–5</span>
+    <h2 class="lesson-title">Quick Reply 快速回覆與 Sender 客製化</h2>
+  </div>
+
+  <p class="body-text">
+    Quick Reply 是一個可附加到<strong>任何訊息型別</strong>的補充元件，
+    傳送後會在用戶的輸入框上方顯示一排可點擊的選項按鈕，
+    點擊後自動消失並觸發對應的 action。
+    它與 Buttons Template 的最大差異在於：Quick Reply 是輸入框的延伸，
+    視覺上屬於「用戶輸入空間」，語意更接近「下一步你想怎麼做？」的引導，
+    而非獨立的卡片訊息。
+  </p>
+
+  <p class="body-text">
+    Quick Reply 最多支援 13 個選項，每個選項稱為 <code>QuickReplyItem</code>，
+    包含一個可選的圖示（<code>imageUrl</code>）與一個 action。
+    action 型別除了 <code>postback</code>、<code>message</code>、<code>uri</code> 之外，
+    還支援兩個特殊型別：<code>location</code>（開啟位置選擇器）和 <code>camera</code>（開啟相機）。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">Quick Reply 附加在文字訊息上</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">msgWithQuickReply</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  text<span class="c-pun">:</span> <span class="c-str">'請選擇你偏好的聯絡方式：'</span><span class="c-pun">,</span></span>
+<span class="c-cmt"><span class="ln">4</span>  // quickReply 可附加到任意訊息型別，包括 template</span>
+<span class="c-def"><span class="ln">5</span>  quickReply<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">6</span>    items<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">7</span>      {</span>
+<span class="c-def"><span class="ln">8</span>        type<span class="c-pun">:</span>     <span class="c-str">'action'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">9</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/icon-phone.png'</span><span class="c-pun">,</span>  <span class="c-cmt">// 選填小圖示</span></span>
+<span class="c-def"><span class="ln">10</span>        action<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">11</span>          type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">12</span>          label<span class="c-pun">:</span> <span class="c-str">'電話'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">13</span>          data<span class="c-pun">:</span>  <span class="c-str">'contact=phone'</span></span>
+<span class="c-def"><span class="ln">14</span>        <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">15</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">16</span>      {</span>
+<span class="c-def"><span class="ln">17</span>        type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">18</span>        action<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">19</span>          type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">20</span>          label<span class="c-pun">:</span> <span class="c-str">'Email'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">21</span>          data<span class="c-pun">:</span>  <span class="c-str">'contact=email'</span></span>
+<span class="c-def"><span class="ln">22</span>        <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">23</span>      <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">24</span>      {</span>
+<span class="c-def"><span class="ln">25</span>        type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">26</span>        action<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">27</span>          type<span class="c-pun">:</span>  <span class="c-str">'location'</span><span class="c-pun">,</span>  <span class="c-cmt">// 開啟位置選擇器</span></span>
+<span class="c-def"><span class="ln">28</span>          label<span class="c-pun">:</span> <span class="c-str">'傳送位置'</span></span>
+<span class="c-def"><span class="ln">29</span>        <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">30</span>      <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">31</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">32</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">33</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="sub-heading">Sender：覆寫 Bot 的顯示名稱與頭像</div>
+  <p class="body-text">
+    <code>sender</code> 欄位同樣可附加到任何訊息型別，
+    讓你在傳送特定訊息時暫時改變 Bot 顯示的名稱與頭像。
+    這在多角色 Bot（例如「客服小助」負責問答、「訂單系統」負責通知）
+    或需要區分人工客服介入的情境中很有用。
+    覆寫只對該則訊息有效，不影響 Bot 的全域設定。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">使用 sender 暫時改變 Bot 顯示身份</div>
+    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">notificationMsg</span> <span class="c-pun">= {</span>
+<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">3</span>  text<span class="c-pun">:</span> <span class="c-str">'您的訂單 #ORD-2025-0521 已確認出貨，預計明日送達。'</span><span class="c-pun">,</span></span>
+<span class="c-cmt"><span class="ln">4</span>  // 傳送此訊息時，Bot 顯示為「訂單通知系統」</span>
+<span class="c-def"><span class="ln">5</span>  sender<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">6</span>    name<span class="c-pun">:</span>    <span class="c-str">'訂單通知系統'</span><span class="c-pun">,</span>  <span class="c-cmt">// 最多 20 字元</span></span>
+<span class="c-def"><span class="ln">7</span>    iconUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/order-bot-icon.png'</span>  <span class="c-cmt">// HTTPS，1MB 以內</span></span>
+<span class="c-def"><span class="ln">8</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">9</span><span class="c-pun">}</span></span></div>
+  </div>
+
+  <div class="sub-heading">建立訊息建構器（Message Builder Pattern）</div>
+  <p class="body-text">
+    隨著訊息型別增多，直接在 handler 中拼湊 JSON 會讓程式碼難以閱讀。
+    建立專屬的 <code>builders/messageBuilders.js</code> 模組，
+    將每種訊息型別封裝成具名函式，讓 handler 的程式碼聚焦在業務邏輯，
+    而非 JSON 結構的細節。
+  </p>
+
+  <div class="code-figure">
+    <div class="code-caption">src/builders/messageBuilders.js — 訊息工廠函式</div>
+    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>// 文字訊息工廠</span>
+<span class="c-kw"><span class="ln">2</span>const</span> <span class="c-fn">text</span> <span class="c-pun">= (</span><span class="c-def">message</span><span class="c-pun">) =&gt; ({</span> type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">message</span> <span class="c-pun">})</span>
+<span class="c-def"><span class="ln">3</span></span>
+<span class="c-cmt"><span class="ln">4</span>// 圖片訊息工廠</span>
+<span class="c-kw"><span class="ln">5</span>const</span> <span class="c-fn">image</span> <span class="c-pun">= (</span><span class="c-def">url</span><span class="c-pun">,</span> <span class="c-def">preview</span><span class="c-pun">) =&gt; ({</span>
+<span class="c-def"><span class="ln">6</span>  type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span> originalContentUrl<span class="c-pun">:</span> <span class="c-def">url</span><span class="c-pun">,</span> previewImageUrl<span class="c-pun">:</span> <span class="c-def">preview</span> <span class="c-pun">||</span> <span class="c-def">url</span>
+<span class="c-def"><span class="ln">7</span><span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">8</span></span>
+<span class="c-cmt"><span class="ln">9</span>// Confirm Template 工廠</span>
+<span class="c-kw"><span class="ln">10</span>const</span> <span class="c-fn">confirm</span> <span class="c-pun">= ({</span> <span class="c-def">text</span><span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">,</span> <span class="c-def">yesLabel</span><span class="c-pun">,</span> <span class="c-def">yesData</span><span class="c-pun">,</span> <span class="c-def">noLabel</span><span class="c-pun">,</span> <span class="c-def">noData</span> <span class="c-pun">}) =&gt; ({</span>
+<span class="c-def"><span class="ln">11</span>  type<span class="c-pun">:</span> <span class="c-str">'template'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">12</span>  altText<span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-num">0</span><span class="c-pun">,</span> <span class="c-num">40</span><span class="c-pun">),</span></span>
+<span class="c-def"><span class="ln">13</span>  contents<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">14</span>    type<span class="c-pun">:</span> <span class="c-str">'confirm'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">15</span>    actions<span class="c-pun">: [</span></span>
+<span class="c-def"><span class="ln">16</span>      <span class="c-pun">{</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">yesLabel</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-def">yesData</span> <span class="c-pun">},</span></span>
+<span class="c-def"><span class="ln">17</span>      <span class="c-pun">{</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">noLabel</span><span class="c-pun">,</span>  data<span class="c-pun">:</span> <span class="c-def">noData</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span></span>
+<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">20</span><span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">21</span></span>
+<span class="c-cmt"><span class="ln">22</span>// 帶 Quick Reply 的文字訊息工廠</span>
+<span class="c-kw"><span class="ln">23</span>const</span> <span class="c-fn">textWithQR</span> <span class="c-pun">= (</span><span class="c-def">message</span><span class="c-pun">,</span> <span class="c-def">options</span><span class="c-pun">) =&gt; ({</span>
+<span class="c-def"><span class="ln">24</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">message</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">25</span>  quickReply<span class="c-pun">: {</span></span>
+<span class="c-def"><span class="ln">26</span>    items<span class="c-pun">:</span> <span class="c-def">options</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">opt</span> <span class="c-pun">=&gt; ({</span></span>
+<span class="c-def"><span class="ln">27</span>      type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
+<span class="c-def"><span class="ln">28</span>      action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">opt</span><span class="c-pun">.</span><span class="c-def">label</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-def">opt</span><span class="c-pun">.</span><span class="c-def">data</span> <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">29</span>    <span class="c-pun">}))</span></span>
+<span class="c-def"><span class="ln">30</span>  <span class="c-pun">}</span></span>
+<span class="c-def"><span class="ln">31</span><span class="c-pun">})</span></span>
+<span class="c-def"><span class="ln">32</span></span>
+<span class="c-cmt"><span class="ln">33</span>// 使用範例：handler 中只需呼叫工廠函式</span>
+<span class="c-cmt"><span class="ln">34</span>// client.replyMessage(token, [</span>
+<span class="c-cmt"><span class="ln">35</span>//   builders.text('請問你想查詢什麼？'),</span>
+<span class="c-cmt"><span class="ln">36</span>//   builders.textWithQR('選擇查詢類別', [</span>
+<span class="c-cmt"><span class="ln">37</span>//     { label: '訂單狀態', data: 'query=order' },</span>
+<span class="c-cmt"><span class="ln">38</span>//     { label: '點數查詢', data: 'query=points' }</span>
+<span class="c-cmt"><span class="ln">39</span>//   ])</span>
+<span class="c-cmt"><span class="ln">40</span>// ])</span>
+<span class="c-def"><span class="ln">41</span></span>
+<span class="c-def"><span class="ln">42</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> text<span class="c-pun">,</span> image<span class="c-pun">,</span> confirm<span class="c-pun">,</span> textWithQR<span class="c-pun">,</span> buildProductCarousel <span class="c-pun">}</span></span></div>
+  </div>
+
+  <p class="body-text">
+    Message Builder Pattern 讓訊息建構的邏輯集中在一個地方，
+    日後若 LINE API 規格調整（例如某欄位改名），
+    只需修改對應的 builder 函式，不需要在整個程式碼庫搜尋所有使用處。
+    這也讓單元測試更容易撰寫——你可以直接測試 builder 函式的輸出是否符合預期結構，
+    而不需要模擬整個 LINE 環境。
+  </p>
+
+  <div class="callout tip">
+    <span class="callout-label">架構建議</span>
+    本章完成後，你的 <code>src/</code> 目錄應新增 <code>builders/messageBuilders.js</code>，
+    並將 <code>handlers/</code> 中的各種 handler 改為呼叫 builder 函式，
+    而非直接構造 JSON 物件。這個小小的重構在後期維護時將節省大量時間。
+    同時建議為 builders 撰寫幾個 <code>jest</code> 測試，
+    驗證關鍵欄位的字數限制守衛（例如 <code>text</code> 超過 160 字時自動截斷或拋出錯誤）。
+  </div>
+
+  <div class="note-inline">
+    下一章 Flex Message 是 Template Message 的進化版，
+    能做到幾乎所有 Template Message 可以做的事，並大幅超越其排版限制。
+    但 Template Message 的建構語法更簡單，適合快速迭代的早期階段；
+    Flex Message 則需要更多設計工作，適合成熟後的品質打磨。
+    兩者並不互斥，同一個 Bot 可以混用。
+  </div>
+
+</article>
+
+</main>
+
+<!-- ─── SIDEBAR ───────────────────────────────────────────────── -->
+<aside class="sidebar">
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">本章目錄</div>
+    <ul class="toc-list">
+      <li class="toc-item"><a href="#l3-1" class="toc-link">3–1 可傳送訊息型別總覽</a></li>
+      <li class="toc-item"><a href="#l3-2" class="toc-link">3–2 Reply / Push API 費用策略</a></li>
+      <li class="toc-item"><a href="#l3-3" class="toc-link">3–3 Buttons 與 Confirm Template</a></li>
+      <li class="toc-item"><a href="#l3-4" class="toc-link">3–4 Carousel 與 Image Carousel</a></li>
+      <li class="toc-item"><a href="#l3-5" class="toc-link">3–5 Quick Reply 與 Message Builder</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">關鍵術語</div>
+    <div class="term-list">
+      <div class="term-row">
+        <div class="term-name">altText</div>
+        <div class="term-def">Template / Flex Message 在不支援環境中的替代文字，必填且有意義。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">postback action</div>
+        <div class="term-def">靜默觸發 Webhook 事件，data 字串最多 300 字元。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">displayText</div>
+        <div class="term-def">postback 的選填欄位，點擊後顯示於聊天室的可讀文字。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">Quick Reply</div>
+        <div class="term-def">可附加於任何訊息的輸入框選項，最多 13 個，點後消失。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">Multicast</div>
+        <div class="term-def">批次推送給最多 500 個 userId，計費 API。</div>
+      </div>
+      <div class="term-row">
+        <div class="term-name">sender</div>
+        <div class="term-def">單則訊息的顯示名稱與頭像覆寫，不影響全域設定。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">參考資源</div>
+    <ul class="res-list">
+      <li class="res-item">
+        <strong>LINE 訊息型別文件</strong>
+        developers.line.biz/en/reference/messaging-api/#message-objects
+      </li>
+      <li class="res-item">
+        <strong>Template Messages</strong>
+        developers.line.biz/en/reference/messaging-api/#template-messages
+      </li>
+      <li class="res-item">
+        <strong>Quick Reply</strong>
+        developers.line.biz/en/reference/messaging-api/#quick-reply
+      </li>
+      <li class="res-item">
+        <strong>訊息費用說明</strong>
+        developers.line.biz/en/docs/messaging-api/overview/#line-official-account-plans
+      </li>
+      <li class="res-item">
+        <strong>LINE 貼圖清單</strong>
+        developers.line.biz/en/docs/messaging-api/sticker-list
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-widget">
+    <div class="sidebar-label">章節測驗</div>
+    <div class="quiz-wrap">
+      <div class="quiz-q">Carousel Template 中，若第一個 column 有 2 個按鈕，其他 column 可以有 3 個按鈕嗎？</div>
+      <div class="quiz-opt" onclick="answerQuiz(0)">A. 可以，每個 column 按鈕數獨立設定</div>
+      <div class="quiz-opt" onclick="answerQuiz(1)">B. 不可以，所有 column 的按鈕數必須一致</div>
+      <div class="quiz-opt" onclick="answerQuiz(2)">C. 可以，但超出部分會自動截斷</div>
+      <div class="quiz-opt" onclick="answerQuiz(3)">D. 取決於訊息是用 Reply 還是 Push API 傳送</div>
+      <div class="quiz-feedback" id="qfeed">
+        正確。LINE 要求 Carousel 中所有 column 的按鈕數量必須完全一致，
+        不一致時 API 回傳 400 錯誤。若某個 column 語意上不需要某按鈕，
+        可放一個 dummy postback action 補齊數量。
+      </div>
+    </div>
+  </div>
+
+</aside>
+</div><!-- .content-wrap -->
+
+</div><!-- .page -->
+
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner">
+    <a href="chapter2.html" class="nav-btn">← CH.02 Webhook 事件處理</a>
+    <div class="nav-loc">
+      <div>CH.03 — 訊息型別與 Reply / Push API</div>
+      <div style="margin-top:0.25rem;font-size:0.58rem;color:var(--ink-4)">第 3 章，共 10 章</div>
+    </div>
+    <a href="chapter4.html" class="nav-btn fwd">CH.04 Flex Message →</a>
+  </div>
+</nav>
+
+<script>
+window.addEventListener('scroll', () => {
+  const d = document.documentElement
+  document.getElementById('rp').style.width =
+    (d.scrollTop / (d.scrollHeight - d.clientHeight) * 100) + '%'
+})
+
+const sections = document.querySelectorAll('.lesson')
+const tocLinks = document.querySelectorAll('.toc-link')
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'))
+      const a = document.querySelector(`.toc-link[href="#${e.target.id}"]`)
+      if (a) a.classList.add('active')
+    }
+  })
+}, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' })
+sections.forEach(s => obs.observe(s))
+
+function answerQuiz(idx) {
+  const CORRECT = 1
+  document.querySelectorAll('.quiz-opt').forEach((el, i) => {
+    el.classList.remove('correct', 'wrong')
+    if (i === CORRECT) el.classList.add('correct')
+    else if (i === idx && idx !== CORRECT) el.classList.add('wrong')
+  })
+  document.getElementById('qfeed').style.display = 'block'
+}
+</script>
+</body>
+</html>
