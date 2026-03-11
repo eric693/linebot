@@ -172,19 +172,21 @@ body {
 .code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
 .code-block {
   background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
-  line-height: 1.75; padding: 1.5rem 1.75rem; overflow-x: auto;
-  border-left: 3px solid var(--red); tab-size: 2;
+  line-height: 1.85; padding: 1.5rem 0; overflow-x: auto;
+  border-left: 3px solid var(--red);
 }
-.ln { display: inline-block; width: 2em; color: #4A4440; user-select: none; font-size: 0.68rem; margin-right: 0.5rem; }
-.c-cmt { color: #7A6F6A; font-style: italic; }
-.c-kw  { color: #C47A6A; }
-.c-str { color: #8BAF7A; }
-.c-fn  { color: #7AABCF; }
-.c-num { color: #C49A5A; }
-.c-cls { color: #C4B570; }
-.c-pun { color: #9A9090; }
-.c-def { color: #E8E0D8; }
-.c-prop{ color: #B0C8E8; }
+.cl { display: flex; padding: 0 1.75rem 0 0; min-height: 1.85em; }
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block; width: 3rem; flex-shrink: 0;
+  padding-left: 1.25rem; padding-right: 1.25rem; text-align: right;
+  color: #4A4440; user-select: none; font-size: 0.68rem; padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+.kw   { color: #C47A6A; } .str  { color: #8BAF7A; }
+.fn   { color: #7AABCF; } .num  { color: #C49A5A; }
+.cls  { color: #C4B570; } .cmt  { color: #7A6F6A; font-style: italic; }
+.pun  { color: #9A9090; } .prop { color: #B0C8E8; }
 
 /* ─── CALLOUTS ───────────────────────────────────────────────── */
 .callout {
@@ -823,165 +825,167 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">order-bubble.js — 訂單確認卡片完整實作</div>
-    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>/**</span>
-<span class="c-cmt"><span class="ln">2</span> * 產生訂單確認 Flex Message Bubble</span>
-<span class="c-cmt"><span class="ln">3</span> * @param {Object} order  訂單資料物件</span>
-<span class="c-cmt"><span class="ln">4</span> * @returns {Object}      Flex Message 物件</span>
-<span class="c-cmt"><span class="ln">5</span> */</span>
-<span class="c-kw"><span class="ln">6</span>function</span> <span class="c-fn">buildOrderBubble</span><span class="c-pun">(</span><span class="c-def">order</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">7</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">8</span>    type<span class="c-pun">:</span>    <span class="c-str">'flex'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">9</span>    altText<span class="c-pun">:</span> <span class="c-str">`訂單 ${order.id} 確認通知`</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>    contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">11</span>      type<span class="c-pun">:</span> <span class="c-str">'bubble'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">12</span>      size<span class="c-pun">:</span> <span class="c-str">'mega'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">13</span></span>
-<span class="c-cmt"><span class="ln">14</span>      // ── HEADER：訂單狀態標籤 ──────────────────────────────</span>
-<span class="c-def"><span class="ln">15</span>      header<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">16</span>        type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">17</span>        layout<span class="c-pun">:</span>         <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">18</span>        backgroundColor<span class="c-pun">:</span> <span class="c-str">'#1A1612'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">19</span>        paddingAll<span class="c-pun">:</span>      <span class="c-str">'md'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">20</span>        contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">21</span>          {</span>
-<span class="c-def"><span class="ln">22</span>            type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">23</span>            text<span class="c-pun">:</span>   <span class="c-str">'訂單確認'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">24</span>            color<span class="c-pun">:</span>  <span class="c-str">'#F5F0E8'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">25</span>            size<span class="c-pun">:</span>   <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">26</span>            weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
-<span class="c-def"><span class="ln">27</span>          <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">28</span>          {</span>
-<span class="c-cmt"><span class="ln">29</span>            // 狀態標籤：動態根據 order.status 改變顏色</span>
-<span class="c-def"><span class="ln">30</span>            type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">31</span>            layout<span class="c-pun">:</span>         <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">32</span>            backgroundColor<span class="c-pun">:</span> <span class="c-fn">statusColor</span><span class="c-pun">(</span><span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">status</span><span class="c-pun">),</span></span>
-<span class="c-def"><span class="ln">33</span>            cornerRadius<span class="c-pun">:</span>    <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">34</span>            paddingAll<span class="c-pun">:</span>      <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">35</span>            contents<span class="c-pun">: [{</span></span>
-<span class="c-def"><span class="ln">36</span>              type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">37</span>              text<span class="c-pun">:</span>   <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">statusLabel</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">38</span>              color<span class="c-pun">:</span>  <span class="c-str">'#FFFFFF'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">39</span>              size<span class="c-pun">:</span>   <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">40</span>              weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
-<span class="c-def"><span class="ln">41</span>            <span class="c-pun">}]</span></span>
-<span class="c-def"><span class="ln">42</span>          <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">43</span>        <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">44</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">45</span></span>
-<span class="c-cmt"><span class="ln">46</span>      // ── BODY：訂單明細 ────────────────────────────────────</span>
-<span class="c-def"><span class="ln">47</span>      body<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">48</span>        type<span class="c-pun">:</span>      <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">49</span>        layout<span class="c-pun">:</span>   <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">50</span>        spacing<span class="c-pun">:</span>  <span class="c-str">'md'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">51</span>        paddingAll<span class="c-pun">:</span> <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">52</span>        contents<span class="c-pun">: [</span></span>
-<span class="c-cmt"><span class="ln">53</span>          // 訂單資訊列（用 infoRow 工廠函式產生）</span>
-<span class="c-fn"><span class="ln">54</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'訂單編號'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">id</span><span class="c-pun">),</span></span>
-<span class="c-fn"><span class="ln">55</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'下單時間'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">createdAt</span><span class="c-pun">),</span></span>
-<span class="c-fn"><span class="ln">56</span>          infoRow</span><span class="c-pun">(</span><span class="c-str">'付款方式'</span><span class="c-pun">,</span> <span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">paymentMethod</span><span class="c-pun">),</span></span>
-<span class="c-def"><span class="ln">57</span></span>
-<span class="c-cmt"><span class="ln">58</span>          // 分隔線</span>
-<span class="c-def"><span class="ln">59</span>          { type<span class="c-pun">:</span> <span class="c-str">'separator'</span><span class="c-pun">,</span> margin<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">60</span></span>
-<span class="c-cmt"><span class="ln">61</span>          // 商品列表（動態展開）</span>
-<span class="c-def"><span class="ln">62</span>          <span class="c-pun">...</span><span class="c-def">order</span><span class="c-pun">.</span><span class="c-def">items</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">item</span> <span class="c-pun">=&gt;</span> <span class="c-fn">itemRow</span><span class="c-pun">(</span><span class="c-def">item</span><span class="c-pun">)),</span></span>
-<span class="c-def"><span class="ln">63</span></span>
-<span class="c-cmt"><span class="ln">64</span>          // 第二條分隔線</span>
-<span class="c-def"><span class="ln">65</span>          { type<span class="c-pun">:</span> <span class="c-str">'separator'</span><span class="c-pun">,</span> margin<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">66</span></span>
-<span class="c-cmt"><span class="ln">67</span>          // 合計金額（加粗強調）</span>
-<span class="c-def"><span class="ln">68</span>          <span class="c-pun">{</span></span>
-<span class="c-def"><span class="ln">69</span>            type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">70</span>            layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">71</span>            margin<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">72</span>            contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">73</span>              { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'合計'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">74</span>              {</span>
-<span class="c-def"><span class="ln">75</span>                type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">76</span>                text<span class="c-pun">:</span>   <span class="c-str">`NT$ ${order.total.toLocaleString()}`</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">77</span>                weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">78</span>                size<span class="c-pun">:</span>   <span class="c-str">'lg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">79</span>                align<span class="c-pun">:</span>  <span class="c-str">'end'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">80</span>                color<span class="c-pun">:</span>  <span class="c-str">'#B83025'</span></span>
-<span class="c-def"><span class="ln">81</span>              <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">82</span>            <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">83</span>          <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">84</span>        <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">85</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">86</span></span>
-<span class="c-cmt"><span class="ln">87</span>      // ── FOOTER：CTA 按鈕 ──────────────────────────────────</span>
-<span class="c-def"><span class="ln">88</span>      footer<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">89</span>        type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">90</span>        layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">91</span>        spacing<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">92</span>        contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">93</span>          {</span>
-<span class="c-def"><span class="ln">94</span>            type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">95</span>            style<span class="c-pun">:</span>  <span class="c-str">'primary'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">96</span>            color<span class="c-pun">:</span>  <span class="c-str">'#1A1612'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">97</span>            height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">98</span>            action<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">99</span>              type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">100</span>              label<span class="c-pun">:</span> <span class="c-str">'追蹤物流'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">101</span>              data<span class="c-pun">:</span>  <span class="c-str">`action=track&orderId=${order.id}`</span></span>
-<span class="c-def"><span class="ln">102</span>            <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">103</span>          <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">104</span>          {</span>
-<span class="c-def"><span class="ln">105</span>            type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">106</span>            style<span class="c-pun">:</span>  <span class="c-str">'link'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">107</span>            height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">108</span>            action<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">109</span>              type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">110</span>              label<span class="c-pun">:</span> <span class="c-str">'申請退換'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">111</span>              data<span class="c-pun">:</span>  <span class="c-str">`action=return&orderId=${order.id}`</span></span>
-<span class="c-def"><span class="ln">112</span>            <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">113</span>          <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">114</span>        <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">115</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">116</span>    <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">117</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">118</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">119</span></span>
-<span class="c-cmt"><span class="ln">120</span>// ── 輔助工廠函式 ────────────────────────────────────────────</span>
-<span class="c-def"><span class="ln">121</span></span>
-<span class="c-cmt"><span class="ln">122</span>// 資訊列：左側標籤 + 右側數值</span>
-<span class="c-kw"><span class="ln">123</span>function</span> <span class="c-fn">infoRow</span><span class="c-pun">(</span><span class="c-def">label</span><span class="c-pun">,</span> <span class="c-def">value</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">124</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">125</span>    type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">126</span>    layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">127</span>    contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">128</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">label</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">2</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">129</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">value</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">3</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">130</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">131</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">132</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">133</span></span>
-<span class="c-cmt"><span class="ln">134</span>// 商品列：名稱 + 數量 + 小計</span>
-<span class="c-kw"><span class="ln">135</span>function</span> <span class="c-fn">itemRow</span><span class="c-pun">(</span><span class="c-def">item</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">136</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">137</span>    type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">138</span>    layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">139</span>    margin<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">140</span>    contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">141</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">item</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>  size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">4</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">142</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`x${item.qty}`</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">1</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'center'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">143</span>      { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`$${item.price}`</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> flex<span class="c-pun">:</span> <span class="c-num">2</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">144</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">145</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">146</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">147</span></span>
-<span class="c-cmt"><span class="ln">148</span>// 訂單狀態對應顏色</span>
-<span class="c-kw"><span class="ln">149</span>function</span> <span class="c-fn">statusColor</span><span class="c-pun">(</span><span class="c-def">status</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">150</span>  const</span> <span class="c-def">map</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">151</span>    pending<span class="c-pun">:</span>   <span class="c-str">'#C49A5A'</span><span class="c-pun">,</span>  <span class="c-cmt">// 待處理 → 橙黃</span></span>
-<span class="c-def"><span class="ln">152</span>    confirmed<span class="c-pun">:</span> <span class="c-str">'#5A8A5A'</span><span class="c-pun">,</span>  <span class="c-cmt">// 已確認 → 綠</span></span>
-<span class="c-def"><span class="ln">153</span>    shipped<span class="c-pun">:</span>   <span class="c-str">'#4A7AAF'</span><span class="c-pun">,</span>  <span class="c-cmt">// 已出貨 → 藍</span></span>
-<span class="c-def"><span class="ln">154</span>    cancelled<span class="c-pun">:</span> <span class="c-str">'#B83025'</span>   <span class="c-cmt">// 已取消 → 紅</span></span>
-<span class="c-def"><span class="ln">155</span>  <span class="c-pun">}</span></span>
-<span class="c-kw"><span class="ln">156</span>  return</span> <span class="c-def">map</span><span class="c-pun">[</span><span class="c-def">status</span><span class="c-pun">]</span> <span class="c-pun">||</span> <span class="c-str">'#8C7E74'</span>
-<span class="c-def"><span class="ln">157</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">158</span></span>
-<span class="c-def"><span class="ln">159</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> buildOrderBubble <span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">/**</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">* 產生訂單確認 Flex Message Bubble</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">* @param {Object} order  訂單資料物件</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">* @returns {Object}      Flex Message 物件</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">*/</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">function</span> <span class="fn">buildOrderBubble</span><span class="pun">(</span>order<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">type<span class="pun">:</span>    <span class="str">'flex'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">altText<span class="pun">:</span> <span class="str">`訂單 ${order.id} 確認通知`</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">type<span class="pun">:</span> <span class="str">'bubble'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">size<span class="pun">:</span> <span class="str">'mega'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">// ── HEADER：訂單狀態標籤 ──────────────────────────────</span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">header<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">type<span class="pun">:</span>            <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">layout<span class="pun">:</span>         <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">backgroundColor<span class="pun">:</span> <span class="str">'#1A1612'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">paddingAll<span class="pun">:</span>      <span class="str">'md'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">type<span class="pun">:</span>   <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">text<span class="pun">:</span>   <span class="str">'訂單確認'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">color<span class="pun">:</span>  <span class="str">'#F5F0E8'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">size<span class="pun">:</span>   <span class="str">'lg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">weight<span class="pun">:</span> <span class="str">'bold'</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">29</span><span class="lc">// 狀態標籤：動態根據 order.status 改變顏色</span></div>
+<div class="cl"><span class="ln">30</span><span class="lc">type<span class="pun">:</span>            <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc">layout<span class="pun">:</span>         <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">32</span><span class="lc">backgroundColor<span class="pun">:</span> <span class="fn">statusColor</span><span class="pun">(</span>order<span class="pun">.</span>status<span class="pun">),</span></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc">cornerRadius<span class="pun">:</span>    <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">34</span><span class="lc">paddingAll<span class="pun">:</span>      <span class="str">'xs'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">35</span><span class="lc">contents<span class="pun">: [{</span></span></div>
+<div class="cl"><span class="ln">36</span><span class="lc">type<span class="pun">:</span>   <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">37</span><span class="lc">text<span class="pun">:</span>   order<span class="pun">.</span>statusLabel<span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">38</span><span class="lc">color<span class="pun">:</span>  <span class="str">'#FFFFFF'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">39</span><span class="lc">size<span class="pun">:</span>   <span class="str">'xs'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">40</span><span class="lc">weight<span class="pun">:</span> <span class="str">'bold'</span></span></div>
+<div class="cl"><span class="ln">41</span><span class="lc"><span class="pun">}]</span></span></div>
+<div class="cl"><span class="ln">42</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">43</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">44</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">45</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">46</span><span class="lc">// ── BODY：訂單明細 ────────────────────────────────────</span></div>
+<div class="cl"><span class="ln">47</span><span class="lc">body<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">48</span><span class="lc">type<span class="pun">:</span>      <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">49</span><span class="lc">layout<span class="pun">:</span>   <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">50</span><span class="lc">spacing<span class="pun">:</span>  <span class="str">'md'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">51</span><span class="lc">paddingAll<span class="pun">:</span> <span class="str">'lg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">52</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">53</span><span class="lc">// 訂單資訊列（用 infoRow 工廠函式產生）</span></div>
+<div class="cl"><span class="ln">54</span><span class="lc">infoRow</span><span class="pun">(</span><span class="str">'訂單編號'</span><span class="pun">,</span> order<span class="pun">.</span>id<span class="pun">),</span></div>
+<div class="cl"><span class="ln">55</span><span class="lc">infoRow</span><span class="pun">(</span><span class="str">'下單時間'</span><span class="pun">,</span> order<span class="pun">.</span>createdAt<span class="pun">),</span></div>
+<div class="cl"><span class="ln">56</span><span class="lc">infoRow</span><span class="pun">(</span><span class="str">'付款方式'</span><span class="pun">,</span> order<span class="pun">.</span>paymentMethod<span class="pun">),</span></div>
+<div class="cl"><span class="ln">57</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">58</span><span class="lc">// 分隔線</span></div>
+<div class="cl"><span class="ln">59</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'separator'</span><span class="pun">,</span> margin<span class="pun">:</span> <span class="str">'md'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">60</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">61</span><span class="lc">// 商品列表（動態展開）</span></div>
+<div class="cl"><span class="ln">62</span><span class="lc"><span class="pun">...</span>order<span class="pun">.</span>items<span class="pun">.</span><span class="fn">map</span><span class="pun">(</span>item <span class="pun">=&gt;</span> <span class="fn">itemRow</span><span class="pun">(</span>item<span class="pun">)),</span></span></div>
+<div class="cl"><span class="ln">63</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">64</span><span class="lc">// 第二條分隔線</span></div>
+<div class="cl"><span class="ln">65</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'separator'</span><span class="pun">,</span> margin<span class="pun">:</span> <span class="str">'md'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">66</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">67</span><span class="lc">// 合計金額（加粗強調）</span></div>
+<div class="cl"><span class="ln">68</span><span class="lc"><span class="pun">{</span></span></div>
+<div class="cl"><span class="ln">69</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">70</span><span class="lc">layout<span class="pun">:</span> <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">71</span><span class="lc">margin<span class="pun">:</span> <span class="str">'md'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">72</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">73</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">'合計'</span><span class="pun">,</span> weight<span class="pun">:</span> <span class="str">'bold'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'md'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">74</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">75</span><span class="lc">type<span class="pun">:</span>   <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">76</span><span class="lc">text<span class="pun">:</span>   <span class="str">`NT$ ${order.total.toLocaleString()}`</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">77</span><span class="lc">weight<span class="pun">:</span> <span class="str">'bold'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">78</span><span class="lc">size<span class="pun">:</span>   <span class="str">'lg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">79</span><span class="lc">align<span class="pun">:</span>  <span class="str">'end'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">80</span><span class="lc">color<span class="pun">:</span>  <span class="str">'#B83025'</span></span></div>
+<div class="cl"><span class="ln">81</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">82</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">83</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">84</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">85</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">86</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">87</span><span class="lc">// ── FOOTER：CTA 按鈕 ──────────────────────────────────</span></div>
+<div class="cl"><span class="ln">88</span><span class="lc">footer<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">89</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">90</span><span class="lc">layout<span class="pun">:</span> <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">91</span><span class="lc">spacing<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">92</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">93</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">94</span><span class="lc">type<span class="pun">:</span>   <span class="str">'button'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">95</span><span class="lc">style<span class="pun">:</span>  <span class="str">'primary'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">96</span><span class="lc">color<span class="pun">:</span>  <span class="str">'#1A1612'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">97</span><span class="lc">height<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">98</span><span class="lc">action<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">99</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">100</span><span class="lc">label<span class="pun">:</span> <span class="str">'追蹤物流'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">101</span><span class="lc">data<span class="pun">:</span>  <span class="str">`action=track&orderId=${order.id}`</span></span></div>
+<div class="cl"><span class="ln">102</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">103</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">104</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">105</span><span class="lc">type<span class="pun">:</span>   <span class="str">'button'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">106</span><span class="lc">style<span class="pun">:</span>  <span class="str">'link'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">107</span><span class="lc">height<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">108</span><span class="lc">action<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">109</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">110</span><span class="lc">label<span class="pun">:</span> <span class="str">'申請退換'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">111</span><span class="lc">data<span class="pun">:</span>  <span class="str">`action=return&orderId=${order.id}`</span></span></div>
+<div class="cl"><span class="ln">112</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">113</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">114</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">115</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">116</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">117</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">118</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">119</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">120</span><span class="lc">// ── 輔助工廠函式 ────────────────────────────────────────────</span></div>
+<div class="cl"><span class="ln">121</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">122</span><span class="lc">// 資訊列：左側標籤 + 右側數值</span></div>
+<div class="cl"><span class="ln">123</span><span class="lc">function</span> <span class="fn">infoRow</span><span class="pun">(</span>label<span class="pun">,</span> value<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">124</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">125</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">126</span><span class="lc">layout<span class="pun">:</span> <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">127</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">128</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> label<span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#8C7E74'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> flex<span class="pun">:</span> <span class="num">2</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">129</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> value<span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> align<span class="pun">:</span> <span class="str">'end'</span><span class="pun">,</span> flex<span class="pun">:</span> <span class="num">3</span><span class="pun">,</span> wrap<span class="pun">:</span> <span class="kw">true</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">130</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">131</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">132</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">133</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">134</span><span class="lc">// 商品列：名稱 + 數量 + 小計</span></div>
+<div class="cl"><span class="ln">135</span><span class="lc">function</span> <span class="fn">itemRow</span><span class="pun">(</span>item<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">136</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">137</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">138</span><span class="lc">layout<span class="pun">:</span> <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">139</span><span class="lc">margin<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">140</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">141</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> item<span class="pun">.</span>name<span class="pun">,</span>  size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> flex<span class="pun">:</span> <span class="num">4</span><span class="pun">,</span> wrap<span class="pun">:</span> <span class="kw">true</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">142</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">`x${item.qty}`</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> flex<span class="pun">:</span> <span class="num">1</span><span class="pun">,</span> align<span class="pun">:</span> <span class="str">'center'</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#8C7E74'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">143</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">`$${item.price}`</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> flex<span class="pun">:</span> <span class="num">2</span><span class="pun">,</span> align<span class="pun">:</span> <span class="str">'end'</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">144</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">145</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">146</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">147</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">148</span><span class="lc">// 訂單狀態對應顏色</span></div>
+<div class="cl"><span class="ln">149</span><span class="lc">function</span> <span class="fn">statusColor</span><span class="pun">(</span>status<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">150</span><span class="lc">const</span> map <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">151</span><span class="lc">pending<span class="pun">:</span>   <span class="str">'#C49A5A'</span><span class="pun">,</span>  <span class="cmt">// 待處理 → 橙黃</span></span></div>
+<div class="cl"><span class="ln">152</span><span class="lc">confirmed<span class="pun">:</span> <span class="str">'#5A8A5A'</span><span class="pun">,</span>  <span class="cmt">// 已確認 → 綠</span></span></div>
+<div class="cl"><span class="ln">153</span><span class="lc">shipped<span class="pun">:</span>   <span class="str">'#4A7AAF'</span><span class="pun">,</span>  <span class="cmt">// 已出貨 → 藍</span></span></div>
+<div class="cl"><span class="ln">154</span><span class="lc">cancelled<span class="pun">:</span> <span class="str">'#B83025'</span>   <span class="cmt">// 已取消 → 紅</span></span></div>
+<div class="cl"><span class="ln">155</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">156</span><span class="lc">return</span> map<span class="pun">[</span>status<span class="pun">]</span> <span class="pun">||</span> <span class="str">'#8C7E74'</span></div>
+<div class="cl"><span class="ln">157</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">158</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">159</span><span class="lc">module<span class="pun">.</span>exports <span class="pun">= {</span> buildOrderBubble <span class="pun">}</span></span></div>
+</div>
   </div>
 
   <p class="body-text">
@@ -1021,67 +1025,69 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">buildProductCarousel — 從商品陣列產生 Flex Carousel</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>function</span> <span class="c-fn">buildProductBubble</span><span class="c-pun">(</span><span class="c-def">product</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">2</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">3</span>    type<span class="c-pun">:</span> <span class="c-str">'bubble'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">4</span>    size<span class="c-pun">:</span> <span class="c-str">'kilo'</span><span class="c-pun">,</span>  <span class="c-cmt">// Carousel 中使用較小 size 可橫排更多卡片</span></span>
-<span class="c-def"><span class="ln">5</span>    hero<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">6</span>      type<span class="c-pun">:</span>        <span class="c-str">'image'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">7</span>      url<span class="c-pun">:</span>         <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">imageUrl</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">8</span>      size<span class="c-pun">:</span>        <span class="c-str">'full'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">9</span>      aspectRatio<span class="c-pun">:</span> <span class="c-str">'4:3'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>      aspectMode<span class="c-pun">:</span>  <span class="c-str">'cover'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">11</span>      action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'uri'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'查看'</span><span class="c-pun">,</span> uri<span class="c-pun">:</span> <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">url</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">12</span>    <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">13</span>    body<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">14</span>      type<span class="c-pun">:</span>       <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>      layout<span class="c-pun">:</span>    <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">16</span>      spacing<span class="c-pun">:</span>   <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">17</span>      paddingAll<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">18</span>      contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">19</span>        { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">product</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>  weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span> wrap<span class="c-pun">:</span> <span class="c-kw">true</span><span class="c-pun">,</span> maxLines<span class="c-pun">:</span> <span class="c-num">2</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">20</span>        {</span>
-<span class="c-def"><span class="ln">21</span>          type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">22</span>          layout<span class="c-pun">:</span> <span class="c-str">'horizontal'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">23</span>          contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">24</span>            {</span>
-<span class="c-cmt"><span class="ln">25</span>              // 原價加刪除線</span>
-<span class="c-def"><span class="ln">26</span>              type<span class="c-pun">:</span>       <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">27</span>              text<span class="c-pun">:</span>       <span class="c-str">`NT$ ${product.originalPrice}`</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">28</span>              color<span class="c-pun">:</span>      <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">29</span>              size<span class="c-pun">:</span>       <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">30</span>              decoration<span class="c-pun">:</span> <span class="c-str">'line-through'</span>  <span class="c-cmt">// 刪除線顯示原價</span></span>
-<span class="c-def"><span class="ln">31</span>            <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">32</span>            { type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">`NT$ ${product.salePrice}`</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'md'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span><span class="c-pun">,</span> align<span class="c-pun">:</span> <span class="c-str">'end'</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">33</span>          <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">34</span>        <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">35</span>      <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">36</span>    <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">37</span>    footer<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">38</span>      type<span class="c-pun">:</span>    <span class="c-str">'box'</span><span class="c-pun">,</span> layout<span class="c-pun">:</span> <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">39</span>      contents<span class="c-pun">: [{</span></span>
-<span class="c-def"><span class="ln">40</span>        type<span class="c-pun">:</span>   <span class="c-str">'button'</span><span class="c-pun">,</span> style<span class="c-pun">:</span> <span class="c-str">'primary'</span><span class="c-pun">,</span> height<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">41</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'加入購物車'</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-str">`action=addCart&id=${product.id}`</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">42</span>      <span class="c-pun">}]</span></span>
-<span class="c-def"><span class="ln">43</span>    <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">44</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">45</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">46</span></span>
-<span class="c-cmt"><span class="ln">47</span>// 組合成 Carousel Flex Message</span>
-<span class="c-kw"><span class="ln">48</span>function</span> <span class="c-fn">buildProductCarousel</span><span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">49</span>  if</span> <span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">.</span><span class="c-def">length</span> <span class="c-pun">===</span> <span class="c-num">0</span><span class="c-pun">)</span> <span class="c-kw">throw new</span> <span class="c-cls">Error</span><span class="c-pun">(</span><span class="c-str">'商品陣列不可為空'</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">50</span>  if</span> <span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">.</span><span class="c-def">length</span> <span class="c-pun">&gt;</span> <span class="c-num">12</span><span class="c-pun">)</span> <span class="c-def">products</span> <span class="c-pun">=</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-num">0</span><span class="c-pun">,</span> <span class="c-num">12</span><span class="c-pun">)</span>  <span class="c-cmt">// 上限 12</span>
-<span class="c-def"><span class="ln">51</span></span>
-<span class="c-kw"><span class="ln">52</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">53</span>    type<span class="c-pun">:</span>    <span class="c-str">'flex'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">54</span>    altText<span class="c-pun">:</span> <span class="c-str">`${products.length} 件商品推薦`</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">55</span>    contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">56</span>      type<span class="c-pun">:</span>     <span class="c-str">'carousel'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">57</span>      contents<span class="c-pun">:</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">p</span> <span class="c-pun">=&gt;</span> <span class="c-fn">buildProductBubble</span><span class="c-pun">(</span><span class="c-def">p</span><span class="c-pun">))</span></span>
-<span class="c-def"><span class="ln">58</span>    <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">59</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">60</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">61</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> buildProductCarousel<span class="c-pun">,</span> buildOrderBubble <span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">function</span> <span class="fn">buildProductBubble</span><span class="pun">(</span>product<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">type<span class="pun">:</span> <span class="str">'bubble'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">size<span class="pun">:</span> <span class="str">'kilo'</span><span class="pun">,</span>  <span class="cmt">// Carousel 中使用較小 size 可橫排更多卡片</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">hero<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">type<span class="pun">:</span>        <span class="str">'image'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">url<span class="pun">:</span>         product<span class="pun">.</span>imageUrl<span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">size<span class="pun">:</span>        <span class="str">'full'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">aspectRatio<span class="pun">:</span> <span class="str">'4:3'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">aspectMode<span class="pun">:</span>  <span class="str">'cover'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">action<span class="pun">: {</span> type<span class="pun">:</span> <span class="str">'uri'</span><span class="pun">,</span> label<span class="pun">:</span> <span class="str">'查看'</span><span class="pun">,</span> uri<span class="pun">:</span> product<span class="pun">.</span>url <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">body<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">type<span class="pun">:</span>       <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">layout<span class="pun">:</span>    <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">spacing<span class="pun">:</span>   <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">paddingAll<span class="pun">:</span> <span class="str">'md'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> product<span class="pun">.</span>name<span class="pun">,</span>  weight<span class="pun">:</span> <span class="str">'bold'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'md'</span><span class="pun">,</span> wrap<span class="pun">:</span> <span class="kw">true</span><span class="pun">,</span> maxLines<span class="pun">:</span> <span class="num">2</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">layout<span class="pun">:</span> <span class="str">'horizontal'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">// 原價加刪除線</span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">type<span class="pun">:</span>       <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc">text<span class="pun">:</span>       <span class="str">`NT$ ${product.originalPrice}`</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">color<span class="pun">:</span>      <span class="str">'#8C7E74'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">29</span><span class="lc">size<span class="pun">:</span>       <span class="str">'xs'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">30</span><span class="lc">decoration<span class="pun">:</span> <span class="str">'line-through'</span>  <span class="cmt">// 刪除線顯示原價</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">32</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">`NT$ ${product.salePrice}`</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#B83025'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'md'</span><span class="pun">,</span> weight<span class="pun">:</span> <span class="str">'bold'</span><span class="pun">,</span> align<span class="pun">:</span> <span class="str">'end'</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">34</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">35</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">36</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">37</span><span class="lc">footer<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">38</span><span class="lc">type<span class="pun">:</span>    <span class="str">'box'</span><span class="pun">,</span> layout<span class="pun">:</span> <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">39</span><span class="lc">contents<span class="pun">: [{</span></span></div>
+<div class="cl"><span class="ln">40</span><span class="lc">type<span class="pun">:</span>   <span class="str">'button'</span><span class="pun">,</span> style<span class="pun">:</span> <span class="str">'primary'</span><span class="pun">,</span> height<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#B83025'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">41</span><span class="lc">action<span class="pun">: {</span> type<span class="pun">:</span> <span class="str">'postback'</span><span class="pun">,</span> label<span class="pun">:</span> <span class="str">'加入購物車'</span><span class="pun">,</span> data<span class="pun">:</span> <span class="str">`action=addCart&id=${product.id}`</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">42</span><span class="lc"><span class="pun">}]</span></span></div>
+<div class="cl"><span class="ln">43</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">44</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">45</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">46</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">47</span><span class="lc">// 組合成 Carousel Flex Message</span></div>
+<div class="cl"><span class="ln">48</span><span class="lc">function</span> <span class="fn">buildProductCarousel</span><span class="pun">(</span>products<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">49</span><span class="lc">if</span> <span class="pun">(</span>products<span class="pun">.</span>length <span class="pun">===</span> <span class="num">0</span><span class="pun">)</span> <span class="kw">throw new</span> <span class="cls">Error</span><span class="pun">(</span><span class="str">'商品陣列不可為空'</span><span class="pun">)</span></div>
+<div class="cl"><span class="ln">50</span><span class="lc">if</span> <span class="pun">(</span>products<span class="pun">.</span>length <span class="pun">&gt;</span> <span class="num">12</span><span class="pun">)</span> products <span class="pun">=</span> products<span class="pun">.</span><span class="fn">slice</span><span class="pun">(</span><span class="num">0</span><span class="pun">,</span> <span class="num">12</span><span class="pun">)</span>  <span class="cmt">// 上限 12</span></div>
+<div class="cl"><span class="ln">51</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">52</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">53</span><span class="lc">type<span class="pun">:</span>    <span class="str">'flex'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">54</span><span class="lc">altText<span class="pun">:</span> <span class="str">`${products.length} 件商品推薦`</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">55</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">56</span><span class="lc">type<span class="pun">:</span>     <span class="str">'carousel'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">57</span><span class="lc">contents<span class="pun">:</span> products<span class="pun">.</span><span class="fn">map</span><span class="pun">(</span>p <span class="pun">=&gt;</span> <span class="fn">buildProductBubble</span><span class="pun">(</span>p<span class="pun">))</span></span></div>
+<div class="cl"><span class="ln">58</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">59</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">60</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">61</span><span class="lc">module<span class="pun">.</span>exports <span class="pun">= {</span> buildProductCarousel<span class="pun">,</span> buildOrderBubble <span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="callout warn">
@@ -1130,14 +1136,16 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">span 行內混合樣式 — 顯示「剩餘 3 件」警示</div>
-    <div class="code-block"><span class="c-pun"><span class="ln">1</span>{</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  contents<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">4</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'庫存：'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">5</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'僅剩 3 件'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span><span class="c-pun">,</span> weight<span class="c-pun">:</span> <span class="c-str">'bold'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">6</span>    { type<span class="c-pun">:</span> <span class="c-str">'span'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-str">'，請盡速下單'</span><span class="c-pun">,</span> color<span class="c-pun">:</span> <span class="c-str">'#8C7E74'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'sm'</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">7</span>  <span class="c-pun">]</span></span>
-<span class="c-pun"><span class="ln">8</span>}</span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'span'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">'庫存：'</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#8C7E74'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'span'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">'僅剩 3 件'</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#B83025'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span><span class="pun">,</span> weight<span class="pun">:</span> <span class="str">'bold'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'span'</span><span class="pun">,</span> text<span class="pun">:</span> <span class="str">'，請盡速下單'</span><span class="pun">,</span> color<span class="pun">:</span> <span class="str">'#8C7E74'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'sm'</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">}</span></div>
+</div>
   </div>
 
   <div class="sub-heading">box 的 position 屬性與絕對定位</div>
@@ -1152,33 +1160,35 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">在圖片上疊加「熱銷」標籤</div>
-    <div class="code-block"><span class="c-pun"><span class="ln">1</span>{</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>   <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  layout<span class="c-pun">:</span> <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: [</span></span>
-<span class="c-cmt"><span class="ln">5</span>    // 底層圖片（正常排版流）</span>
-<span class="c-def"><span class="ln">6</span>    { type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span> url<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/product.jpg'</span><span class="c-pun">,</span> size<span class="c-pun">:</span> <span class="c-str">'full'</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">7</span></span>
-<span class="c-cmt"><span class="ln">8</span>    // 絕對定位的標籤，疊加在圖片左上角</span>
-<span class="c-def"><span class="ln">9</span>    {</span>
-<span class="c-def"><span class="ln">10</span>      type<span class="c-pun">:</span>            <span class="c-str">'box'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">11</span>      layout<span class="c-pun">:</span>         <span class="c-str">'vertical'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">12</span>      position<span class="c-pun">:</span>       <span class="c-str">'absolute'</span><span class="c-pun">,</span>  <span class="c-cmt">// 脫離正常排版流</span></span>
-<span class="c-def"><span class="ln">13</span>      offsetTop<span class="c-pun">:</span>      <span class="c-str">'10px'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">14</span>      offsetStart<span class="c-pun">:</span>    <span class="c-str">'10px'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>      backgroundColor<span class="c-pun">:</span> <span class="c-str">'#B83025'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">16</span>      cornerRadius<span class="c-pun">:</span>   <span class="c-str">'sm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">17</span>      paddingAll<span class="c-pun">:</span>     <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">18</span>      contents<span class="c-pun">: [{</span></span>
-<span class="c-def"><span class="ln">19</span>        type<span class="c-pun">:</span>   <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">20</span>        text<span class="c-pun">:</span>   <span class="c-str">'熱銷'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">21</span>        color<span class="c-pun">:</span>  <span class="c-str">'#FFFFFF'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">22</span>        size<span class="c-pun">:</span>   <span class="c-str">'xs'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">23</span>        weight<span class="c-pun">:</span> <span class="c-str">'bold'</span></span>
-<span class="c-def"><span class="ln">24</span>      <span class="c-pun">}]</span></span>
-<span class="c-def"><span class="ln">25</span>    <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">26</span>  <span class="c-pun">]</span></span>
-<span class="c-pun"><span class="ln">27</span>}</span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span>   <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">layout<span class="pun">:</span> <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">contents<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">// 底層圖片（正常排版流）</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">{ type<span class="pun">:</span> <span class="str">'image'</span><span class="pun">,</span> url<span class="pun">:</span> <span class="str">'https://cdn.example.com/product.jpg'</span><span class="pun">,</span> size<span class="pun">:</span> <span class="str">'full'</span> <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">// 絕對定位的標籤，疊加在圖片左上角</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">type<span class="pun">:</span>            <span class="str">'box'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">layout<span class="pun">:</span>         <span class="str">'vertical'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">position<span class="pun">:</span>       <span class="str">'absolute'</span><span class="pun">,</span>  <span class="cmt">// 脫離正常排版流</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">offsetTop<span class="pun">:</span>      <span class="str">'10px'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">offsetStart<span class="pun">:</span>    <span class="str">'10px'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">backgroundColor<span class="pun">:</span> <span class="str">'#B83025'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">cornerRadius<span class="pun">:</span>   <span class="str">'sm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">paddingAll<span class="pun">:</span>     <span class="str">'xs'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">contents<span class="pun">: [{</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">type<span class="pun">:</span>   <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">text<span class="pun">:</span>   <span class="str">'熱銷'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">color<span class="pun">:</span>  <span class="str">'#FFFFFF'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">size<span class="pun">:</span>   <span class="str">'xs'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">weight<span class="pun">:</span> <span class="str">'bold'</span></span></div>
+<div class="cl"><span class="ln">24</span><span class="lc"><span class="pun">}]</span></span></div>
+<div class="cl"><span class="ln">25</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc">}</span></div>
+</div>
   </div>
 
   <div class="sub-heading">常見排版問題診斷</div>

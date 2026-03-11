@@ -268,25 +268,27 @@ body {
 }
 .code-block {
   background: var(--ink-2);
-  font-family: var(--mono); font-size: 0.78rem; line-height: 1.75;
-  padding: 1.5rem 1.75rem;
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.85;
+  padding: 1.5rem 0;
   overflow-x: auto;
   border-left: 3px solid var(--red);
-  tab-size: 2;
 }
-.code-block .ln {
-  display: inline-block; width: 2em;
+.cl { display: flex; padding: 0 1.75rem 0 0; min-height: 1.85em; }
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block; width: 3rem;
+  padding-left: 1.25rem; padding-right: 1.25rem;
   color: #4A4440; user-select: none; font-size: 0.68rem;
-  margin-right: 0.5rem;
+  flex-shrink: 0; text-align: right; padding-top: 0.02em;
 }
-.c-cmt  { color: #7A6F6A; font-style: italic; }
-.c-kw   { color: #C47A6A; }
-.c-str  { color: #8BAF7A; }
-.c-fn   { color: #7AABCF; }
-.c-num  { color: #C49A5A; }
-.c-cls  { color: #C4B570; }
-.c-pun  { color: #9A9090; }
-.c-def  { color: #E8E0D8; }
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+.i1 { padding-left: 2ch; } .i2 { padding-left: 4ch; }
+.i3 { padding-left: 6ch; } .i4 { padding-left: 8ch; }
+.i5 { padding-left: 10ch; } .i6 { padding-left: 12ch; }
+.kw  { color: #C47A6A; } .str { color: #8BAF7A; }
+.fn  { color: #7AABCF; } .num { color: #C49A5A; }
+.cls { color: #C4B570; } .cmt { color: #7A6F6A; font-style: italic; }
+.pun { color: #9A9090; }
 
 /* ─── CALLOUT BOXES ──────────────────────────────────────────── */
 .callout {
@@ -669,25 +671,27 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">Webhook payload 範例結構</div>
-        <div class="code-block"><span class="c-def"><span class="ln">1</span>{</span>
-<span class="c-def"><span class="ln">2</span>  <span class="c-str">"destination"</span><span class="c-pun">:</span> <span class="c-str">"U4af4980629..."</span>,</span>
-<span class="c-def"><span class="ln">3</span>  <span class="c-str">"events"</span><span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">4</span>    {</span>
-<span class="c-def"><span class="ln">5</span>      <span class="c-str">"type"</span><span class="c-pun">:</span> <span class="c-str">"message"</span>,</span>
-<span class="c-def"><span class="ln">6</span>      <span class="c-str">"replyToken"</span><span class="c-pun">:</span> <span class="c-str">"nHuyWiB7yP5Zw52FIkcQobQuGDXCTA"</span>,</span>
-<span class="c-def"><span class="ln">7</span>      <span class="c-str">"source"</span><span class="c-pun">:</span> {</span>
-<span class="c-def"><span class="ln">8</span>        <span class="c-str">"type"</span><span class="c-pun">:</span>   <span class="c-str">"user"</span>,</span>
-<span class="c-def"><span class="ln">9</span>        <span class="c-str">"userId"</span><span class="c-pun">:</span> <span class="c-str">"U4af4980629..."</span></span>
-<span class="c-def"><span class="ln">10</span>      },</span>
-<span class="c-def"><span class="ln">11</span>      <span class="c-str">"timestamp"</span><span class="c-pun">:</span> <span class="c-num">1625665242211</span>,</span>
-<span class="c-def"><span class="ln">12</span>      <span class="c-str">"message"</span><span class="c-pun">:</span> {</span>
-<span class="c-def"><span class="ln">13</span>        <span class="c-str">"id"</span><span class="c-pun">:</span>   <span class="c-str">"444573844083572737"</span>,</span>
-<span class="c-def"><span class="ln">14</span>        <span class="c-str">"type"</span><span class="c-pun">:</span> <span class="c-str">"text"</span>,</span>
-<span class="c-def"><span class="ln">15</span>        <span class="c-str">"text"</span><span class="c-pun">:</span> <span class="c-str">"你好！"</span></span>
-<span class="c-def"><span class="ln">16</span>      }</span>
-<span class="c-def"><span class="ln">17</span>    }</span>
-<span class="c-def"><span class="ln">18</span>  ]</span>
-<span class="c-def"><span class="ln">19</span>}</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">  <span class="str">"destination"</span><span class="pun">:</span> <span class="str">"U4af4980629..."</span>,</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">  <span class="str">"events"</span><span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">    {</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">      <span class="str">"type"</span><span class="pun">:</span>       <span class="str">"message"</span>,</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">      <span class="str">"replyToken"</span><span class="pun">:</span> <span class="str">"nHuyWiB7yP5Zw52FIkcQobQuGDXCTA"</span>,</span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">      <span class="str">"source"</span><span class="pun">:</span> {</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">        <span class="str">"type"</span><span class="pun">:</span>   <span class="str">"user"</span>,</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">        <span class="str">"userId"</span><span class="pun">:</span> <span class="str">"U4af4980629..."</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">      },</span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">      <span class="str">"timestamp"</span><span class="pun">:</span> <span class="num">1625665242211</span>,</span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">      <span class="str">"message"</span><span class="pun">:</span> {</span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">        <span class="str">"id"</span><span class="pun">:</span>   <span class="str">"444573844083572737"</span>,</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">        <span class="str">"type"</span><span class="pun">:</span> <span class="str">"text"</span>,</span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">        <span class="str">"text"</span><span class="pun">:</span> <span class="str">"你好！"</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">      }</span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">    }</span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">  ]</span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">}</span></div>
+</div>
       </div>
 
     </article>
@@ -789,17 +793,19 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">建立專案目錄並安裝依賴</div>
-        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 建立並進入專案目錄</span>
-<span class="c-def"><span class="ln">2</span>mkdir my-linebot <span class="c-pun">&&</span> cd my-linebot</span>
-<span class="c-def"><span class="ln">3</span></span>
-<span class="c-cmt"><span class="ln">4</span># 初始化 npm 專案（-y 跳過互動式提問）</span>
-<span class="c-def"><span class="ln">5</span>npm init -y</span>
-<span class="c-def"><span class="ln">6</span></span>
-<span class="c-cmt"><span class="ln">7</span># 安裝生產依賴</span>
-<span class="c-def"><span class="ln">8</span>npm install @line/bot-sdk express dotenv</span>
-<span class="c-def"><span class="ln">9</span></span>
-<span class="c-cmt"><span class="ln">10</span># 安裝開發工具（自動重啟）</span>
-<span class="c-def"><span class="ln">11</span>npm install --save-dev nodemon</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 建立並進入專案目錄</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">mkdir my-linebot && cd my-linebot</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt"># 初始化 npm 專案（-y 跳過互動式提問）</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">npm init -y</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt"># 安裝生產依賴</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">npm install @line/bot-sdk express dotenv</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc"><span class="cmt"># 安裝開發工具（自動重啟）</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">npm install --save-dev nodemon</span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -809,22 +815,26 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">.env — 環境變數設定</div>
-        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 從 LINE Developers Console 取得</span>
-<span class="c-def"><span class="ln">2</span>CHANNEL_SECRET<span class="c-pun">=</span>你的_channel_secret_32位</span>
-<span class="c-def"><span class="ln">3</span>CHANNEL_ACCESS_TOKEN<span class="c-pun">=</span>你的_long_lived_token</span>
-<span class="c-def"><span class="ln">4</span></span>
-<span class="c-cmt"><span class="ln">5</span># 伺服器設定</span>
-<span class="c-def"><span class="ln">6</span>PORT<span class="c-pun">=</span>3000</span>
-<span class="c-def"><span class="ln">7</span>NODE_ENV<span class="c-pun">=</span>development</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 從 LINE Developers Console 取得</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc"><span class="cls">CHANNEL_SECRET</span>=你的_channel_secret_32位</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"><span class="cls">CHANNEL_ACCESS_TOKEN</span>=你的_long_lived_token</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt"># 伺服器設定</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"><span class="cls">PORT</span>=<span class="num">3000</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="cls">NODE_ENV</span>=development</span></div>
+</div>
       </div>
 
       <div class="code-figure">
         <div class="code-caption">.gitignore — 排除敏感檔案</div>
-        <div class="code-block"><span class="c-def"><span class="ln">1</span>node_modules/</span>
-<span class="c-def"><span class="ln">2</span>.env</span>
-<span class="c-def"><span class="ln">3</span>.env.local</span>
-<span class="c-def"><span class="ln">4</span>.DS_Store</span>
-<span class="c-def"><span class="ln">5</span>*.log</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">node_modules/</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">.env</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">.env.local</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">.DS_Store</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">*.log</span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -834,11 +844,13 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">package.json — scripts 欄位</div>
-        <div class="code-block"><span class="c-def"><span class="ln">1</span><span class="c-str">"scripts"</span><span class="c-pun">:</span> {</span>
-<span class="c-def"><span class="ln">2</span>  <span class="c-str">"start"</span><span class="c-pun">:</span>  <span class="c-str">"node index.js"</span>,</span>
-<span class="c-def"><span class="ln">3</span>  <span class="c-str">"dev"</span><span class="c-pun">:</span>    <span class="c-str">"nodemon index.js"</span>,</span>
-<span class="c-def"><span class="ln">4</span>  <span class="c-str">"lint"</span><span class="c-pun">:</span>   <span class="c-str">"eslint ."</span></span>
-<span class="c-def"><span class="ln">5</span>}</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="str">"scripts"</span><span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">  <span class="str">"start"</span><span class="pun">:</span> <span class="str">"node index.js"</span>,</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">  <span class="str">"dev"</span><span class="pun">:</span>   <span class="str">"nodemon index.js"</span>,</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">  <span class="str">"lint"</span><span class="pun">:</span>  <span class="str">"eslint ."</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -848,12 +860,14 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">初始專案目錄結構</div>
-        <div class="code-block"><span class="c-def"><span class="ln">1</span>my-linebot/</span>
-<span class="c-def"><span class="ln">2</span>├── index.js          <span class="c-cmt"># 主程式入口</span></span>
-<span class="c-def"><span class="ln">3</span>├── .env              <span class="c-cmt"># 環境變數（不提交 Git）</span></span>
-<span class="c-def"><span class="ln">4</span>├── .gitignore</span>
-<span class="c-def"><span class="ln">5</span>├── package.json</span>
-<span class="c-def"><span class="ln">6</span>└── package-lock.json</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">my-linebot/</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">├── index.js          <span class="cmt"># 主程式入口</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">├── .env              <span class="cmt"># 環境變數（不提交 Git）</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">├── .gitignore</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">├── package.json</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">└── package-lock.json</span></div>
+</div>
       </div>
 
     </article>
@@ -874,56 +888,58 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">index.js — 完整 Echo Bot 實作</div>
-        <div class="code-block"><span class="c-kw"><span class="ln">1</span>require</span><span class="c-pun">(</span><span class="c-str">'dotenv'</span><span class="c-pun">).</span><span class="c-fn">config</span><span class="c-pun">()</span>
-<span class="c-kw"><span class="ln">2</span>const</span> line    <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'@line/bot-sdk'</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">3</span>const</span> express <span class="c-pun">=</span> <span class="c-fn">require</span><span class="c-pun">(</span><span class="c-str">'express'</span><span class="c-pun">)</span>
-<span class="c-def"><span class="ln">4</span></span>
-<span class="c-cmt"><span class="ln">5</span>// 1. 設定物件：SDK 與 Client 都需要它</span>
-<span class="c-kw"><span class="ln">6</span>const</span> config <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">7</span>  channelSecret:      process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_SECRET</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">8</span>  channelAccessToken: process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">CHANNEL_ACCESS_TOKEN</span></span>
-<span class="c-def"><span class="ln">9</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">10</span></span>
-<span class="c-cmt"><span class="ln">11</span>// 2. LINE Client：用於呼叫 LINE API（傳送訊息等）</span>
-<span class="c-kw"><span class="ln">12</span>const</span> client <span class="c-pun">=</span> <span class="c-kw">new</span> <span class="c-cls">line</span><span class="c-pun">.</span><span class="c-cls">Client</span><span class="c-pun">(</span>config<span class="c-pun">)</span>
-<span class="c-def"><span class="ln">13</span></span>
-<span class="c-cmt"><span class="ln">14</span>// 3. Express App</span>
-<span class="c-kw"><span class="ln">15</span>const</span> app <span class="c-pun">=</span> <span class="c-fn">express</span><span class="c-pun">()</span>
-<span class="c-def"><span class="ln">16</span></span>
-<span class="c-cmt"><span class="ln">17</span>// 4. Webhook 端點：line.middleware 負責驗證簽名並解析 body</span>
-<span class="c-def"><span class="ln">18</span>app<span class="c-pun">.</span><span class="c-fn">post</span><span class="c-pun">(</span><span class="c-str">'/webhook'</span><span class="c-pun">,</span> line<span class="c-pun">.</span><span class="c-fn">middleware</span><span class="c-pun">(</span>config<span class="c-pun">),</span> <span class="c-pun">(</span>req<span class="c-pun">,</span> res<span class="c-pun">)</span> <span class="c-kw">=></span> <span class="c-pun">{</span></span>
-<span class="c-def"><span class="ln">19</span>  Promise</span>
-<span class="c-def"><span class="ln">20</span>    <span class="c-pun">.</span><span class="c-fn">all</span><span class="c-pun">(</span>req<span class="c-pun">.</span>body<span class="c-pun">.</span>events<span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span>handleEvent<span class="c-pun">))</span></span>
-<span class="c-def"><span class="ln">21</span>    <span class="c-pun">.</span><span class="c-fn">then</span><span class="c-pun">(</span>result <span class="c-kw">=></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">(</span>result<span class="c-pun">))</span></span>
-<span class="c-def"><span class="ln">22</span>    <span class="c-pun">.</span><span class="c-fn">catch</span><span class="c-pun">(</span>err <span class="c-kw">=></span> <span class="c-pun">{</span></span>
-<span class="c-def"><span class="ln">23</span>      console<span class="c-pun">.</span><span class="c-fn">error</span><span class="c-pun">(</span>err<span class="c-pun">)</span></span>
-<span class="c-def"><span class="ln">24</span>      res<span class="c-pun">.</span><span class="c-fn">status</span><span class="c-pun">(</span><span class="c-num">500</span><span class="c-pun">).</span><span class="c-fn">end</span><span class="c-pun">()</span></span>
-<span class="c-def"><span class="ln">25</span>    <span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">26</span><span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">27</span></span>
-<span class="c-cmt"><span class="ln">28</span>// 5. 事件處理函式：處理單一 event 物件</span>
-<span class="c-kw"><span class="ln">29</span>async function</span> <span class="c-fn">handleEvent</span><span class="c-pun">(</span>event<span class="c-pun">) {</span>
-<span class="c-cmt"><span class="ln">30</span>  // 只處理文字訊息，其他事件型別一律回傳 null</span>
-<span class="c-kw"><span class="ln">31</span>  if</span> <span class="c-pun">(</span>event<span class="c-pun">.</span>type <span class="c-pun">!==</span> <span class="c-str">'message'</span> <span class="c-pun">||</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>type <span class="c-pun">!==</span> <span class="c-str">'text'</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">32</span>    return</span> <span class="c-kw">null</span>
-<span class="c-def"><span class="ln">33</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">34</span></span>
-<span class="c-cmt"><span class="ln">35</span>  // 取得使用者傳送的文字</span>
-<span class="c-kw"><span class="ln">36</span>  const</span> userText <span class="c-pun">=</span> event<span class="c-pun">.</span>message<span class="c-pun">.</span>text
-<span class="c-def"><span class="ln">37</span></span>
-<span class="c-cmt"><span class="ln">38</span>  // 呼叫 Reply API，以 replyToken 回覆</span>
-<span class="c-kw"><span class="ln">39</span>  return</span> client<span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span>event<span class="c-pun">.</span>replyToken<span class="c-pun">, {</span>
-<span class="c-def"><span class="ln">40</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">41</span>    text<span class="c-pun">:</span> <span class="c-str">`你說：${userText}`</span></span>
-<span class="c-def"><span class="ln">42</span>  <span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">43</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">44</span></span>
-<span class="c-cmt"><span class="ln">45</span>// 6. 健康檢查端點（部署監控用）</span>
-<span class="c-def"><span class="ln">46</span>app<span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'/health'</span><span class="c-pun">,</span> <span class="c-pun">(</span>_req<span class="c-pun">,</span> res<span class="c-pun">)</span> <span class="c-kw">=></span> res<span class="c-pun">.</span><span class="c-fn">json</span><span class="c-pun">({</span> status<span class="c-pun">:</span> <span class="c-str">'ok'</span> <span class="c-pun">}))</span></span>
-<span class="c-def"><span class="ln">47</span></span>
-<span class="c-cmt"><span class="ln">48</span>// 7. 啟動伺服器</span>
-<span class="c-kw"><span class="ln">49</span>const</span> PORT <span class="c-pun">=</span> process<span class="c-pun">.</span>env<span class="c-pun">.</span><span class="c-cls">PORT</span> <span class="c-pun">||</span> <span class="c-num">3000</span>
-<span class="c-def"><span class="ln">50</span>app<span class="c-pun">.</span><span class="c-fn">listen</span><span class="c-pun">(</span>PORT<span class="c-pun">,</span> <span class="c-pun">()</span> <span class="c-kw">=></span> console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`Bot running on port ${PORT}`</span><span class="c-pun">))</span></span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="fn">require</span>(<span class="str">'dotenv'</span>).<span class="fn">config</span>()</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc"><span class="kw">const</span> line    = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt">// 1. 設定物件：SDK 與 Client 都需要它</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"><span class="kw">const</span> config = {</span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">  channelSecret:      process.env.<span class="cls">CHANNEL_SECRET</span>,</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">  channelAccessToken: process.env.<span class="cls">CHANNEL_ACCESS_TOKEN</span>,</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">}</span></div>
+<div class="cl"><span class="ln">10</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc"><span class="cmt">// 2. LINE Client：用於呼叫 LINE API（傳送訊息等）</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.<span class="cls">Client</span>(config)</span></div>
+<div class="cl"><span class="ln">13</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc"><span class="cmt">// 3. Express App</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc"><span class="kw">const</span> app = <span class="fn">express</span>()</span></div>
+<div class="cl"><span class="ln">16</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="cmt">// 4. Webhook 端點：line.middleware 負責驗證簽名並解析 body</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, line.<span class="fn">middleware</span>(config), (req, res) => {</span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">  <span class="cls">Promise</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">    .<span class="fn">all</span>(req.body.events.<span class="fn">map</span>(handleEvent))</span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">    .<span class="fn">then</span>(result => res.<span class="fn">json</span>(result))</span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">    .<span class="fn">catch</span>(err => {</span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">      console.<span class="fn">error</span>(err)</span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">      res.<span class="fn">status</span>(<span class="num">500</span>).<span class="fn">end</span>()</span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">    })</span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">})</span></div>
+<div class="cl"><span class="ln">27</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc"><span class="cmt">// 5. 事件處理函式：處理單一 event 物件</span></span></div>
+<div class="cl"><span class="ln">29</span><span class="lc"><span class="kw">async function</span> <span class="fn">handleEvent</span>(event) {</span></div>
+<div class="cl"><span class="ln">30</span><span class="lc">  <span class="cmt">// 只處理文字訊息，其他事件型別一律回傳 null</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc">  <span class="kw">if</span> (event.type !== <span class="str">'message'</span> || event.message.type !== <span class="str">'text'</span>) {</span></div>
+<div class="cl"><span class="ln">32</span><span class="lc">    <span class="kw">return</span> <span class="kw">null</span></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc">  }</span></div>
+<div class="cl"><span class="ln">34</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">35</span><span class="lc">  <span class="cmt">// 取得使用者傳送的文字</span></span></div>
+<div class="cl"><span class="ln">36</span><span class="lc">  <span class="kw">const</span> userText = event.message.text</span></div>
+<div class="cl"><span class="ln">37</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">38</span><span class="lc">  <span class="cmt">// 呼叫 Reply API，以 replyToken 回覆</span></span></div>
+<div class="cl"><span class="ln">39</span><span class="lc">  <span class="kw">return</span> client.<span class="fn">replyMessage</span>(event.replyToken, {</span></div>
+<div class="cl"><span class="ln">40</span><span class="lc">    type: <span class="str">'text'</span>,</span></div>
+<div class="cl"><span class="ln">41</span><span class="lc">    text: <span class="str">`你說：${userText}`</span>,</span></div>
+<div class="cl"><span class="ln">42</span><span class="lc">  })</span></div>
+<div class="cl"><span class="ln">43</span><span class="lc">}</span></div>
+<div class="cl"><span class="ln">44</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">45</span><span class="lc"><span class="cmt">// 6. 健康檢查端點（部署監控用）</span></span></div>
+<div class="cl"><span class="ln">46</span><span class="lc">app.<span class="fn">get</span>(<span class="str">'/health'</span>, (_req, res) => res.<span class="fn">json</span>({ status: <span class="str">'ok'</span> }))</span></div>
+<div class="cl"><span class="ln">47</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">48</span><span class="lc"><span class="cmt">// 7. 啟動伺服器</span></span></div>
+<div class="cl"><span class="ln">49</span><span class="lc"><span class="kw">const</span> <span class="cls">PORT</span> = process.env.<span class="cls">PORT</span> || <span class="num">3000</span></span></div>
+<div class="cl"><span class="ln">50</span><span class="lc">app.<span class="fn">listen</span>(<span class="cls">PORT</span>, () => console.<span class="fn">log</span>(<span class="str">`Bot running on port ${PORT}`</span>))</span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -969,14 +985,16 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">安裝並啟動 Ngrok</div>
-        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 方式一：全域安裝（需先在 ngrok.com 建立免費帳號）</span>
-<span class="c-def"><span class="ln">2</span>npm install -g ngrok</span>
-<span class="c-def"><span class="ln">3</span>ngrok config add-authtoken 你的_authtoken</span>
-<span class="c-def"><span class="ln">4</span></span>
-<span class="c-cmt"><span class="ln">5</span># 方式二：直接從 ngrok.com 下載執行檔（免安裝）</span>
-<span class="c-def"><span class="ln">6</span></span>
-<span class="c-cmt"><span class="ln">7</span># 啟動隧道，對外暴露 3000 port</span>
-<span class="c-def"><span class="ln">8</span>ngrok http 3000</span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 方式一：全域安裝（需先在 ngrok.com 建立免費帳號）</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">npm install -g ngrok</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">ngrok config add-authtoken 你的_authtoken</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc"><span class="cmt"># 方式二：直接從 ngrok.com 下載執行檔（免安裝）</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt"># 啟動隧道，對外暴露 3000 port</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">ngrok http 3000</span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -985,13 +1003,15 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">Ngrok 啟動輸出</div>
-        <div class="code-block"><span class="c-def"><span class="ln">1</span>Session Status     online</span>
-<span class="c-def"><span class="ln">2</span>Account            your@email.com (Plan: Free)</span>
-<span class="c-def"><span class="ln">3</span>Version            3.x.x</span>
-<span class="c-def"><span class="ln">4</span>Region             Asia Pacific (ap)</span>
-<span class="c-def"><span class="ln">5</span>Forwarding         <span class="c-str">https://a1b2c3d4e5f6.ngrok-free.app</span> -> http://localhost:3000</span>
-<span class="c-def"><span class="ln">6</span></span>
-<span class="c-cmt"><span class="ln">7</span>Connections        ttl=0  opn=0  rt1=0.00  rt5=0.00  p50=0.00  p90=0.00</span></span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">Session Status     online</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">Account            <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4831273d3a082d25292124662b2725">[email&#160;protected]</a> (Plan: Free)</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">Version            3.x.x</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">Region             Asia Pacific (ap)</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">Forwarding         <span class="str">https://a1b2c3d4e5f6.ngrok-free.app</span> -&gt; http://localhost:3000</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="cmt">Connections        ttl=0  opn=0  rt1=0.00  rt5=0.00  p50=0.00  p90=0.00</span></span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -1015,11 +1035,13 @@ body {
 
       <div class="code-figure">
         <div class="code-caption">啟動本地開發伺服器</div>
-        <div class="code-block"><span class="c-cmt"><span class="ln">1</span># 開發模式（檔案變更自動重啟）</span>
-<span class="c-def"><span class="ln">2</span>npm run dev</span>
-<span class="c-def"><span class="ln">3</span></span>
-<span class="c-cmt"><span class="ln">4</span># 終端機應顯示：</span>
-<span class="c-def"><span class="ln">5</span>Bot running on port <span class="c-num">3000</span></span></div>
+        <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="cmt"># 開發模式（檔案變更自動重啟）</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">npm run dev</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc"><span class="cmt"># 終端機應顯示：</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">Bot running on port <span class="num">3000</span></span></div>
+</div>
       </div>
 
       <p class="body-text">
@@ -1197,7 +1219,7 @@ body {
   </div>
 </nav>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* Reading progress */
 window.addEventListener('scroll', () => {
   const d = document.documentElement
@@ -1223,13 +1245,4 @@ sections.forEach(s => observer.observe(s))
 function answerQuiz(idx) {
   const opts = document.querySelectorAll('.quiz-opt')
   opts.forEach((el, i) => {
-    el.classList.remove('correct', 'wrong')
-    if (i === 1) el.classList.add('correct')
-    else if (i === idx && idx !== 1) el.classList.add('wrong')
-  })
-  document.getElementById('qfeed').style.display = 'block'
-}
-</script>
-
-</body>
-</html>
+    e

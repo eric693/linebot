@@ -178,19 +178,21 @@ body {
 .code-caption::after { content: ''; flex: 1; height: 1px; background: var(--paper-3); }
 .code-block {
   background: var(--ink-2); font-family: var(--mono); font-size: 0.78rem;
-  line-height: 1.75; padding: 1.5rem 1.75rem; overflow-x: auto;
-  border-left: 3px solid var(--red); tab-size: 2;
+  line-height: 1.85; padding: 1.5rem 0; overflow-x: auto;
+  border-left: 3px solid var(--red);
 }
-.ln { display: inline-block; width: 2em; color: #4A4440; user-select: none; font-size: 0.68rem; margin-right: 0.5rem; }
-.c-cmt { color: #7A6F6A; font-style: italic; }
-.c-kw  { color: #C47A6A; }
-.c-str { color: #8BAF7A; }
-.c-fn  { color: #7AABCF; }
-.c-num { color: #C49A5A; }
-.c-cls { color: #C4B570; }
-.c-pun { color: #9A9090; }
-.c-def { color: #E8E0D8; }
-.c-key { color: #CF9060; }
+.cl { display: flex; padding: 0 1.75rem 0 0; min-height: 1.85em; }
+.cl:hover { background: rgba(255,255,255,0.04); }
+.ln {
+  display: inline-block; width: 3rem; flex-shrink: 0;
+  padding-left: 1.25rem; padding-right: 1.25rem; text-align: right;
+  color: #4A4440; user-select: none; font-size: 0.68rem; padding-top: 0.02em;
+}
+.lc { flex: 1; white-space: pre; color: #E8E0D8; }
+.kw  { color: #C47A6A; } .str { color: #8BAF7A; }
+.fn  { color: #7AABCF; } .num { color: #C49A5A; }
+.cls { color: #C4B570; } .cmt { color: #7A6F6A; font-style: italic; }
+.pun { color: #9A9090; } .key { color: #CF9060; }
 
 /* ─── CALLOUTS ───────────────────────────────────────────────── */
 .callout {
@@ -656,27 +658,29 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">一次傳送多種型別的組合範例</div>
-    <div class="code-block"><span class="c-def"><span class="ln">1</span></span><span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">replyToken</span><span class="c-pun">, [</span>
-<span class="c-cmt"><span class="ln">2</span>  // 訊息一：文字說明</span>
-<span class="c-def"><span class="ln">3</span>  {</span>
-<span class="c-def"><span class="ln">4</span>    type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">5</span>    text<span class="c-pun">:</span> <span class="c-str">'本月最新優惠方案如下：'</span></span>
-<span class="c-def"><span class="ln">6</span>  <span class="c-pun">},</span></span>
-<span class="c-cmt"><span class="ln">7</span>  // 訊息二：圖片</span>
-<span class="c-def"><span class="ln">8</span>  {</span>
-<span class="c-def"><span class="ln">9</span>    type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>    originalContentUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/promo-may.jpg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">11</span>    previewImageUrl<span class="c-pun">:</span>   <span class="c-str">'https://cdn.example.com/promo-may-thumb.jpg'</span></span>
-<span class="c-def"><span class="ln">12</span>  <span class="c-pun">},</span></span>
-<span class="c-cmt"><span class="ln">13</span>  // 訊息三：位置（門市地址）</span>
-<span class="c-def"><span class="ln">14</span>  {</span>
-<span class="c-def"><span class="ln">15</span>    type<span class="c-pun">:</span>      <span class="c-str">'location'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">16</span>    title<span class="c-pun">:</span>     <span class="c-str">'台北旗艦店'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">17</span>    address<span class="c-pun">:</span>   <span class="c-str">'台北市信義區松高路12號'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">18</span>    latitude<span class="c-pun">:</span>  <span class="c-num">25.0408</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">19</span>    longitude<span class="c-pun">:</span> <span class="c-num">121.5676</span></span>
-<span class="c-def"><span class="ln">20</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">21</span><span class="c-pun">])</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc"><span class="kw">await</span> client<span class="pun">.</span><span class="fn">replyMessage</span><span class="pun">(</span>event<span class="pun">.</span>replyToken<span class="pun">, [</span></span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">// 訊息一：文字說明</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">text<span class="pun">:</span> <span class="str">'本月最新優惠方案如下：'</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">// 訊息二：圖片</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">type<span class="pun">:</span> <span class="str">'image'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">originalContentUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/promo-may.jpg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">previewImageUrl<span class="pun">:</span>   <span class="str">'https://cdn.example.com/promo-may-thumb.jpg'</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">// 訊息三：位置（門市地址）</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">type<span class="pun">:</span>      <span class="str">'location'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">title<span class="pun">:</span>     <span class="str">'台北旗艦店'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">address<span class="pun">:</span>   <span class="str">'台北市信義區松高路12號'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">latitude<span class="pun">:</span>  <span class="num">25.0408</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">longitude<span class="pun">:</span> <span class="num">121.5676</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc"><span class="pun">])</span></span></div>
+</div>
   </div>
 
 </article>
@@ -765,28 +769,30 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">四種傳送方式的呼叫語法</div>
-    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>// Reply API：需要 replyToken，只能用一次，30 秒有效</span>
-<span class="c-kw"><span class="ln">2</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">replyMessage</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">replyToken</span><span class="c-pun">,</span> message<span class="c-pun">)</span>
-<span class="c-def"><span class="ln">3</span></span>
-<span class="c-cmt"><span class="ln">4</span>// Push API：需要 userId（或 groupId / roomId）</span>
-<span class="c-kw"><span class="ln">5</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">pushMessage</span><span class="c-pun">(</span><span class="c-def">userId</span><span class="c-pun">,</span> message<span class="c-pun">)</span>
-<span class="c-def"><span class="ln">6</span></span>
-<span class="c-cmt"><span class="ln">7</span>// Multicast：userId 陣列，上限 500，訊息為單一物件或陣列</span>
-<span class="c-kw"><span class="ln">8</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">multicast</span><span class="c-pun">([</span><span class="c-def">userId1</span><span class="c-pun">,</span> <span class="c-def">userId2</span><span class="c-pun">,</span> <span class="c-def">userId3</span><span class="c-pun">],</span> message<span class="c-pun">)</span>
-<span class="c-def"><span class="ln">9</span></span>
-<span class="c-cmt"><span class="ln">10</span>// Broadcast：無需提供用戶清單，推送給所有追蹤者</span>
-<span class="c-kw"><span class="ln">11</span>await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">broadcast</span><span class="c-pun">(</span>message<span class="c-pun">)</span>
-<span class="c-def"><span class="ln">12</span></span>
-<span class="c-cmt"><span class="ln">13</span>// Multicast 超過 500 人時需分批</span>
-<span class="c-kw"><span class="ln">14</span>async function</span> <span class="c-fn">multicastAll</span><span class="c-pun">(</span><span class="c-def">allUserIds</span><span class="c-pun">,</span> <span class="c-def">message</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">15</span>  const</span> <span class="c-def">BATCH</span> <span class="c-pun">=</span> <span class="c-num">500</span>
-<span class="c-kw"><span class="ln">16</span>  for</span> <span class="c-pun">(</span><span class="c-kw">let</span> <span class="c-def">i</span> <span class="c-pun">=</span> <span class="c-num">0</span><span class="c-pun">;</span> <span class="c-def">i</span> <span class="c-pun">&lt;</span> <span class="c-def">allUserIds</span><span class="c-pun">.</span><span class="c-def">length</span><span class="c-pun">;</span> <span class="c-def">i</span> <span class="c-pun">+=</span> <span class="c-def">BATCH</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">17</span>    const</span> <span class="c-def">batch</span> <span class="c-pun">=</span> <span class="c-def">allUserIds</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-def">i</span><span class="c-pun">,</span> <span class="c-def">i</span> <span class="c-pun">+</span> <span class="c-def">BATCH</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">18</span>    await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">multicast</span><span class="c-pun">(</span><span class="c-def">batch</span><span class="c-pun">,</span> <span class="c-def">message</span><span class="c-pun">)</span>
-<span class="c-cmt"><span class="ln">19</span>    // 批次之間稍作等待，避免 rate limit</span>
-<span class="c-kw"><span class="ln">20</span>    await new</span> <span class="c-cls">Promise</span><span class="c-pun">(</span><span class="c-def">r</span> <span class="c-pun">=></span> <span class="c-fn">setTimeout</span><span class="c-pun">(</span><span class="c-def">r</span><span class="c-pun">,</span> <span class="c-num">200</span><span class="c-pun">))</span>
-<span class="c-def"><span class="ln">21</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">22</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">// Reply API：需要 replyToken，只能用一次，30 秒有效</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">await</span> client<span class="pun">.</span><span class="fn">replyMessage</span><span class="pun">(</span>event<span class="pun">.</span>replyToken<span class="pun">,</span> message<span class="pun">)</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">// Push API：需要 userId（或 groupId / roomId）</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">await</span> client<span class="pun">.</span><span class="fn">pushMessage</span><span class="pun">(</span>userId<span class="pun">,</span> message<span class="pun">)</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">// Multicast：userId 陣列，上限 500，訊息為單一物件或陣列</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">await</span> client<span class="pun">.</span><span class="fn">multicast</span><span class="pun">([</span>userId1<span class="pun">,</span> userId2<span class="pun">,</span> userId3<span class="pun">],</span> message<span class="pun">)</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">// Broadcast：無需提供用戶清單，推送給所有追蹤者</span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">await</span> client<span class="pun">.</span><span class="fn">broadcast</span><span class="pun">(</span>message<span class="pun">)</span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">// Multicast 超過 500 人時需分批</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">async function</span> <span class="fn">multicastAll</span><span class="pun">(</span>allUserIds<span class="pun">,</span> message<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">const</span> BATCH <span class="pun">=</span> <span class="num">500</span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">for</span> <span class="pun">(</span><span class="kw">let</span> i <span class="pun">=</span> <span class="num">0</span><span class="pun">;</span> i <span class="pun">&lt;</span> allUserIds<span class="pun">.</span>length<span class="pun">;</span> i <span class="pun">+=</span> BATCH<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">const</span> batch <span class="pun">=</span> allUserIds<span class="pun">.</span><span class="fn">slice</span><span class="pun">(</span>i<span class="pun">,</span> i <span class="pun">+</span> BATCH<span class="pun">)</span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">await</span> client<span class="pun">.</span><span class="fn">multicast</span><span class="pun">(</span>batch<span class="pun">,</span> message<span class="pun">)</span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">// 批次之間稍作等待，避免 rate limit</span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">await new</span> <span class="cls">Promise</span><span class="pun">(</span>r <span class="pun">=></span> <span class="fn">setTimeout</span><span class="pun">(</span>r<span class="pun">,</span> <span class="num">200</span><span class="pun">))</span></div>
+<div class="cl"><span class="ln">21</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="callout warn">
@@ -802,19 +808,21 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">取得訊息配額與已使用量</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>async function</span> <span class="c-fn">checkQuota</span><span class="c-pun">() {</span>
-<span class="c-cmt"><span class="ln">2</span>  // 取得本月配額上限</span>
-<span class="c-kw"><span class="ln">3</span>  const</span> <span class="c-def">quota</span> <span class="c-pun">=</span> <span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">getMessageQuota</span><span class="c-pun">()</span>
-<span class="c-def"><span class="ln">4</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">'配額上限：'</span><span class="c-pun">,</span> <span class="c-def">quota</span><span class="c-pun">.</span><span class="c-def">value</span><span class="c-pun">)</span>   <span class="c-cmt">// -1 代表無限制</span>
-<span class="c-def"><span class="ln">5</span></span>
-<span class="c-cmt"><span class="ln">6</span>  // 取得本月已傳送則數</span>
-<span class="c-kw"><span class="ln">7</span>  const</span> <span class="c-def">usage</span> <span class="c-pun">=</span> <span class="c-kw">await</span> <span class="c-def">client</span><span class="c-pun">.</span><span class="c-fn">getMessageQuotaConsumption</span><span class="c-pun">()</span>
-<span class="c-def"><span class="ln">8</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">'已使用：'</span><span class="c-pun">,</span> <span class="c-def">usage</span><span class="c-pun">.</span><span class="c-def">totalUsage</span><span class="c-pun">)</span>
-<span class="c-def"><span class="ln">9</span></span>
-<span class="c-kw"><span class="ln">10</span>  const</span> <span class="c-def">remaining</span> <span class="c-pun">=</span> <span class="c-def">quota</span><span class="c-pun">.</span><span class="c-def">value</span> <span class="c-pun">-</span> <span class="c-def">usage</span><span class="c-pun">.</span><span class="c-def">totalUsage</span>
-<span class="c-def"><span class="ln">11</span>  console<span class="c-pun">.</span><span class="c-fn">log</span><span class="c-pun">(</span><span class="c-str">`剩餘：${remaining} 則`</span><span class="c-pun">)</span>
-<span class="c-def"><span class="ln">12</span>  <span class="c-kw">return</span> <span class="c-def">remaining</span></span>
-<span class="c-def"><span class="ln">13</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">async function</span> <span class="fn">checkQuota</span><span class="pun">() {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">// 取得本月配額上限</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">const</span> quota <span class="pun">=</span> <span class="kw">await</span> client<span class="pun">.</span><span class="fn">getMessageQuota</span><span class="pun">()</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">console<span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="str">'配額上限：'</span><span class="pun">,</span> quota<span class="pun">.</span>value<span class="pun">)</span>   <span class="cmt">// -1 代表無限制</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">// 取得本月已傳送則數</span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">const</span> usage <span class="pun">=</span> <span class="kw">await</span> client<span class="pun">.</span><span class="fn">getMessageQuotaConsumption</span><span class="pun">()</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">console<span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="str">'已使用：'</span><span class="pun">,</span> usage<span class="pun">.</span>totalUsage<span class="pun">)</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">const</span> remaining <span class="pun">=</span> quota<span class="pun">.</span>value <span class="pun">-</span> usage<span class="pun">.</span><span >totalUsage</span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">console<span class="pun">.</span><span class="fn">log</span><span class="pun">(</span><span class="str">`剩餘：${remaining} 則`</span><span class="pun">)</span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="kw">return</span> remaining</span></div>
+<div class="cl"><span class="ln">13</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
 </article>
@@ -871,41 +879,43 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">Buttons Template 完整結構</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">buttonsMsg</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'請選擇服務項目'</span><span class="c-pun">,</span>  <span class="c-cmt">// 不支援 template 的環境顯示此文字</span></span>
-<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span>              <span class="c-str">'buttons'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">6</span>    thumbnailImageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/service-banner.jpg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">7</span>    imageAspectRatio<span class="c-pun">:</span>  <span class="c-str">'rectangle'</span><span class="c-pun">,</span>  <span class="c-cmt">// 'rectangle' | 'square'</span></span>
-<span class="c-def"><span class="ln">8</span>    imageSize<span class="c-pun">:</span>         <span class="c-str">'cover'</span><span class="c-pun">,</span>       <span class="c-cmt">// 'cover' | 'contain'</span></span>
-<span class="c-def"><span class="ln">9</span>    title<span class="c-pun">:</span>             <span class="c-str">'客服中心'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>    text<span class="c-pun">:</span>              <span class="c-str">'請選擇你需要的服務項目'</span><span class="c-pun">,</span>  <span class="c-cmt">// 必填，有圖時最多 60 字</span></span>
-<span class="c-def"><span class="ln">11</span>    actions<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">12</span>      {</span>
-<span class="c-def"><span class="ln">13</span>        type<span class="c-pun">:</span>        <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">14</span>        label<span class="c-pun">:</span>       <span class="c-str">'查詢訂單'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>        data<span class="c-pun">:</span>        <span class="c-str">'action=query&type=order'</span><span class="c-pun">,</span>  <span class="c-cmt">// URLSearchParams 格式建議</span></span>
-<span class="c-def"><span class="ln">16</span>        displayText<span class="c-pun">:</span> <span class="c-str">'我要查詢訂單'</span>  <span class="c-cmt">// 可選：聊天室顯示文字</span></span>
-<span class="c-def"><span class="ln">17</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">18</span>      {</span>
-<span class="c-def"><span class="ln">19</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">20</span>        label<span class="c-pun">:</span> <span class="c-str">'退換貨申請'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">21</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=return'</span></span>
-<span class="c-def"><span class="ln">22</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">23</span>      {</span>
-<span class="c-def"><span class="ln">24</span>        type<span class="c-pun">:</span>  <span class="c-str">'uri'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">25</span>        label<span class="c-pun">:</span> <span class="c-str">'前往官方網站'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">26</span>        uri<span class="c-pun">:</span>   <span class="c-str">'https://www.example.com'</span></span>
-<span class="c-def"><span class="ln">27</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">28</span>      {</span>
-<span class="c-def"><span class="ln">29</span>        type<span class="c-pun">:</span> <span class="c-str">'message'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">30</span>        label<span class="c-pun">:</span> <span class="c-str">'轉接真人客服'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">31</span>        text<span class="c-pun">:</span>  <span class="c-str">'我要轉接真人客服'</span>  <span class="c-cmt">// 以用戶身份傳送</span></span>
-<span class="c-def"><span class="ln">32</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">33</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">34</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">35</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">const</span> buttonsMsg <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span>    <span class="str">'template'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">altText<span class="pun">:</span> <span class="str">'請選擇服務項目'</span><span class="pun">,</span>  <span class="cmt">// 不支援 template 的環境顯示此文字</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">type<span class="pun">:</span>              <span class="str">'buttons'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">thumbnailImageUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/service-banner.jpg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">imageAspectRatio<span class="pun">:</span>  <span class="str">'rectangle'</span><span class="pun">,</span>  <span class="cmt">// 'rectangle' | 'square'</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">imageSize<span class="pun">:</span>         <span class="str">'cover'</span><span class="pun">,</span>       <span class="cmt">// 'cover' | 'contain'</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">title<span class="pun">:</span>             <span class="str">'客服中心'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">text<span class="pun">:</span>              <span class="str">'請選擇你需要的服務項目'</span><span class="pun">,</span>  <span class="cmt">// 必填，有圖時最多 60 字</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">actions<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">type<span class="pun">:</span>        <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">label<span class="pun">:</span>       <span class="str">'查詢訂單'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">data<span class="pun">:</span>        <span class="str">'action=query&type=order'</span><span class="pun">,</span>  <span class="cmt">// URLSearchParams 格式建議</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">displayText<span class="pun">:</span> <span class="str">'我要查詢訂單'</span>  <span class="cmt">// 可選：聊天室顯示文字</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">label<span class="pun">:</span> <span class="str">'退換貨申請'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">data<span class="pun">:</span>  <span class="str">'action=return'</span></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">type<span class="pun">:</span>  <span class="str">'uri'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">label<span class="pun">:</span> <span class="str">'前往官方網站'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">uri<span class="pun">:</span>   <span class="str">'https://www.example.com'</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">29</span><span class="lc">type<span class="pun">:</span> <span class="str">'message'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">30</span><span class="lc">label<span class="pun">:</span> <span class="str">'轉接真人客服'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc">text<span class="pun">:</span>  <span class="str">'我要轉接真人客服'</span>  <span class="cmt">// 以用戶身份傳送</span></span></div>
+<div class="cl"><span class="ln">32</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">34</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">35</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="sub-heading">Postback 資料的解析</div>
@@ -918,23 +928,25 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">postbackHandler.js — 解析 postback data</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>async function</span> <span class="c-fn">postbackHandler</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">) {</span>
-<span class="c-cmt"><span class="ln">2</span>  // 用 URLSearchParams 解析 data 字串</span>
-<span class="c-kw"><span class="ln">3</span>  const</span> <span class="c-def">params</span> <span class="c-pun">=</span> <span class="c-kw">new</span> <span class="c-cls">URLSearchParams</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">.</span><span class="c-def">postback</span><span class="c-pun">.</span><span class="c-def">data</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">4</span>  const</span> <span class="c-def">action</span> <span class="c-pun">=</span> <span class="c-def">params</span><span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'action'</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">5</span>  const</span> <span class="c-def">type</span>   <span class="c-pun">=</span> <span class="c-def">params</span><span class="c-pun">.</span><span class="c-fn">get</span><span class="c-pun">(</span><span class="c-str">'type'</span><span class="c-pun">)</span>
-<span class="c-def"><span class="ln">6</span></span>
-<span class="c-kw"><span class="ln">7</span>  switch</span> <span class="c-pun">(</span><span class="c-def">action</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">8</span>    case</span> <span class="c-str">'query'</span><span class="c-pun">:</span>
-<span class="c-kw"><span class="ln">9</span>      return</span> <span class="c-fn">handleQuery</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">,</span> <span class="c-def">type</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">10</span>    case</span> <span class="c-str">'return'</span><span class="c-pun">:</span>
-<span class="c-kw"><span class="ln">11</span>      return</span> <span class="c-fn">handleReturn</span><span class="c-pun">(</span><span class="c-def">event</span><span class="c-pun">,</span> <span class="c-def">client</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">12</span>    default</span><span class="c-pun">:</span>
-<span class="c-def"><span class="ln">13</span>      console<span class="c-pun">.</span><span class="c-fn">warn</span><span class="c-pun">(</span><span class="c-str">`Unknown postback action: ${action}`</span><span class="c-pun">)</span>
-<span class="c-kw"><span class="ln">14</span>      return</span> <span class="c-kw">null</span>
-<span class="c-def"><span class="ln">15</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">16</span><span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">17</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">=</span> <span class="c-def">postbackHandler</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">async function</span> <span class="fn">postbackHandler</span><span class="pun">(</span>event<span class="pun">,</span> client<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">// 用 URLSearchParams 解析 data 字串</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">const</span> params <span class="pun">=</span> <span class="kw">new</span> <span class="cls">URLSearchParams</span><span class="pun">(</span>event<span class="pun">.</span>postback<span class="pun">.</span>data<span class="pun">)</span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">const</span> action <span class="pun">=</span> params<span class="pun">.</span><span class="fn">get</span><span class="pun">(</span><span class="str">'action'</span><span class="pun">)</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">const</span> type   <span class="pun">=</span> params<span class="pun">.</span><span class="fn">get</span><span class="pun">(</span><span class="str">'type'</span><span class="pun">)</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">switch</span> <span class="pun">(</span>action<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">case</span> <span class="str">'query'</span><span class="pun">:</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">return</span> <span class="fn">handleQuery</span><span class="pun">(</span>event<span class="pun">,</span> client<span class="pun">,</span> type<span class="pun">)</span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">case</span> <span class="str">'return'</span><span class="pun">:</span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">return</span> <span class="fn">handleReturn</span><span class="pun">(</span>event<span class="pun">,</span> client<span class="pun">)</span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">default</span><span class="pun">:</span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">console<span class="pun">.</span><span class="fn">warn</span><span class="pun">(</span><span class="str">`Unknown postback action: ${action}`</span><span class="pun">)</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">return</span> <span class="kw">null</span></div>
+<div class="cl"><span class="ln">15</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">module<span class="pun">.</span>exports <span class="pun">=</span> postbackHandler</span></div>
+</div>
   </div>
 
   <div class="sub-heading">Confirm Template</div>
@@ -946,26 +958,28 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">Confirm Template — 訂單送出確認</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">confirmMsg</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'確認送出訂單？'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span> <span class="c-str">'confirm'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">6</span>    text<span class="c-pun">:</span> <span class="c-str">'確認送出以下訂單？\n商品：限定版手提袋 × 2\n金額：NT$ 1,480'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">7</span>    actions<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">8</span>      {</span>
-<span class="c-def"><span class="ln">9</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>        label<span class="c-pun">:</span> <span class="c-str">'確認送出'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">11</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=confirm_order&orderId=ORD-2025-0521'</span></span>
-<span class="c-def"><span class="ln">12</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">13</span>      {</span>
-<span class="c-def"><span class="ln">14</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>        label<span class="c-pun">:</span> <span class="c-str">'取消'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">16</span>        data<span class="c-pun">:</span>  <span class="c-str">'action=cancel_order&orderId=ORD-2025-0521'</span></span>
-<span class="c-def"><span class="ln">17</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">20</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">const</span> confirmMsg <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span>    <span class="str">'template'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">altText<span class="pun">:</span> <span class="str">'確認送出訂單？'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">type<span class="pun">:</span> <span class="str">'confirm'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">text<span class="pun">:</span> <span class="str">'確認送出以下訂單？\n商品：限定版手提袋 × 2\n金額：NT$ 1,480'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">actions<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">label<span class="pun">:</span> <span class="str">'確認送出'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">data<span class="pun">:</span>  <span class="str">'action=confirm_order&orderId=ORD-2025-0521'</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">label<span class="pun">:</span> <span class="str">'取消'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">data<span class="pun">:</span>  <span class="str">'action=cancel_order&orderId=ORD-2025-0521'</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="callout">
@@ -1002,37 +1016,39 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">Carousel Template — 商品列表（2 欄示範）</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>function</span> <span class="c-fn">buildProductCarousel</span><span class="c-pun">(</span><span class="c-def">products</span><span class="c-pun">) {</span>
-<span class="c-kw"><span class="ln">2</span>  const</span> <span class="c-def">columns</span> <span class="c-pun">=</span> <span class="c-def">products</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">p</span> <span class="c-pun">=&gt; ({</span>
-<span class="c-def"><span class="ln">3</span>    thumbnailImageUrl<span class="c-pun">:</span> <span class="c-def">p</span><span class="c-pun">.</span><span class="c-def">imageUrl</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">4</span>    imageBackgroundColor<span class="c-pun">:</span> <span class="c-str">'#F5F0E8'</span><span class="c-pun">,</span>  <span class="c-cmt">// 圖片載入前的背景色</span></span>
-<span class="c-def"><span class="ln">5</span>    title<span class="c-pun">:</span> <span class="c-def">p</span><span class="c-pun">.</span><span class="c-def">name</span><span class="c-pun">,</span>          <span class="c-cmt">// 最多 40 字</span></span>
-<span class="c-def"><span class="ln">6</span>    text<span class="c-pun">:</span>  <span class="c-str">`NT$ ${p.price} | ${p.stock > 0 ? '有貨' : '缺貨'}`</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">7</span>    actions<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">8</span>      {</span>
-<span class="c-def"><span class="ln">9</span>        type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">10</span>        label<span class="c-pun">:</span> <span class="c-str">'加入購物車'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">11</span>        data<span class="c-pun">:</span>  <span class="c-str">`action=addCart&productId=${p.id}`</span></span>
-<span class="c-def"><span class="ln">12</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">13</span>      {</span>
-<span class="c-def"><span class="ln">14</span>        type<span class="c-pun">:</span>  <span class="c-str">'uri'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>        label<span class="c-pun">:</span> <span class="c-str">'查看詳情'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">16</span>        uri<span class="c-pun">:</span>   <span class="c-str">`https://shop.example.com/products/${p.id}`</span></span>
-<span class="c-def"><span class="ln">17</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span>  <span class="c-cmt">// 注意：每個 column 的按鈕數必須相同</span></span>
-<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}))</span></span>
-<span class="c-def"><span class="ln">20</span></span>
-<span class="c-kw"><span class="ln">21</span>  return</span> <span class="c-pun">{</span>
-<span class="c-def"><span class="ln">22</span>    type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">23</span>    altText<span class="c-pun">:</span> <span class="c-str">'商品目錄'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">24</span>    contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">25</span>      type<span class="c-pun">:</span>              <span class="c-str">'carousel'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">26</span>      imageAspectRatio<span class="c-pun">:</span>  <span class="c-str">'rectangle'</span><span class="c-pun">,</span>  <span class="c-cmt">// 全 carousel 統一的圖片比例</span></span>
-<span class="c-def"><span class="ln">27</span>      imageSize<span class="c-pun">:</span>         <span class="c-str">'cover'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">28</span>      columns<span class="c-pun">:</span>           <span class="c-def">columns</span></span>
-<span class="c-def"><span class="ln">29</span>    <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">30</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">31</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">function</span> <span class="fn">buildProductCarousel</span><span class="pun">(</span>products<span class="pun">) {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">const</span> columns <span class="pun">=</span> products<span class="pun">.</span><span class="fn">map</span><span class="pun">(</span>p <span class="pun">=&gt; ({</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">thumbnailImageUrl<span class="pun">:</span> p<span class="pun">.</span>imageUrl<span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">imageBackgroundColor<span class="pun">:</span> <span class="str">'#F5F0E8'</span><span class="pun">,</span>  <span class="cmt">// 圖片載入前的背景色</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">title<span class="pun">:</span> p<span class="pun">.</span>name<span class="pun">,</span>          <span class="cmt">// 最多 40 字</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">text<span class="pun">:</span>  <span class="str">`NT$ ${p.price} | ${p.stock > 0 ? '有貨' : '缺貨'}`</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">actions<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">label<span class="pun">:</span> <span class="str">'加入購物車'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">data<span class="pun">:</span>  <span class="str">`action=addCart&productId=${p.id}`</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">type<span class="pun">:</span>  <span class="str">'uri'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">label<span class="pun">:</span> <span class="str">'查看詳情'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">uri<span class="pun">:</span>   <span class="str">`https://shop.example.com/products/${p.id}`</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc"><span class="pun">]</span>  <span class="cmt">// 注意：每個 column 的按鈕數必須相同</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc"><span class="pun">}))</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">return</span> <span class="pun">{</span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">type<span class="pun">:</span>    <span class="str">'template'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">altText<span class="pun">:</span> <span class="str">'商品目錄'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">type<span class="pun">:</span>              <span class="str">'carousel'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">imageAspectRatio<span class="pun">:</span>  <span class="str">'rectangle'</span><span class="pun">,</span>  <span class="cmt">// 全 carousel 統一的圖片比例</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc">imageSize<span class="pun">:</span>         <span class="str">'cover'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">columns<span class="pun">:</span>           columns</span></div>
+<div class="cl"><span class="ln">29</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">30</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="sub-heading">Image Carousel</div>
@@ -1044,23 +1060,25 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">Image Carousel — 活動橫幅輪播</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">imageCarouselMsg</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span>    <span class="c-str">'template'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  altText<span class="c-pun">:</span> <span class="c-str">'本月活動一覽'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">4</span>  contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">5</span>    type<span class="c-pun">:</span> <span class="c-str">'image_carousel'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">6</span>    columns<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">7</span>      {</span>
-<span class="c-def"><span class="ln">8</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/event-01.jpg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">9</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'活動一'</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-str">'event=1'</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">10</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">11</span>      {</span>
-<span class="c-def"><span class="ln">12</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/event-02.jpg'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">13</span>        action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'uri'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-str">'活動二'</span><span class="c-pun">,</span> uri<span class="c-pun">:</span> <span class="c-str">'https://example.com/event/2'</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">14</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">15</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">16</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">17</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">const</span> imageCarouselMsg <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span>    <span class="str">'template'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">altText<span class="pun">:</span> <span class="str">'本月活動一覽'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">type<span class="pun">:</span> <span class="str">'image_carousel'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">columns<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">imageUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/event-01.jpg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">action<span class="pun">: {</span> type<span class="pun">:</span> <span class="str">'postback'</span><span class="pun">,</span> label<span class="pun">:</span> <span class="str">'活動一'</span><span class="pun">,</span> data<span class="pun">:</span> <span class="str">'event=1'</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">imageUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/event-02.jpg'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">action<span class="pun">: {</span> type<span class="pun">:</span> <span class="str">'uri'</span><span class="pun">,</span> label<span class="pun">:</span> <span class="str">'活動二'</span><span class="pun">,</span> uri<span class="pun">:</span> <span class="str">'https://example.com/event/2'</span> <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="sub-heading">Template Message 規格限制總覽</div>
@@ -1139,39 +1157,41 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">Quick Reply 附加在文字訊息上</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">msgWithQuickReply</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  text<span class="c-pun">:</span> <span class="c-str">'請選擇你偏好的聯絡方式：'</span><span class="c-pun">,</span></span>
-<span class="c-cmt"><span class="ln">4</span>  // quickReply 可附加到任意訊息型別，包括 template</span>
-<span class="c-def"><span class="ln">5</span>  quickReply<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">6</span>    items<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">7</span>      {</span>
-<span class="c-def"><span class="ln">8</span>        type<span class="c-pun">:</span>     <span class="c-str">'action'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">9</span>        imageUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/icon-phone.png'</span><span class="c-pun">,</span>  <span class="c-cmt">// 選填小圖示</span></span>
-<span class="c-def"><span class="ln">10</span>        action<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">11</span>          type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">12</span>          label<span class="c-pun">:</span> <span class="c-str">'電話'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">13</span>          data<span class="c-pun">:</span>  <span class="c-str">'contact=phone'</span></span>
-<span class="c-def"><span class="ln">14</span>        <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">15</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">16</span>      {</span>
-<span class="c-def"><span class="ln">17</span>        type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">18</span>        action<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">19</span>          type<span class="c-pun">:</span>  <span class="c-str">'postback'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">20</span>          label<span class="c-pun">:</span> <span class="c-str">'Email'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">21</span>          data<span class="c-pun">:</span>  <span class="c-str">'contact=email'</span></span>
-<span class="c-def"><span class="ln">22</span>        <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">23</span>      <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">24</span>      {</span>
-<span class="c-def"><span class="ln">25</span>        type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">26</span>        action<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">27</span>          type<span class="c-pun">:</span>  <span class="c-str">'location'</span><span class="c-pun">,</span>  <span class="c-cmt">// 開啟位置選擇器</span></span>
-<span class="c-def"><span class="ln">28</span>          label<span class="c-pun">:</span> <span class="c-str">'傳送位置'</span></span>
-<span class="c-def"><span class="ln">29</span>        <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">30</span>      <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">31</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">32</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">33</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">const</span> msgWithQuickReply <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">text<span class="pun">:</span> <span class="str">'請選擇你偏好的聯絡方式：'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">// quickReply 可附加到任意訊息型別，包括 template</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">quickReply<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">items<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">8</span><span class="lc">type<span class="pun">:</span>     <span class="str">'action'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">imageUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/icon-phone.png'</span><span class="pun">,</span>  <span class="cmt">// 選填小圖示</span></span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">action<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">label<span class="pun">:</span> <span class="str">'電話'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">data<span class="pun">:</span>  <span class="str">'contact=phone'</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">17</span><span class="lc">type<span class="pun">:</span>   <span class="str">'action'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc">action<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc">type<span class="pun">:</span>  <span class="str">'postback'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc">label<span class="pun">:</span> <span class="str">'Email'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc">data<span class="pun">:</span>  <span class="str">'contact=email'</span></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">23</span><span class="lc"><span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">{</span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">type<span class="pun">:</span>   <span class="str">'action'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">action<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc">type<span class="pun">:</span>  <span class="str">'location'</span><span class="pun">,</span>  <span class="cmt">// 開啟位置選擇器</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">label<span class="pun">:</span> <span class="str">'傳送位置'</span></span></div>
+<div class="cl"><span class="ln">29</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">30</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">32</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="sub-heading">Sender：覆寫 Bot 的顯示名稱與頭像</div>
@@ -1185,15 +1205,17 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">使用 sender 暫時改變 Bot 顯示身份</div>
-    <div class="code-block"><span class="c-kw"><span class="ln">1</span>const</span> <span class="c-def">notificationMsg</span> <span class="c-pun">= {</span>
-<span class="c-def"><span class="ln">2</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">3</span>  text<span class="c-pun">:</span> <span class="c-str">'您的訂單 #ORD-2025-0521 已確認出貨，預計明日送達。'</span><span class="c-pun">,</span></span>
-<span class="c-cmt"><span class="ln">4</span>  // 傳送此訊息時，Bot 顯示為「訂單通知系統」</span>
-<span class="c-def"><span class="ln">5</span>  sender<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">6</span>    name<span class="c-pun">:</span>    <span class="c-str">'訂單通知系統'</span><span class="c-pun">,</span>  <span class="c-cmt">// 最多 20 字元</span></span>
-<span class="c-def"><span class="ln">7</span>    iconUrl<span class="c-pun">:</span> <span class="c-str">'https://cdn.example.com/order-bot-icon.png'</span>  <span class="c-cmt">// HTTPS，1MB 以內</span></span>
-<span class="c-def"><span class="ln">8</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">9</span><span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">const</span> notificationMsg <span class="pun">= {</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">3</span><span class="lc">text<span class="pun">:</span> <span class="str">'您的訂單 #ORD-2025-0521 已確認出貨，預計明日送達。'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">// 傳送此訊息時，Bot 顯示為「訂單通知系統」</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">sender<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">name<span class="pun">:</span>    <span class="str">'訂單通知系統'</span><span class="pun">,</span>  <span class="cmt">// 最多 20 字元</span></span></div>
+<div class="cl"><span class="ln">7</span><span class="lc">iconUrl<span class="pun">:</span> <span class="str">'https://cdn.example.com/order-bot-icon.png'</span>  <span class="cmt">// HTTPS，1MB 以內</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc"><span class="pun">}</span></span></div>
+</div>
   </div>
 
   <div class="sub-heading">建立訊息建構器（Message Builder Pattern）</div>
@@ -1206,48 +1228,50 @@ body {
 
   <div class="code-figure">
     <div class="code-caption">src/builders/messageBuilders.js — 訊息工廠函式</div>
-    <div class="code-block"><span class="c-cmt"><span class="ln">1</span>// 文字訊息工廠</span>
-<span class="c-kw"><span class="ln">2</span>const</span> <span class="c-fn">text</span> <span class="c-pun">= (</span><span class="c-def">message</span><span class="c-pun">) =&gt; ({</span> type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">message</span> <span class="c-pun">})</span>
-<span class="c-def"><span class="ln">3</span></span>
-<span class="c-cmt"><span class="ln">4</span>// 圖片訊息工廠</span>
-<span class="c-kw"><span class="ln">5</span>const</span> <span class="c-fn">image</span> <span class="c-pun">= (</span><span class="c-def">url</span><span class="c-pun">,</span> <span class="c-def">preview</span><span class="c-pun">) =&gt; ({</span>
-<span class="c-def"><span class="ln">6</span>  type<span class="c-pun">:</span> <span class="c-str">'image'</span><span class="c-pun">,</span> originalContentUrl<span class="c-pun">:</span> <span class="c-def">url</span><span class="c-pun">,</span> previewImageUrl<span class="c-pun">:</span> <span class="c-def">preview</span> <span class="c-pun">||</span> <span class="c-def">url</span>
-<span class="c-def"><span class="ln">7</span><span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">8</span></span>
-<span class="c-cmt"><span class="ln">9</span>// Confirm Template 工廠</span>
-<span class="c-kw"><span class="ln">10</span>const</span> <span class="c-fn">confirm</span> <span class="c-pun">= ({</span> <span class="c-def">text</span><span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">,</span> <span class="c-def">yesLabel</span><span class="c-pun">,</span> <span class="c-def">yesData</span><span class="c-pun">,</span> <span class="c-def">noLabel</span><span class="c-pun">,</span> <span class="c-def">noData</span> <span class="c-pun">}) =&gt; ({</span>
-<span class="c-def"><span class="ln">11</span>  type<span class="c-pun">:</span> <span class="c-str">'template'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">12</span>  altText<span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">.</span><span class="c-fn">slice</span><span class="c-pun">(</span><span class="c-num">0</span><span class="c-pun">,</span> <span class="c-num">40</span><span class="c-pun">),</span></span>
-<span class="c-def"><span class="ln">13</span>  contents<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">14</span>    type<span class="c-pun">:</span> <span class="c-str">'confirm'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">bodyText</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">15</span>    actions<span class="c-pun">: [</span></span>
-<span class="c-def"><span class="ln">16</span>      <span class="c-pun">{</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">yesLabel</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-def">yesData</span> <span class="c-pun">},</span></span>
-<span class="c-def"><span class="ln">17</span>      <span class="c-pun">{</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">noLabel</span><span class="c-pun">,</span>  data<span class="c-pun">:</span> <span class="c-def">noData</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">18</span>    <span class="c-pun">]</span></span>
-<span class="c-def"><span class="ln">19</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">20</span><span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">21</span></span>
-<span class="c-cmt"><span class="ln">22</span>// 帶 Quick Reply 的文字訊息工廠</span>
-<span class="c-kw"><span class="ln">23</span>const</span> <span class="c-fn">textWithQR</span> <span class="c-pun">= (</span><span class="c-def">message</span><span class="c-pun">,</span> <span class="c-def">options</span><span class="c-pun">) =&gt; ({</span>
-<span class="c-def"><span class="ln">24</span>  type<span class="c-pun">:</span> <span class="c-str">'text'</span><span class="c-pun">,</span> text<span class="c-pun">:</span> <span class="c-def">message</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">25</span>  quickReply<span class="c-pun">: {</span></span>
-<span class="c-def"><span class="ln">26</span>    items<span class="c-pun">:</span> <span class="c-def">options</span><span class="c-pun">.</span><span class="c-fn">map</span><span class="c-pun">(</span><span class="c-def">opt</span> <span class="c-pun">=&gt; ({</span></span>
-<span class="c-def"><span class="ln">27</span>      type<span class="c-pun">:</span>   <span class="c-str">'action'</span><span class="c-pun">,</span></span>
-<span class="c-def"><span class="ln">28</span>      action<span class="c-pun">: {</span> type<span class="c-pun">:</span> <span class="c-str">'postback'</span><span class="c-pun">,</span> label<span class="c-pun">:</span> <span class="c-def">opt</span><span class="c-pun">.</span><span class="c-def">label</span><span class="c-pun">,</span> data<span class="c-pun">:</span> <span class="c-def">opt</span><span class="c-pun">.</span><span class="c-def">data</span> <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">29</span>    <span class="c-pun">}))</span></span>
-<span class="c-def"><span class="ln">30</span>  <span class="c-pun">}</span></span>
-<span class="c-def"><span class="ln">31</span><span class="c-pun">})</span></span>
-<span class="c-def"><span class="ln">32</span></span>
-<span class="c-cmt"><span class="ln">33</span>// 使用範例：handler 中只需呼叫工廠函式</span>
-<span class="c-cmt"><span class="ln">34</span>// client.replyMessage(token, [</span>
-<span class="c-cmt"><span class="ln">35</span>//   builders.text('請問你想查詢什麼？'),</span>
-<span class="c-cmt"><span class="ln">36</span>//   builders.textWithQR('選擇查詢類別', [</span>
-<span class="c-cmt"><span class="ln">37</span>//     { label: '訂單狀態', data: 'query=order' },</span>
-<span class="c-cmt"><span class="ln">38</span>//     { label: '點數查詢', data: 'query=points' }</span>
-<span class="c-cmt"><span class="ln">39</span>//   ])</span>
-<span class="c-cmt"><span class="ln">40</span>// ])</span>
-<span class="c-def"><span class="ln">41</span></span>
-<span class="c-def"><span class="ln">42</span>module<span class="c-pun">.</span><span class="c-def">exports</span> <span class="c-pun">= {</span> text<span class="c-pun">,</span> image<span class="c-pun">,</span> confirm<span class="c-pun">,</span> textWithQR<span class="c-pun">,</span> buildProductCarousel <span class="c-pun">}</span></span></div>
+    <div class="code-block">
+<div class="cl"><span class="ln">1</span><span class="lc">// 文字訊息工廠</span></div>
+<div class="cl"><span class="ln">2</span><span class="lc">const</span> <span class="fn">text</span> <span class="pun">= (</span>message<span class="pun">) =&gt; ({</span> type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> message <span class="pun">})</span></div>
+<div class="cl"><span class="ln">3</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">4</span><span class="lc">// 圖片訊息工廠</span></div>
+<div class="cl"><span class="ln">5</span><span class="lc">const</span> <span class="fn">image</span> <span class="pun">= (</span>url<span class="pun">,</span> preview<span class="pun">) =&gt; ({</span></div>
+<div class="cl"><span class="ln">6</span><span class="lc">type<span class="pun">:</span> <span class="str">'image'</span><span class="pun">,</span> originalContentUrl<span class="pun">:</span> url<span class="pun">,</span> previewImageUrl<span class="pun">:</span> preview <span class="pun">||</span> <span >url</span></div>
+<div class="cl"><span class="ln">7</span><span class="lc"><span class="pun">})</span></span></div>
+<div class="cl"><span class="ln">8</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">9</span><span class="lc">// Confirm Template 工廠</span></div>
+<div class="cl"><span class="ln">10</span><span class="lc">const</span> <span class="fn">confirm</span> <span class="pun">= ({</span> text<span class="pun">:</span> bodyText<span class="pun">,</span> yesLabel<span class="pun">,</span> yesData<span class="pun">,</span> noLabel<span class="pun">,</span> noData <span class="pun">}) =&gt; ({</span></div>
+<div class="cl"><span class="ln">11</span><span class="lc">type<span class="pun">:</span> <span class="str">'template'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">12</span><span class="lc">altText<span class="pun">:</span> bodyText<span class="pun">.</span><span class="fn">slice</span><span class="pun">(</span><span class="num">0</span><span class="pun">,</span> <span class="num">40</span><span class="pun">),</span></span></div>
+<div class="cl"><span class="ln">13</span><span class="lc">contents<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">14</span><span class="lc">type<span class="pun">:</span> <span class="str">'confirm'</span><span class="pun">,</span> text<span class="pun">:</span> bodyText<span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">15</span><span class="lc">actions<span class="pun">: [</span></span></div>
+<div class="cl"><span class="ln">16</span><span class="lc"><span class="pun">{</span> type<span class="pun">:</span> <span class="str">'postback'</span><span class="pun">,</span> label<span class="pun">:</span> yesLabel<span class="pun">,</span> data<span class="pun">:</span> yesData <span class="pun">},</span></span></div>
+<div class="cl"><span class="ln">17</span><span class="lc"><span class="pun">{</span> type<span class="pun">:</span> <span class="str">'postback'</span><span class="pun">,</span> label<span class="pun">:</span> noLabel<span class="pun">,</span>  data<span class="pun">:</span> noData  <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">18</span><span class="lc"><span class="pun">]</span></span></div>
+<div class="cl"><span class="ln">19</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">20</span><span class="lc"><span class="pun">})</span></span></div>
+<div class="cl"><span class="ln">21</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">22</span><span class="lc">// 帶 Quick Reply 的文字訊息工廠</span></div>
+<div class="cl"><span class="ln">23</span><span class="lc">const</span> <span class="fn">textWithQR</span> <span class="pun">= (</span>message<span class="pun">,</span> options<span class="pun">) =&gt; ({</span></div>
+<div class="cl"><span class="ln">24</span><span class="lc">type<span class="pun">:</span> <span class="str">'text'</span><span class="pun">,</span> text<span class="pun">:</span> message<span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">25</span><span class="lc">quickReply<span class="pun">: {</span></span></div>
+<div class="cl"><span class="ln">26</span><span class="lc">items<span class="pun">:</span> options<span class="pun">.</span><span class="fn">map</span><span class="pun">(</span>opt <span class="pun">=&gt; ({</span></span></div>
+<div class="cl"><span class="ln">27</span><span class="lc">type<span class="pun">:</span>   <span class="str">'action'</span><span class="pun">,</span></span></div>
+<div class="cl"><span class="ln">28</span><span class="lc">action<span class="pun">: {</span> type<span class="pun">:</span> <span class="str">'postback'</span><span class="pun">,</span> label<span class="pun">:</span> opt<span class="pun">.</span>label<span class="pun">,</span> data<span class="pun">:</span> opt<span class="pun">.</span>data <span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">29</span><span class="lc"><span class="pun">}))</span></span></div>
+<div class="cl"><span class="ln">30</span><span class="lc"><span class="pun">}</span></span></div>
+<div class="cl"><span class="ln">31</span><span class="lc"><span class="pun">})</span></span></div>
+<div class="cl"><span class="ln">32</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">33</span><span class="lc">// 使用範例：handler 中只需呼叫工廠函式</span></div>
+<div class="cl"><span class="ln">34</span><span class="lc">// client.replyMessage(token, [</span></div>
+<div class="cl"><span class="ln">35</span><span class="lc">//   builders.text('請問你想查詢什麼？'),</span></div>
+<div class="cl"><span class="ln">36</span><span class="lc">//   builders.textWithQR('選擇查詢類別', [</span></div>
+<div class="cl"><span class="ln">37</span><span class="lc">//     { label: '訂單狀態', data: 'query=order' },</span></div>
+<div class="cl"><span class="ln">38</span><span class="lc">//     { label: '點數查詢', data: 'query=points' }</span></div>
+<div class="cl"><span class="ln">39</span><span class="lc">//   ])</span></div>
+<div class="cl"><span class="ln">40</span><span class="lc">// ])</span></div>
+<div class="cl"><span class="ln">41</span><span class="lc"></span></div>
+<div class="cl"><span class="ln">42</span><span class="lc">module<span class="pun">.</span>exports <span class="pun">= {</span> text<span class="pun">,</span> image<span class="pun">,</span> confirm<span class="pun">,</span> textWithQR<span class="pun">,</span> buildProductCarousel <span class="pun">}</span></span></div>
+</div>
   </div>
 
   <p class="body-text">
