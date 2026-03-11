@@ -158,20 +158,27 @@
     white-space: nowrap;
   }
   .code-preview {
-    background: var(--ink); color: #A8D5A2;
-    font-family: var(--mono); font-size: 0.8rem; line-height: 1.7;
-    padding: 1.5rem; border-left: 3px solid var(--red);
+    background: var(--ink); color: #ABD6A0;
+    font-family: var(--mono); font-size: 0.75rem; line-height: 1.75;
+    padding: 1.5rem 1.75rem; border-left: 3px solid var(--red);
     position: relative; z-index: 1;
     animation: fadeInUp 0.8s ease both 0.3s;
+    overflow-x: auto;
   }
-  .code-preview .cmt { color: var(--ink-3); }
+  .code-preview > span {
+    display: block;
+    white-space: pre;
+  }
+  .code-preview .cmt { color: #5A5550; font-style: italic; }
   .code-preview .kw  { color: #E06C75; }
   .code-preview .str { color: #98C379; }
   .code-preview .fn  { color: #61AFEF; }
   .code-preview .num { color: #D19A66; }
+  .code-preview .cls { color: #C4B570; }
   .code-line-num {
-    display: inline-block; width: 1.8rem; color: #4A4A4A;
-    user-select: none; font-size: 0.7rem;
+    display: inline-block; width: 2rem; color: #4A4440;
+    user-select: none; font-size: 0.68rem; text-align: right;
+    margin-right: 0.75rem;
   }
   .hero-chapter-count {
     margin-top: 2.5rem; position: relative; z-index: 1;
@@ -503,25 +510,29 @@
   </div>
   <div class="hero-right">
     <div class="code-preview">
-<span class="cmt"><span class="code-line-num">1</span> // LINE Bot 快速起步範例</span>
-<span><span class="code-line-num">2</span> <span class="kw">const</span> line = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span>
-<span><span class="code-line-num">3</span> <span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span>
-<span><span class="code-line-num">4</span></span>
-<span><span class="code-line-num">5</span> <span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.Client({</span>
-<span><span class="code-line-num">6</span>   channelAccessToken: process.env.<span class="cls">TOKEN</span></span>
-<span><span class="code-line-num">7</span> })</span>
-<span><span class="code-line-num">8</span></span>
-<span><span class="code-line-num">9</span> app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, (req, res) => {</span>
-<span><span class="code-line-num">10</span>   <span class="kw">const</span> events = req.body.events</span>
-<span><span class="code-line-num">11</span>   events.<span class="fn">forEach</span>(event => {</span>
-<span><span class="code-line-num">12</span>     <span class="kw">if</span> (event.type === <span class="str">'message'</span>) {</span>
-<span><span class="code-line-num">13</span>       client.<span class="fn">replyMessage</span>(event.replyToken, {</span>
-<span><span class="code-line-num">14</span>         type: <span class="str">'text'</span>, text: <span class="str">'Hello, World! 👋'</span></span>
-<span><span class="code-line-num">15</span>       })</span>
-<span><span class="code-line-num">16</span>     }</span>
-<span><span class="code-line-num">17</span>   })</span>
-<span><span class="code-line-num">18</span>   res.<span class="fn">sendStatus</span>(<span class="num">200</span>)</span>
-<span><span class="code-line-num">19</span> })</span>
+<span class="cmt"><span class="code-line-num"> 1</span>// LINE Bot 快速起步範例</span>
+<span><span class="code-line-num"> 2</span><span class="kw">const</span> line    = <span class="fn">require</span>(<span class="str">'@line/bot-sdk'</span>)</span>
+<span><span class="code-line-num"> 3</span><span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)</span>
+<span><span class="code-line-num"> 4</span><span class="kw">const</span> app    = <span class="fn">express</span>()</span>
+<span><span class="code-line-num"> 5</span></span>
+<span><span class="code-line-num"> 6</span><span class="kw">const</span> client = <span class="kw">new</span> <span class="cls">line</span>.<span class="cls">Client</span>({</span>
+<span><span class="code-line-num"> 7</span>  channelAccessToken: process.env.<span class="cls">TOKEN</span>,</span>
+<span><span class="code-line-num"> 8</span>  channelSecret:      process.env.<span class="cls">SECRET</span>,</span>
+<span><span class="code-line-num"> 9</span>})</span>
+<span><span class="code-line-num">10</span></span>
+<span><span class="code-line-num">11</span>app.<span class="fn">post</span>(<span class="str">'/webhook'</span>, <span class="fn">line</span>.middleware(), (req, res) => {</span>
+<span><span class="code-line-num">12</span>  res.<span class="fn">sendStatus</span>(<span class="num">200</span>)</span>
+<span><span class="code-line-num">13</span>  req.body.events.<span class="fn">forEach</span>(event => {</span>
+<span><span class="code-line-num">14</span>    <span class="kw">if</span> (event.type === <span class="str">'message'</span>) {</span>
+<span><span class="code-line-num">15</span>      client.<span class="fn">replyMessage</span>(event.replyToken, {</span>
+<span><span class="code-line-num">16</span>        type: <span class="str">'text'</span>,</span>
+<span><span class="code-line-num">17</span>        text: <span class="str">'Hello, World!'</span>,</span>
+<span><span class="code-line-num">18</span>      })</span>
+<span><span class="code-line-num">19</span>    }</span>
+<span><span class="code-line-num">20</span>  })</span>
+<span><span class="code-line-num">21</span>})</span>
+<span><span class="code-line-num">22</span></span>
+<span><span class="code-line-num">23</span>app.<span class="fn">listen</span>(<span class="num">3000</span>)</span>
     </div>
     <div class="hero-chapter-count">
       <div style="font-family:var(--mono);font-size:0.65rem;color:var(--ink-3);letter-spacing:0.1em;margin-bottom:0.5rem">MODULES</div>
